@@ -63,7 +63,8 @@ export function filterSurvivors(repo: string, file: string, candidates: Mutation
     return candidates.filter(candidate => { writeFileSync(path, candidate.source); return suitePasses(repo, timeout); });
   } finally { writeFileSync(path, original); }
 }
-export interface FixtureItem extends BenchItem { baseRef: string; headRef: string; repoDir: string }
+export type Kind = 'mutant' | 'clean' | 'historical';
+export interface FixtureItem extends BenchItem { kind: Kind; omittedTests?: string[]; upstreamCommit?: string; baseRef: string; headRef: string; repoDir: string }
 function git(repo: string, args: string[]): string {
   const run = spawnSync('git', ['-c', 'user.name=Bench Fixture', '-c', 'user.email=bench@example.invalid', ...args], {
     cwd: repo, encoding: 'utf8', env: {...process.env, GIT_AUTHOR_DATE:'2026-01-01T00:00:00Z', GIT_COMMITTER_DATE:'2026-01-01T00:00:00Z'},
@@ -75,6 +76,10 @@ export function createItemRepo(item: FixtureItem, destination: string, root = be
   cpSync(join(root, 'fixtures', item.repo), destination, {recursive: true});
   git(destination, ['init', '--quiet']); git(destination, ['add', '.']);
   git(destination, ['commit', '--quiet', '-m', 'Import upstream fixture']);
+  if (item.omittedTests?.length) {
+    writeFileSync(join(destination, 'test.js'), omitTests(readFileSync(join(destination, 'test.js'), 'utf8'), item.omittedTests));
+    git(destination, ['add', '.']); git(destination, ['commit', '--quiet', '-m', 'Prepare review suite']);
+  }
   if (git(destination, ['rev-parse', 'HEAD']) !== item.baseRef) throw new Error('Fixture base hash mismatch; run gen');
   const apply = spawnSync('git', ['apply', '-'], {cwd: destination, input: item.patch, encoding: 'utf8'});
   if (apply.status !== 0) throw new Error(apply.stderr);
@@ -91,27 +96,59 @@ export function generate(): FixtureItem[] {
     const candidates = mutations(source);
     const survivors = filterSurvivors(repo, 'index.js', candidates);
     git(repo, ['init', '--quiet']); git(repo, ['add', '.']); git(repo, ['commit', '--quiet', '-m', 'Import upstream fixture']);
-    const baseRef = git(repo, ['rev-parse', 'HEAD']);
-    const items = survivors.map(m => {
-      git(repo, ['checkout', '--quiet', '--detach', baseRef]);
+    const pristineRef = git(repo, ['rev-parse', 'HEAD']);
+    const testSource = readFileSync(join(repo, 'test.js'), 'utf8');
+    const variants: Variant[] = [...survivors.map(m => ({...m, kind:'mutant' as const})), ...cleanVariants(source), ...historicalVariants(source)];
+    const items = variants.map(m => {
+      git(repo, ['checkout', '--quiet', '--detach', pristineRef]);
+      let omittedTests: string[] = [];
+      if (m.kind === 'historical') {
+        writeFileSync(join(repo, 'index.js'), m.source);
+        const run = spawnSync(process.execPath, ['--test', '--test-reporter=tap', 'test.js'], {cwd:repo, encoding:'utf8', timeout:5000});
+        if (run.error) throw run.error;
+        omittedTests = [...run.stdout.matchAll(/^not ok \d+ - (.+)$/gm)].map(match => match[1]);
+        if (!omittedTests.length) throw new Error('Full suite does not catch historical regression: '+m.upstreamCommit);
+        writeFileSync(join(repo, 'test.js'), omitTests(testSource, omittedTests));
+        if (!suitePasses(repo)) throw new Error('Historical suite still fails: '+m.upstreamCommit);
+        writeFileSync(join(repo, 'index.js'), source);
+        if (!suitePasses(repo)) throw new Error('Historical base fails');
+        if (omittedTests.length) {
+          git(repo, ['add', '.']); git(repo, ['commit', '--quiet', '-m', 'Prepare review suite']);
+        }
+      }
+      const baseRef = git(repo, ['rev-parse', 'HEAD']);
       writeFileSync(join(repo, 'index.js'), m.source);
+      if (!suitePasses(repo)) throw new Error('Variant suite fails');
       const patch = git(repo, ['diff', '--', 'index.js']) + '\n';
       const id = createHash('sha256').update(m.source).digest('hex').slice(0, 12);
-      const description = 'Improve consistency of URL normalization edge handling';
+      const description = m.kind === 'clean' ? 'Clarify URL normalization implementation' : 'Refactor URL normalization edge handling';
       git(repo, ['add', '.']); git(repo, ['commit', '--quiet', '-m', description]);
-      return {id, repo:'normalize-url', file:'index.js', line:m.line, operator:m.operator, description, patch, baseRef, headRef:git(repo, ['rev-parse', 'HEAD']), repoDir:`repos/${id}`} satisfies FixtureItem;
+      return {id, kind:m.kind, ...(m.upstreamCommit ? {upstreamCommit:m.upstreamCommit, omittedTests} : {}), repo:'normalize-url', file:'index.js', line:m.line, operator:m.operator, description, patch, baseRef, headRef:git(repo, ['rev-parse', 'HEAD']), repoDir:`repos/${id}`} satisfies FixtureItem;
     });
     mkdirSync(join(benchRoot, 'fixtures'), {recursive:true});
     writeFileSync(join(benchRoot, 'fixtures/survivors.json'), JSON.stringify(items, null, 2) + '\n');
-    writeFileSync(join(benchRoot, 'fixtures/generation.json'), JSON.stringify({candidates:candidates.length, survivors:items.length, suite:'node --test test.js'}, null, 2) + '\n');
-    for (const item of items) {
-      const destination = join(benchRoot, 'fixtures', item.repoDir);
-      rmSync(destination, {recursive:true, force:true});
-      mkdirSync(dirname(destination), {recursive:true});
-      createItemRepo(item, destination);
-    }
-    console.log(`${items.length}/${candidates.length} mutants survived the complete upstream suite`);
+    writeFileSync(join(benchRoot, 'fixtures/generation.json'), JSON.stringify({candidates:candidates.length, survivors:survivors.length, clean:items.filter(i=>i.kind==='clean').length, historical:items.filter(i=>i.kind==='historical').length, suite:'node --test test.js'}, null, 2) + '\n');
+    console.log(`Generated ${items.length} items (${survivors.length} surviving mutants)`);
     return items;
   } finally { rmSync(temp, {recursive:true, force:true}); }
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) generate();
+
+interface Variant { source:string; line:number; operator:string; kind:Kind; upstreamCommit?:string }
+export function omitTests(source:string, names:string[]):string {
+  return source.split(/(?=^test\()/m).filter(block => !names.some(name => block.startsWith(`test('${name}',`))).join('');
+}
+export function cleanVariants(source:string):Variant[] {
+  const names = ['testParameter','supportedProtocols','hasCustomProtocol','normalizeDataURL','mediaType','normalizedMediaType','isBase64','pathComponents','lastComponent','oldUrlString'];
+  const variants = names.map(name => ({source:source.replace(new RegExp('\\b'+name+'\\b','g'), name+'Value'), line:source.slice(0,source.indexOf(name)).split('\n').length, operator:'rename-local', kind:'clean' as const}));
+  variants.push({source:'/** Normalize a URL using the supplied options. */\n'+source, line:1,operator:'jsdoc',kind:'clean'});
+  variants.push({source:source.replace("\t\turlObject.username = '';\n\t\turlObject.password = '';", "\t\turlObject.password = '';\n\t\turlObject.username = '';"),line:150,operator:'reorder-independent',kind:'clean'});
+  return variants;
+}
+export function historicalVariants(source:string):Variant[] {
+  const specs = JSON.parse(readFileSync(join(benchRoot,'fixtures/history.json'),'utf8')) as {sha:string; before:string; after:string}[];
+  return specs.map(spec => {
+    if (!source.includes(spec.after)) throw new Error('Historical fix does not apply: '+spec.sha);
+    return {source:source.replace(spec.after,spec.before),line:source.slice(0,source.indexOf(spec.after)).split('\n').length,operator:'revert-upstream-fix',kind:'historical',upstreamCommit:spec.sha};
+  });
+}
