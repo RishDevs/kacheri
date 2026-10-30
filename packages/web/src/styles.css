@@ -1055,6 +1055,19 @@ select {
 }
 .charge-verdict {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2);
+}
+.fix-mark {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--pass);
+  border: 1px solid currentColor;
+  padding: 2px calc(var(--u) * 2);
 }
 .claim {
   font-family: var(--serif);
@@ -1219,7 +1232,8 @@ select {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.repro-copy {
+.repro-copy,
+.mini-button {
   flex: none;
   font-family: var(--mono);
   font-size: 11px;
@@ -1330,6 +1344,83 @@ select {
 .log-drawer .log {
   max-height: none;
   flex: 1 1 auto;
+}
+
+/* ---- Remedy ---- */
+
+.remedy {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 3);
+  padding: var(--gutter) 0 var(--gutter) calc(var(--u) * 4);
+  border-left: 2px solid transparent;
+}
+.remedy-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 3);
+  flex-wrap: wrap;
+}
+.remedy-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 500;
+}
+.remedy-status {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid currentColor;
+  padding: 2px calc(var(--u) * 2);
+}
+.remedy-verified {
+  color: var(--pass);
+}
+.remedy-unverified {
+  color: var(--muted);
+}
+.remedy-attempts {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.remedy-explanation {
+  overflow-wrap: anywhere;
+}
+.reg-charge {
+  font-weight: 400;
+  color: var(--muted);
+  margin-right: var(--u);
+}
+.remedy-suite {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 3);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 16px;
+}
+.suite-pass {
+  color: var(--pass);
+  font-weight: 500;
+}
+.suite-fail {
+  color: var(--fail);
+  font-weight: 500;
+}
+.suite-not_run {
+  color: var(--muted);
+}
+.remedy-patch-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--u) * 3);
+  margin-bottom: calc(var(--u) * 2);
 }
 
 /* ---- Benchmark ---- */

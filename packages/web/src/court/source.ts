@@ -27,7 +27,15 @@ export interface CourtSource {
   loadBench(): Promise<BenchData | null>;
 }
 
-const COURT_EVENT_TYPES = new Set<CourtEvent['type']>(['case', 'charge', 'evidence', 'rebuttal', 'ruling', 'usage']);
+const COURT_EVENT_TYPES = new Set<CourtEvent['type']>([
+  'case',
+  'charge',
+  'evidence',
+  'rebuttal',
+  'ruling',
+  'usage',
+  'remedy',
+]);
 
 // The daemon wraps court events on the shared /api/events stream as `{ type: 'court', event }`.
 export function parseCourtMessage(data: string): CourtEvent | null {

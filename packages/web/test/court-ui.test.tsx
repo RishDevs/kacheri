@@ -6,9 +6,10 @@ import type { KacheriApi } from '../src/api';
 import { parseBench, type BenchData } from '../src/court/bench';
 import type { CourtHandlers, CourtSource } from '../src/court/source';
 import { BenchPage } from '../src/components/court/BenchPage';
+import { CaseView } from '../src/components/court/CaseView';
 import { CourtPage } from '../src/components/court/CourtPage';
 import { Root, parseRoute, routeHash } from '../src/Root';
-import { makeCase, makeCharge, makeEvidence, makeUsage, readDemo } from './court-fixtures';
+import { makeCase, makeCharge, makeEvidence, makeRemedy, makeUsage, readDemo } from './court-fixtures';
 
 afterEach(cleanup);
 
@@ -84,6 +85,17 @@ describe('CourtPage (live)', () => {
     expect(within(meters).getByText('$0.0012')).toBeTruthy();
     expect(within(meters).getByText('2.2k tok')).toBeTruthy();
     expect(screen.getByLabelText('Tally').textContent).toMatch(/1 convicted · 1 dismissed \(1 inadmissible\)/);
+
+    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×1 → Super → Ultra');
+    expect(screen.queryByRole('region', { name: 'Remedy' })).toBeNull();
+    expect(document.querySelector('.fix-mark')).toBeNull();
+    emit({ type: 'remedy', caseId: 'case1', remedy: makeRemedy() });
+    const remedy = screen.getByRole('region', { name: 'Remedy' });
+    expect(within(remedy).getByText('Verified')).toBeTruthy();
+    expect(within(within(remedy).getByLabelText('c1 head+fix runs')).getAllByText('PASS')).toHaveLength(3);
+    expect(within(c1).getByText('Fix verified').className).toBe('fix-mark');
+    expect(within(c2).queryByText('Fix verified')).toBeNull();
+    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×1 → Super → Ultra → Super (fix)');
   });
 
   it('lists cases, selects one, and files a new case', async () => {
@@ -130,12 +142,12 @@ describe('CourtPage (demo)', () => {
     expect(source.getCase).not.toHaveBeenCalled();
     expect(screen.getByRole('status').textContent).toBe('Demo replay');
 
-    expect(screen.getByRole('region', { name: 'src/compare.js' })).toBeTruthy();
+    expect(within(screen.getByRole('region', { name: 'Diff' })).getByRole('region', { name: 'src/compare.js' })).toBeTruthy();
     expect(screen.getByText('PR description')).toBeTruthy();
     const meters = screen.getByLabelText('Case meters');
-    expect(within(meters).getByText('$0.0218')).toBeTruthy();
+    expect(within(meters).getByText('$0.0274')).toBeTruthy();
     expect(within(meters).getByText('31.7k tok')).toBeTruthy();
-    expect(within(meters).getByText('2m 41s')).toBeTruthy();
+    expect(within(meters).getByText('3m 23s')).toBeTruthy();
 
     expect(within(screen.getByRole('group', { name: 'Charge c1' })).getByText('Convicted')).toBeTruthy();
     const c2 = screen.getByRole('group', { name: 'Charge c2' });
@@ -164,9 +176,10 @@ describe('CourtPage (demo)', () => {
       ),
     ).toBeTruthy();
 
-    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×2 → Super → Ultra');
-    expect(within(meters).getByText('Nano ×2').getAttribute('title')).toBe('nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B');
-    expect(within(meters).getByText('10.9k tok')).toBeTruthy();
+    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×3 → Super → Ultra → Super (fix)');
+    expect(within(meters).getByText('Nano ×3').getAttribute('title')).toBe('nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B');
+    expect(within(meters).getByText('Super (fix)').getAttribute('title')).toBe('nvidia/nemotron-3-super-120b-a12b');
+    expect(within(meters).getByText('24.5k tok')).toBeTruthy();
     expect(within(meters).getByText('9.1k tok')).toBeTruthy();
     expect(screen.getByText(/Replay of recorded Token Factory run/).textContent).toContain('recorded on 2026-10-29');
 
@@ -210,7 +223,8 @@ describe('CaseView workbench', () => {
 
   it('links charges and diff lines both ways', async () => {
     await renderDemo();
-    const compare = screen.getByRole('region', { name: 'src/compare.js' });
+    const diffPane = screen.getByRole('region', { name: 'Diff' });
+    const compare = within(diffPane).getByRole('region', { name: 'src/compare.js' });
     const mark = within(compare).getByRole('button', { name: 'Go to charge c1' });
     const markedRow = mark.closest('tr')!;
     expect(markedRow.className).toContain('line-charged');
@@ -223,7 +237,7 @@ describe('CaseView workbench', () => {
     expect(c1.className).toContain('charge-active');
     expect(scrolled[scrolled.length - 1]).toBe(markedRow);
 
-    const range = screen.getByRole('region', { name: 'src/range.js' });
+    const range = within(diffPane).getByRole('region', { name: 'src/range.js' });
     fireEvent.click(within(range).getByRole('button', { name: 'Go to charge c2' }));
     const c2 = screen.getByRole('group', { name: 'Charge c2' });
     expect(c2.className).toContain('charge-active');
@@ -260,6 +274,114 @@ describe('CaseView workbench', () => {
     expect(cmd).toContain(`git checkout --detach '${demo.headRef}'`);
     expect(cmd).toContain("node --test '__kacheri__/c1.test.mjs' # expected: FAIL on head");
     expect(await within(c1).findByRole('button', { name: 'Copied' })).toBeTruthy();
+  });
+
+  it('ends the docket with the verified remedy: register, suite log and fix patch', async () => {
+    const writeText = vi.fn(async (_text: string) => undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    await renderDemo();
+    const docket = screen.getByRole('region', { name: 'Docket' });
+    const remedy = within(docket).getByRole('region', { name: 'Remedy' });
+    const charges = docket.querySelector('ol.charges')!;
+    expect(charges.compareDocumentPosition(remedy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(remedy.nextElementSibling).toBeNull();
+
+    expect(within(remedy).getByRole('heading', { name: 'Remedy' }).className).toBe('remedy-title');
+    expect(within(remedy).getByText('Verified').className).toContain('remedy-verified');
+    expect(within(remedy).queryByText('Not verified')).toBeNull();
+    expect(within(remedy).getByText('2 attempts')).toBeTruthy();
+    expect(within(remedy).getByText(demo.remedy!.explanation)).toBeTruthy();
+
+    const register = within(remedy).getByRole('table', { name: 'Remedy register' });
+    expect(within(register).getAllByRole('row')).toHaveLength(2);
+    const row = within(register).getByLabelText('c1 head+fix runs');
+    expect(row.querySelector('th')?.textContent).toBe('c1 HEAD+FIX');
+    expect(within(row).getAllByText('PASS')).toHaveLength(3);
+    expect(within(row).getByText('3/3 pass')).toBeTruthy();
+
+    const suite = within(remedy).getByText('Existing suite').closest('p')!;
+    expect(within(suite).getByText('PASS').className).toBe('suite-pass');
+    fireEvent.click(within(suite).getByRole('button', { name: 'View log' }));
+    const drawer = screen.getByRole('dialog', { name: 'Log: existing suite · head+fix' });
+    expect(drawer.textContent).toContain('ℹ pass 10');
+    expect(within(drawer).getByText('PASS').className).toContain('suite-pass');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    expect(remedy.querySelector('.diff-refs')?.textContent).toBe(`${demo.headRef.slice(0, 10)}…head+fix · 1 file changed`);
+    const fixFile = within(remedy).getByRole('region', { name: 'src/compare.js' });
+    const dels = fixFile.querySelectorAll('tr.line-del');
+    const adds = fixFile.querySelectorAll('tr.line-add');
+    expect(dels).toHaveLength(1);
+    expect(adds).toHaveLength(1);
+    expect(dels[0].textContent).toContain('i < MAIN.length - 1;');
+    expect(adds[0].textContent).toContain('i < MAIN.length;');
+
+    fireEvent.click(within(remedy).getByRole('button', { name: 'Copy patch' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(demo.remedy!.patch));
+    expect(await within(remedy).findByRole('button', { name: 'Copied' })).toBeTruthy();
+
+    const c1 = screen.getByRole('group', { name: 'Charge c1' });
+    const mark = within(c1).getByText('Fix verified');
+    expect(mark.className).toBe('fix-mark');
+    expect(mark.parentElement?.querySelector('.stamp')).toBeTruthy();
+    expect(document.querySelectorAll('.fix-mark')).toHaveLength(1);
+  });
+
+  it('shows an unverified remedy muted, with no fix mark and missing runs as dashes', () => {
+    const record = makeCase({
+      status: 'closed',
+      endedAt: '2026-10-30T07:03:00.000Z',
+      charges: [makeCharge('c1'), makeCharge('c2')],
+      evidence: [makeEvidence('c1', true), makeEvidence('c2', true)],
+      rulings: [
+        { chargeId: 'c1', decision: 'convicted', reason: 'r1' },
+        { chargeId: 'c2', decision: 'convicted', reason: 'r2' },
+      ],
+      remedy: makeRemedy({
+        chargeIds: ['c1', 'c2'],
+        verified: false,
+        attempts: 1,
+        suite: 'fail',
+        suiteLog: '',
+        witnesses: [{ chargeId: 'c1', outcomes: ['pass', 'fail', 'pass'] }],
+      }),
+    });
+    render(<CaseView record={record} />);
+    const remedy = screen.getByRole('region', { name: 'Remedy' });
+    expect(within(remedy).getByText('Not verified').className).toContain('remedy-unverified');
+    expect(within(remedy).queryByText('Verified')).toBeNull();
+    expect(within(remedy).getByText('1 attempt')).toBeTruthy();
+
+    const c1Row = within(remedy).getByLabelText('c1 head+fix runs');
+    expect(within(c1Row).getAllByText('PASS')).toHaveLength(2);
+    expect(within(c1Row).getByText('FAIL').className).toBe('run-fail');
+    expect(within(c1Row).getByText('2/3 pass, 1/3 fail')).toBeTruthy();
+    const c2Row = within(remedy).getByLabelText('c2 head+fix runs');
+    expect(within(c2Row).getAllByText('—')).toHaveLength(3);
+    expect(within(c2Row).getByText('no runs')).toBeTruthy();
+
+    const suite = within(remedy).getByText('Existing suite').closest('p')!;
+    expect(within(suite).getByText('FAIL').className).toBe('suite-fail');
+    fireEvent.click(within(suite).getByRole('button', { name: 'View log' }));
+    expect(screen.getByRole('dialog', { name: 'Log: existing suite · head+fix' }).textContent).toContain('(empty output)');
+
+    expect(document.querySelector('.fix-mark')).toBeNull();
+    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano → Super → Ultra → Super (fix)');
+  });
+
+  it('labels a suite that was not run', () => {
+    const record = makeCase({
+      status: 'closed',
+      charges: [makeCharge('c1')],
+      rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'r1' }],
+      remedy: makeRemedy({ suite: 'not_run', suiteLog: '' }),
+    });
+    render(<CaseView record={record} />);
+    const suite = within(screen.getByRole('region', { name: 'Remedy' })).getByText('Existing suite').closest('p')!;
+    expect(within(suite).getByText('NOT RUN').className).toBe('suite-not_run');
+    fireEvent.click(within(suite).getByRole('button', { name: 'View log' }));
+    expect(screen.getByRole('dialog').textContent).toContain('The existing suite was not run on head+fix.');
   });
 });
 

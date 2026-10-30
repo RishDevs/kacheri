@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { CourtEvent } from '@kacheri/shared';
 import { createDemoCourtSource, createLiveCourtSource, parseCourtMessage, type Timers } from '../src/court/source';
-import { makeCase, makeCharge, makeEvidence } from './court-fixtures';
+import { makeCase, makeCharge, makeEvidence, makeRemedy } from './court-fixtures';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -23,6 +23,8 @@ describe('parseCourtMessage', () => {
     const charge: CourtEvent = { type: 'charge', caseId: 'k', charge: makeCharge('c1') };
     expect(parseCourtMessage(JSON.stringify({ type: 'court', event: charge }))).toEqual(charge);
     expect(parseCourtMessage(JSON.stringify(charge))).toBeNull();
+    const remedy: CourtEvent = { type: 'remedy', caseId: 'k', remedy: makeRemedy() };
+    expect(parseCourtMessage(JSON.stringify({ type: 'court', event: remedy }))).toEqual(remedy);
     expect(parseCourtMessage(JSON.stringify({ type: 'task', task: {} }))).toBeNull();
     expect(parseCourtMessage(JSON.stringify({ type: 'court', event: { type: 'weird' } }))).toBeNull();
     expect(parseCourtMessage('nope')).toBeNull();

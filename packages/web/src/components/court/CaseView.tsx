@@ -4,7 +4,6 @@ import type { CaseRecord, CaseStatus, Charge, Evidence, Rebuttal, Verdict } from
 import { anchorKey, locateLine, parsePatch, patchToDiff } from '../../diff';
 import { reproCommand } from '../../court/repro';
 import {
-  MODEL_LINEAGE,
   STATUS_TEXT,
   TIERS,
   TIER_LABEL,
@@ -17,12 +16,15 @@ import {
   formatTokens,
   formatUsd,
   isActive,
+  isFixVerified,
   isoDate,
+  modelLineage,
   shortSha,
   type ChargeOutcome,
 } from '../../court/summary';
 import { DiffViewer, type DiffMarker } from '../DiffViewer';
 import { EvidenceRegister, LogDrawer, ReproStrip, type LogTarget } from './Evidence';
+import { RemedySection, SuiteLogDrawer } from './Remedy';
 
 export function useNow(ticking: boolean, intervalMs = 1000): number {
   const [now, setNow] = useState(() => Date.now());
@@ -118,11 +120,22 @@ interface ChargeSectionProps {
   anchored: boolean;
   live: boolean;
   animateStamp: boolean;
+  fixVerified: boolean;
   onLocate(chargeId: string): void;
   onOpenLog(target: LogTarget): void;
 }
 
-function ChargeSection({ record, charge, focused, anchored, live, animateStamp, onLocate, onOpenLog }: ChargeSectionProps) {
+function ChargeSection({
+  record,
+  charge,
+  focused,
+  anchored,
+  live,
+  animateStamp,
+  fixVerified,
+  onLocate,
+  onOpenLog,
+}: ChargeSectionProps) {
   const evidence = record.evidence.find((e) => e.chargeId === charge.id);
   const rebuttal = record.rebuttals.find((r) => r.chargeId === charge.id);
   const outcome = chargeOutcome(record, charge.id);
@@ -179,6 +192,7 @@ function ChargeSection({ record, charge, focused, anchored, live, animateStamp, 
         )}
         <span className="charge-verdict">
           <VerdictMark outcome={outcome} animate={animateStamp} />
+          {fixVerified && <span className="fix-mark">Fix verified</span>}
         </span>
       </header>
       <h3 className="claim">{charge.claim}</h3>
@@ -295,8 +309,10 @@ export function CaseView({ record, replay = false, recordedAt = null, onReplay, 
     if (target && typeof target.scrollIntoView === 'function') target.scrollIntoView({ block: 'center' });
   }, [focus]);
 
-  const [log, setLog] = useState<LogTarget | null>(null);
+  const [log, setLog] = useState<LogTarget | 'suite' | null>(null);
   const closeLog = useCallback(() => setLog(null), []);
+  const openSuiteLog = useCallback(() => setLog('suite'), []);
+  const lineage = useMemo(() => modelLineage(record), [record]);
 
   const [settled, setSettled] = useState(false);
   useEffect(() => setSettled(true), []);
@@ -353,8 +369,8 @@ export function CaseView({ record, replay = false, recordedAt = null, onReplay, 
               <dt>Models</dt>
               <dd>
                 <span aria-label="Model lineage">
-                  {MODEL_LINEAGE.map((m, i) => (
-                    <Fragment key={m.tier}>
+                  {lineage.map((m, i) => (
+                    <Fragment key={m.key}>
                       {i > 0 && ' → '}
                       <abbr title={MODELS[m.tier].id}>{m.label}</abbr>
                     </Fragment>
@@ -443,12 +459,14 @@ export function CaseView({ record, replay = false, recordedAt = null, onReplay, 
                   anchored={anchors.has(charge.id)}
                   live={active}
                   animateStamp={settled}
+                  fixVerified={isFixVerified(record, charge.id)}
                   onLocate={locateFromDocket}
                   onOpenLog={setLog}
                 />
               </li>
             ))}
           </ol>
+          {record.remedy && <RemedySection record={record} remedy={record.remedy} onOpenSuiteLog={openSuiteLog} />}
         </section>
 
         <section ref={diffRef} className="diff-pane" aria-label="Diff">
@@ -475,9 +493,11 @@ export function CaseView({ record, replay = false, recordedAt = null, onReplay, 
         </section>
       </div>
 
-      {log && (
-        <LogDrawer target={log} evidence={record.evidence.find((e) => e.chargeId === log.chargeId)} onClose={closeLog} />
-      )}
+      {log === 'suite'
+        ? record.remedy && <SuiteLogDrawer remedy={record.remedy} onClose={closeLog} />
+        : log && (
+            <LogDrawer target={log} evidence={record.evidence.find((e) => e.chargeId === log.chargeId)} onClose={closeLog} />
+          )}
     </article>
   );
 }

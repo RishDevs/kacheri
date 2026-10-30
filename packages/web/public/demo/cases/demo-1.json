@@ -189,9 +189,37 @@
       "completionTokens": 2215,
       "costUsd": 0.013549,
       "latencyMs": 41270
+    },
+    {
+      "tier": "super",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "role": "remedy",
+      "promptTokens": 5120,
+      "completionTokens": 1406,
+      "costUsd": 0.0028014,
+      "latencyMs": 16420
+    },
+    {
+      "tier": "super",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "role": "remedy",
+      "promptTokens": 6018,
+      "completionTokens": 1122,
+      "costUsd": 0.0028152,
+      "latencyMs": 13985
     }
   ],
+  "remedy": {
+    "chargeIds": ["c1"],
+    "explanation": "compare() stops one component early: the loop bound MAIN.length - 1 skips 'patch', so versions that differ only in patch compare equal. The fix restores the full bound; prerelease ordering still applies only when major, minor and patch are equal. Attempt 1 also rewrote comparePrerelease() and failed the existing suite; attempt 2 changes only the loop bound.",
+    "patch": "diff --git a/src/compare.js b/src/compare.js\nindex e7a93d1..0c5d2a4 100644\n--- a/src/compare.js\n+++ b/src/compare.js\n@@ -25,7 +25,7 @@ export function comparePrerelease(a, b) {\n export function compare(a, b) {\n   const x = parse(a);\n   const y = parse(b);\n-  for (let i = 0; i < MAIN.length - 1; i++) {\n+  for (let i = 0; i < MAIN.length; i++) {\n     const key = MAIN[i];\n     if (x[key] !== y[key]) return x[key] < y[key] ? -1 : 1;\n   }\n",
+    "attempts": 2,
+    "witnesses": [{ "chargeId": "c1", "outcomes": ["pass", "pass", "pass"] }],
+    "suite": "pass",
+    "suiteLog": "> tinysemver@1.4.0 test\n> node --test test/\n\n✔ parse: major.minor.patch (0.702ms)\n✔ parse: leading v (0.118ms)\n✔ parse: prerelease identifiers (0.143ms)\n✔ compare: major and minor ordering (0.231ms)\n✔ compare: prerelease below release (0.164ms)\n✔ compare: numeric prerelease identifiers (0.097ms)\n✔ satisfies: caret ranges (0.288ms)\n✔ satisfies: tilde ranges (0.121ms)\n✔ satisfies: comparators (0.140ms)\n✔ satisfies: prerelease opt-in (0.176ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 61.482\n",
+    "verified": true
+  },
   "error": null,
   "startedAt": "2026-10-29T18:42:07.311Z",
-  "endedAt": "2026-10-29T18:44:48.902Z"
+  "endedAt": "2026-10-29T18:45:31.207Z"
 }

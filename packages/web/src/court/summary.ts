@@ -1,4 +1,4 @@
-import type { CaseRecord, CaseStatus, LlmUsage, ModelTier, WitnessOutcome } from '@kacheri/shared';
+import type { CaseRecord, CaseStatus, LlmUsage, ModelTier, Remedy, WitnessOutcome } from '@kacheri/shared';
 
 // Optional fields a case record may carry beyond the shared contract (demo JSON includes them).
 export interface CaseExtras {
@@ -112,12 +112,37 @@ export function caseTally(record: CaseRecord): CaseTally {
 
 export const TIER_LABEL: Record<ModelTier, string> = { nano: 'Nano', super: 'Super', ultra: 'Ultra' };
 
-// Pipeline label fixed by docs/DESIGN.md: parallel Nano prosecutors, Super defense, Ultra judge.
-export const MODEL_LINEAGE: readonly { tier: ModelTier; label: string }[] = [
-  { tier: 'nano', label: 'Nano ×2' },
-  { tier: 'super', label: 'Super' },
-  { tier: 'ultra', label: 'Ultra' },
-];
+export interface LineageStep {
+  key: string;
+  tier: ModelTier;
+  label: string;
+}
+
+// Parallel Nano prosecutors, Super defense, Ultra judge, then a Super remedy once a fix is proposed.
+export function modelLineage(record: Pick<CaseRecord, 'usage' | 'remedy'>): LineageStep[] {
+  const nano = record.usage.filter((u) => u.tier === 'nano').length;
+  const steps: LineageStep[] = [
+    { key: 'nano', tier: 'nano', label: nano > 0 ? `Nano ×${nano}` : 'Nano' },
+    { key: 'super', tier: 'super', label: 'Super' },
+    { key: 'ultra', tier: 'ultra', label: 'Ultra' },
+  ];
+  if (record.remedy || record.usage.some((u) => u.role === 'remedy')) {
+    steps.push({ key: 'remedy', tier: 'super', label: 'Super (fix)' });
+  }
+  return steps;
+}
+
+export const SUITE_LABEL: Record<Remedy['suite'], string> = { pass: 'PASS', fail: 'FAIL', not_run: 'NOT RUN' };
+
+export function convictedChargeIds(record: CaseRecord): string[] {
+  return record.charges.filter((c) => chargeOutcome(record, c.id).state === 'convicted').map((c) => c.id);
+}
+
+export function isFixVerified(record: CaseRecord, chargeId: string): boolean {
+  const remedy = record.remedy;
+  if (!remedy || !remedy.verified || !remedy.chargeIds.includes(chargeId)) return false;
+  return chargeOutcome(record, chargeId).state === 'convicted';
+}
 
 export const OUTCOME_LABEL: Record<WitnessOutcome, string> = {
   pass: 'PASS',
