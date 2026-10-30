@@ -1,3 +1,5 @@
+<img src=".github/header.svg" width="100%" alt="kacheri — Kacheri Court — README header">
+
 # Kacheri Court
 
 AI code review that must prove every accusation.
