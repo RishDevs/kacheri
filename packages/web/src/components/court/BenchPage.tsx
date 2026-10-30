@@ -9,45 +9,62 @@ import {
   type SystemSummary,
 } from '../../court/bench';
 import type { CourtSource } from '../../court/source';
-import { formatDuration, formatUsd } from '../../court/summary';
+import { formatDuration, formatUsd, isoDate } from '../../court/summary';
 
 const SYSTEM_LABEL: Record<BenchSystem, string> = { court: 'Court', baseline: 'Baseline' };
 
 const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
 
 interface Metric {
-  key: 'hitRate' | 'fpPerPr' | 'costPerPr';
+  key: string;
   label: string;
   better: 'higher' | 'lower';
+  value(s: SystemSummary): number | null;
   format(n: number): string;
   // fixed scale maximum; otherwise bars are scaled to the larger of the two systems
   max?: number;
 }
 
 const METRICS: Metric[] = [
-  { key: 'hitRate', label: 'Hit rate', better: 'higher', format: pct, max: 1 },
-  { key: 'fpPerPr', label: 'False positives per PR', better: 'lower', format: (n) => n.toFixed(2) },
-  { key: 'costPerPr', label: 'Cost per PR', better: 'lower', format: formatUsd },
+  { key: 'hitRate', label: 'Hit rate', better: 'higher', value: (s) => s.hitRate, format: pct, max: 1 },
+  {
+    key: 'fpPerPr',
+    label: 'False positives per PR',
+    better: 'lower',
+    value: (s) => s.fpPerPr,
+    format: (n) => n.toFixed(2),
+  },
+  { key: 'precision', label: 'Precision', better: 'higher', value: (s) => s.precision, format: pct, max: 1 },
+  { key: 'costPerPr', label: 'Cost per PR', better: 'lower', value: (s) => s.costPerPr, format: formatUsd },
+  {
+    key: 'p50LatencyMs',
+    label: 'p50 latency',
+    better: 'lower',
+    value: (s) => s.p50LatencyMs,
+    format: formatDuration,
+  },
 ];
 
-function MetricBars({ metric, summaries }: { metric: Metric; summaries: SystemSummary[] }) {
-  const max = metric.max ?? Math.max(0, ...summaries.map((s) => s[metric.key]));
+function MetricRules({ metric, summaries }: { metric: Metric; summaries: SystemSummary[] }) {
+  const values = summaries.map((s) => metric.value(s));
+  const max = metric.max ?? Math.max(0, ...values.map((v) => v ?? 0));
   return (
     <div className="metric" role="group" aria-label={metric.label}>
-      <h3 className="metric-title">
-        {metric.label} <span className="muted">· {metric.better} is better</span>
-      </h3>
-      {summaries.map((s) => {
-        const value = s[metric.key];
-        const width = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+      <div className="metric-head">
+        <span className="metric-title">{metric.label}</span>
+        <span className="label">{metric.better} is better</span>
+      </div>
+      {summaries.map((s, i) => {
+        const value = values[i];
+        const width = value !== null && max > 0 ? Math.min(100, (value / max) * 100) : 0;
         return (
-          <div key={s.system} className="bar-row">
-            <span className="bar-label">{SYSTEM_LABEL[s.system]}</span>
-            <span className="bar-track">
-              <span className={`bar bar-${s.system}`} style={{ width: `${width}%` }} />
+          <div key={s.system} className="rule-row">
+            <span className="rule-system">{SYSTEM_LABEL[s.system]}</span>
+            <span className="rule-track">
+              <span className={`rule-bar rule-${s.system}`} style={{ width: `${width}%` }} />
             </span>
-            <span className="bar-value" data-system={s.system}>
-              {metric.format(value)}
+            <span className="rule-value" data-system={s.system}>
+              {value === null ? '—' : metric.format(value)}
             </span>
           </div>
         );
@@ -56,32 +73,44 @@ function MetricBars({ metric, summaries }: { metric: Metric; summaries: SystemSu
   );
 }
 
-function SummaryTable({ summaries }: { summaries: SystemSummary[] }) {
+function ComparisonTable({ summaries }: { summaries: SystemSummary[] }) {
   return (
-    <table className="data-table" aria-label="Summary">
+    <table className="data-table compare-table" aria-label="Comparison">
       <thead>
         <tr>
-          <th>System</th>
-          <th>PRs</th>
-          <th>Hits</th>
-          <th>Hit rate</th>
-          <th>FP / PR</th>
-          <th>Precision</th>
-          <th>$ / PR</th>
-          <th>p50 latency</th>
+          <th scope="col">System</th>
+          <th scope="col" className="num">
+            Hit rate
+          </th>
+          <th scope="col" className="num" title="False positives per PR">
+            FP / PR
+          </th>
+          <th scope="col" className="num">
+            Precision
+          </th>
+          <th scope="col" className="num">
+            $ / PR
+          </th>
+          <th scope="col" className="num">
+            p50 latency
+          </th>
+          <th scope="col" className="num">
+            n
+          </th>
         </tr>
       </thead>
       <tbody>
         {summaries.map((s) => (
           <tr key={s.system}>
             <th scope="row">{SYSTEM_LABEL[s.system]}</th>
-            <td>{s.items}</td>
-            <td>{s.hits}</td>
-            <td>{pct(s.hitRate)}</td>
-            <td>{s.fpPerPr.toFixed(2)}</td>
-            <td>{s.precision === null ? '—' : pct(s.precision)}</td>
-            <td>{formatUsd(s.costPerPr)}</td>
-            <td>{formatDuration(s.p50LatencyMs)}</td>
+            <td className="num" title={`${s.hits}/${s.items} hits`}>
+              {pct(s.hitRate)}
+            </td>
+            <td className="num">{s.fpPerPr.toFixed(2)}</td>
+            <td className="num">{s.precision === null ? '—' : pct(s.precision)}</td>
+            <td className="num">{formatUsd(s.costPerPr)}</td>
+            <td className="num">{formatDuration(s.p50LatencyMs)}</td>
+            <td className="num">{s.items}</td>
           </tr>
         ))}
       </tbody>
@@ -100,13 +129,13 @@ function ResultCells({ result }: { result: BenchResult | undefined }) {
   const reported = result.system === 'court' ? `${result.convicted}/${result.findings}` : String(result.findings);
   return (
     <>
-      <td className={result.hit ? 'hit' : 'miss'}>{result.hit ? 'hit' : 'miss'}</td>
-      <td>
+      <td className={`sys-start ${result.hit ? 'hit' : 'miss'}`}>{result.hit ? 'hit' : 'miss'}</td>
+      <td className="num">
         {reported}
         {result.falsePositives > 0 && <span className="fp"> · {result.falsePositives} FP</span>}
       </td>
-      <td>{formatUsd(result.costUsd)}</td>
-      <td>{formatDuration(result.latencyMs)}</td>
+      <td className="num">{formatUsd(result.costUsd)}</td>
+      <td className="num">{formatDuration(result.latencyMs)}</td>
     </>
   );
 }
@@ -201,17 +230,18 @@ export function BenchPage({ source, nav }: BenchPageProps) {
       </header>
       {data?.sample && (
         <div className="sample-banner" role="note" aria-label="Sample data">
-          <strong>Sample data.</strong> These numbers are illustrative placeholders, not real benchmark results.
-          {data.label && <span className="sample-label"> {data.label}</span>}
+          <span className="label">Sample data</span> These numbers are illustrative placeholders, not real benchmark
+          results.
+          {data.label && <code className="sample-label"> {data.label}</code>}
         </div>
       )}
       <main className="bench-main">
-        <header className="bench-head">
+        <header className="page-head">
           <h2>Court vs baseline</h2>
           <p className="muted">
             Injected bugs that survive the target repo&apos;s own test suite. A hit means a reported finding (court:
             a convicted charge) lands in the same file within 3 lines of the injected bug.
-            {data?.generatedAt && <> Generated {new Date(data.generatedAt).toLocaleString()}.</>}
+            {data?.generatedAt && <> Generated {isoDate(data.generatedAt)}.</>}
           </p>
         </header>
         {load.kind === 'loading' && <p className="muted">Loading results…</p>}
@@ -223,16 +253,20 @@ export function BenchPage({ source, nav }: BenchPageProps) {
         )}
         {data && (
           <>
-            <section className="metrics" aria-label="Comparison">
-              {METRICS.map((m) => (
-                <MetricBars key={m.key} metric={m} summaries={summaries} />
-              ))}
+            <section aria-label="Comparison table" className="bench-section table-wrap">
+              <h3 className="section-head">Comparison</h3>
+              <ComparisonTable summaries={summaries} />
             </section>
-            <section aria-label="Summary table" className="table-wrap">
-              <SummaryTable summaries={summaries} />
+            <section aria-label="Metrics" className="bench-section">
+              <h3 className="section-head">By metric</h3>
+              <div className="metrics">
+                {METRICS.map((m) => (
+                  <MetricRules key={m.key} metric={m} summaries={summaries} />
+                ))}
+              </div>
             </section>
-            <section aria-label="Items" className="table-wrap">
-              <h3>Per item</h3>
+            <section aria-label="Items" className="bench-section table-wrap">
+              <h3 className="section-head">Per item</h3>
               <ItemTable data={data} />
             </section>
           </>

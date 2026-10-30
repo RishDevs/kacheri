@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
-import { DiffViewer } from '../src/components/DiffViewer';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { DiffViewer, type DiffMarker } from '../src/components/DiffViewer';
 import { DIFF, VERDICTS } from './fixtures';
 
 afterEach(cleanup);
@@ -55,6 +55,30 @@ describe('DiffViewer', () => {
     const app = screen.getByRole('region', { name: 'src/app.ts' });
     const note = within(app).getByText('Far away').closest('[role="note"]') as HTMLElement;
     expect(note.closest('tr')).toBeNull();
+  });
+
+  it('pins markers to charged lines in the gutter, file-level when the line is not shown', () => {
+    const onMarkerClick = vi.fn();
+    const markers: DiffMarker[] = [
+      { id: 'c1', file: './src/app.ts', line: 3, label: 'c1', tone: 'convicted', title: 'c1' },
+      { id: 'c2', file: 'README.md', line: 40, label: 'c2', tone: 'dismissed', title: 'c2' },
+      { id: 'c3', file: 'src/missing.ts', line: 1, label: 'c3', tone: 'pending', title: 'c3' },
+    ];
+    render(<DiffViewer diff={DIFF} verdicts={[]} markers={markers} activeMarkerId="c1" onMarkerClick={onMarkerClick} />);
+    const app = screen.getByRole('region', { name: 'src/app.ts' });
+    const mark = within(app).getByRole('button', { name: 'Go to charge c1' });
+    const row = mark.closest('tr')!;
+    expect(row.textContent).toContain('const secret = "hunter2";');
+    expect(row.className).toContain('line-charged');
+    expect(row.className).toContain('line-active');
+    expect(row.getAttribute('data-anchor')).toBe('src/app.ts#3');
+    fireEvent.click(mark);
+    expect(onMarkerClick).toHaveBeenCalledWith('c1');
+
+    const readme = screen.getByRole('region', { name: 'README.md' });
+    expect(within(readme).getByRole('button', { name: 'Go to charge c2' }).closest('tr')).toBeNull();
+    expect(readme.getAttribute('data-anchor')).toBe('README.md#file');
+    expect(screen.queryByRole('button', { name: 'Go to charge c3' })).toBeNull();
   });
 
   it('renders files listed without patch content', () => {
