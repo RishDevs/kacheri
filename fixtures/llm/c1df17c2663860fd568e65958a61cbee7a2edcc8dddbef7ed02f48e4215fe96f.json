@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The new regex restricts TLD length to 2-5 characters, breaking www stripping for valid hostnames with longer TLDs; this is an unintended regression contrary to the refactor goal.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The new regex requires subdomain labels of at least 2 characters, breaking www stripping for valid single-character labels like 'www.a.com'; this unintended tightening regresses previously working behavior.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4084,
+    "completionTokens": 464,
+    "costUsd": 0.005476,
+    "latencyMs": 2198
+  }
+}

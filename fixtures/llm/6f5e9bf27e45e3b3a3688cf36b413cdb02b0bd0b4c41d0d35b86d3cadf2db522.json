@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import x from '../index.js';\\nimport { strict as assert } from 'node:assert';\\n\\nconst url = 'http://www.a.com/';\\nconst opts = { stripWWW: true, removeTrailingSlash: false, removeSingleSlash: false };\\nconst result = x(url, opts);\\nassert.equal(result, 'http://a.com/');\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3119,
+    "completionTokens": 1495,
+    "costUsd": 0.0022811999999999997,
+    "latencyMs": 8136
+  }
+}

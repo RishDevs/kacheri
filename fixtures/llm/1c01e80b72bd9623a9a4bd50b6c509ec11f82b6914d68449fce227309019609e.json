@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { test } from 'node:test'; import assert from 'node:assert/strict'; import normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl adds default protocol to dot-containing custom protocol when defaultProtocol is non‑special', async t => {\\n  const input = 'example.com:foo';\\n  const options = { defaultProtocol: 'foo' };\\n  const expected = 'foo:example.com:foo';\\n  const actual = normalizeUrl(input, options);\\n  assert.strictEqual(actual, expected);\\n});\\n\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3152,
+    "completionTokens": 8835,
+    "costUsd": 0.0088971,
+    "latencyMs": 52190
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": []}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2740,
+    "completionTokens": 4310,
+    "costUsd": 0.004701,
+    "latencyMs": 21825
+  }
+}

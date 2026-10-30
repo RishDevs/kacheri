@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import normalizeUrl from '../index.js';\\nimport { strictEqual } from 'node:assert/strict';\\n\\nconst result = normalizeUrl('http://example.com', { removeSingleSlash: false });\\nstrictEqual(result, 'http://example.com');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2965,
+    "completionTokens": 2285,
+    "costUsd": 0.0007262999999999999,
+    "latencyMs": 7359
+  }
+}

@@ -5,8 +5,10 @@ import type { CaseRecord, Charge, Evidence, LlmUsage, Remedy } from '@kacheri/sh
 
 const DEMO_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'demo');
 
+// The hand-written sample case lives with the tests; the shipped demo only contains recorded live runs.
 export function readDemo<T>(relPath: string): T {
-  return JSON.parse(readFileSync(join(DEMO_DIR, relPath), 'utf8')) as T;
+  const path = relPath === 'cases/demo-1.json' ? join(__dirname, 'fixtures', 'demo-1.json') : join(DEMO_DIR, relPath);
+  return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
 export function makeCharge(id: string, overrides: Partial<Charge> = {}): Charge {

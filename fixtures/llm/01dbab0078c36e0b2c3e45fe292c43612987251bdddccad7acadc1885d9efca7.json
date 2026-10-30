@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The witness test fails on head and passes on base, demonstrating a behavioral regression where removeSingleSlash:false now preserves a trailing slash for root-pathname URLs that was previously stripped. The removed conditional block explicitly handled this case, and its removal changes the observable behavior without evidence of intentional design.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same regression as c1: the witness shows that with removeSingleSlash:false, 'http://example.com' now returns 'http://example.com/' instead of 'http://example.com', contradicting the established behavior verified by the passing base test.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3875,
+    "completionTokens": 890,
+    "costUsd": 0.006545,
+    "latencyMs": 3651
+  }
+}

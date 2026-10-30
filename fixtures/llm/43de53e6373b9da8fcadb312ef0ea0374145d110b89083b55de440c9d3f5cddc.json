@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c3\",\"decision\":\"convicted\",\"reason\":\"The witness test passes on the original code and fails on the changed code, demonstrating a regression: a URL that previously received the default protocol now remains unchanged. The defense claims the dot check was erroneous, but the test's expected behavior (prepending the default protocol) aligns with the original logic, indicating the change unintentionally broke a supported case.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3345,
+    "completionTokens": 1863,
+    "costUsd": 0.008934,
+    "latencyMs": 7835
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"explanation\": \"The refactor removed a check for dots in the protocol string, causing URLs with dot-containing custom protocols to be incorrectly identified as custom and returned unchanged. Restoring the dot check ensures that such protocols are treated as relative and normalized with the default protocol.\", \"edits\": [{\"path\": \"index.js\", \"old\": \"\\treturn protocol.endsWith(':')\\n\\t\\t&& !supportedProtocols.has(protocol);\", \"new\": \"\\treturn protocol.endsWith(':')\\n\\t\\t&& !protocol.includes('.')\\n\\t\\t&& !supportedProtocols.has(protocol);\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "remedy",
+    "promptTokens": 3272,
+    "completionTokens": 6091,
+    "costUsd": 0.0064635,
+    "latencyMs": 33130
+  }
+}

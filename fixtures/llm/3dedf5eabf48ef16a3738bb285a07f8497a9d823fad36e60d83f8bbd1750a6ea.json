@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"WWW stripping fails for single-character subdomain labels due to increased minimum length in regex\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import x from '../index.js';\\nimport { strict as assert } from 'node:assert';\\n\\nconst url = 'http://www.a.com/';\\nconst opts = { stripWWW: true, removeTrailingSlash: false };\\nconst result = x(url, opts);\\nassert.equal(result, 'http://a.com/');\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3032,
+    "completionTokens": 1889,
+    "costUsd": 0.0026097000000000004,
+    "latencyMs": 16749
+  }
+}

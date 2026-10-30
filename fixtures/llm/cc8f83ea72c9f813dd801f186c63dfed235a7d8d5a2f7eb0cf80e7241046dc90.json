@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\ntest('decode percent-encoded plus after sorting', async () => {\\n  const input = 'http://example.com?foo=%2B';\\n  const expected = 'http://example.com/?foo=+';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, expected);\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3156,
+    "completionTokens": 866,
+    "costUsd": 0.0017261999999999998,
+    "latencyMs": 5433
+  }
+}

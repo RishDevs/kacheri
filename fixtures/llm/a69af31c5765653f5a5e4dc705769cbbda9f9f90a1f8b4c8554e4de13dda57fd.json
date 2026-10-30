@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strictEqual } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'my.protocol://example.com/path with space';\\nconst expected = 'http://my.protocol/example.com/path%20with%20space';\\nconst result = normalizeUrl(input);\\nstrictEqual(result, expected);\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 2259,
+    "costUsd": 0.0007246199999999999,
+    "latencyMs": 8783
+  }
+}

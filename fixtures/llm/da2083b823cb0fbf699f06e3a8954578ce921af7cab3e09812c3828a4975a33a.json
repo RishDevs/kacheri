@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The changed regex restricts TLD patterns to 2–5 characters ([a-z.]{2,5}), while the previous regex allowed up to 63 characters. Hostnames like 'abcdefghijk.lmnopqrstuvwxyz' have a TLD ('lmnopqrstuvwxyz') longer than 5 characters, so the condition fails and www. is not stripped. This contradicts the PR's stated goal of refactoring URL normalization edge handling without altering behavior for valid hostnames.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3311,
+    "completionTokens": 118,
+    "costUsd": 0.0010995,
+    "latencyMs": 1251
+  }
+}

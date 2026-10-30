@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The removed condition `!protocol.includes('.')` was overly restrictive and incorrect. Custom protocols can legitimately contain dots (e.g., 'my.domain.proto:'), and the presence of a dot does not make a protocol standard or supported. The function's purpose is to detect non-standard protocols, and the correct logic is simply to check if the protocol ends with ':' and is not in the set of supported protocols. The witness test reflects a valid use case that was previously broken by the erroneous dot check.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3171,
+    "completionTokens": 114,
+    "costUsd": 0.0010538999999999998,
+    "latencyMs": 1482
+  }
+}

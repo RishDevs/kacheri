@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\nassert.throws(\\n  () => {\\n    x('foo.bar://example.com/path/');\\n  },\\n  (err) => {\\n    return err instanceof TypeError && err.code === 'ERR_INVALID_URL';\\n  },\\n  'Expected ERR_INVALID_URL for URLs with dot-containing custom protocols'\\n);\\n\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2991,
+    "completionTokens": 8418,
+    "costUsd": 0.0084735,
+    "latencyMs": 53350
+  }
+}

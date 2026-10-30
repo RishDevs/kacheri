@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":257,\"severity\":\"critical\",\"message\":\"Duplicate declaration of 'const oldUrlStringValue'. The variable is declared at line ~257 (per the diff) and again at line ~300 (after the removeExplicitPort block). This will cause a SyntaxError: 'Identifier 'oldUrlStringValue' has already been declared'.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2624,
+    "completionTokens": 1179,
+    "costUsd": 0.006161,
+    "latencyMs": 4374
+  }
+}

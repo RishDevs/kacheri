@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"decodeURI error handling regression causing unhandled URIError\",\n      \"file\": \"index.js\",\n      \"line\": 182,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport { normalizeUrl } from '../index.js';\\n\\nconst url = 'http://example.com/%GG';\\nconst expected = 'http://example.com/%GG';\\n\\nassert.strictEqual(normalizeUrl(url), expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2913,
+    "completionTokens": 2324,
+    "costUsd": 0.00073254,
+    "latencyMs": 7645
+  }
+}

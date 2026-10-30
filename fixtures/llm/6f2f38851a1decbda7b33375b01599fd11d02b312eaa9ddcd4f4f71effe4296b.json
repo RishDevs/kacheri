@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The new regex for stripping 'www.' is overly restrictive and breaks valid hostnames. Changes: (1) Domain label minimum length changed from 1 to 2 chars, breaking single-label domains like 'www.x.com'. (2) TLD maximum length changed from 63 to 5 chars, breaking long TLDs like '.museum', '.travel', '.google', '.microsoft'. (3) TLD character set changed from [a-z.\\\\-d] to [a-z.], removing hyphens/digits and preventing multi-level TLDs like '.co.uk', '.com.au'. (4) Negative lookahead (?!www\\\\.) removed, potentially allowing incorrect stripping on 'www.www.example.com'.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2661,
+    "completionTokens": 1516,
+    "costUsd": 0.007209,
+    "latencyMs": 5795
+  }
+}

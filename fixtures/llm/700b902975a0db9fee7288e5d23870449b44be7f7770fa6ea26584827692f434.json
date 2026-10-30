@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'assert';\\nimport x from '../index.js' // default export: function(urlString, options)\\n\\nconst input = 'custom.protocol:';\\nconst result = x(input);\\nassert.match(result, /:\\/\\//, 'Expected result to contain \\\"://\\\"');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2918,
+    "completionTokens": 3583,
+    "costUsd": 0.001035,
+    "latencyMs": 18384
+  }
+}

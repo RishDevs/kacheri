@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The witness test passes on base and fails on head, demonstrating that the removal of the decoding block changed the behavior for percent-encoded '+' (%2B) in query parameters. The previous behavior (decoding to '+') was tested and expected; the new behavior leaves it encoded. This is an unintended regression in a refactor PR that the maintainer would want fixed before merging.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3311,
+    "completionTokens": 2418,
+    "costUsd": 0.010565,
+    "latencyMs": 10234
+  }
+}

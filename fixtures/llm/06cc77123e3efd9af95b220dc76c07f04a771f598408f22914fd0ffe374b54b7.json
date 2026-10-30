@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removing the dot check in hasCustomProtocol causes URLs with dot-containing custom protocols to bypass normalization, altering output.\", \"file\": \"index.js\", \"line\": 18, \"severity\": \"major\", \"witnessCode\": \"import x from '../index.js';\\n\\n// Test that a URL with a dot in its protocol is normalized in base but left unchanged in head\\nconst input = 'foo.bar:baz';\\n// Expected base behavior: protocol not recognized as custom -> default protocol prepended -> URL object -> serialized\\n// In base, this results in 'http:///foo.bar:baz'\\n// In head, the dot check is removed, so hasCustomProtocol returns true and the input is returned unchanged.\\nassert.strictEqual(x(input), 'http:///foo.bar:baz');\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2890,
+    "completionTokens": 3466,
+    "costUsd": 0.0039864,
+    "latencyMs": 25390
+  }
+}

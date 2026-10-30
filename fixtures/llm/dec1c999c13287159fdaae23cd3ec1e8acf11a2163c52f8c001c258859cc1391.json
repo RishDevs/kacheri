@@ -1,0 +1,12 @@
+{
+  "content": "{\"explanation\": \"Restore the dot check in hasCustomProtocol to treat protocols containing a dot as non-custom, ensuring they get normalized by prepending the default protocol.\", \"edits\": [{\"path\": \"index.js\", \"old\": \"const hasCustomProtocol = urlString => {\\n\\ttry {\\n\\t\\tconst {protocol} = new URL(urlString);\\n\\n\\t\\treturn protocol.endsWith(':')\\n\\t\\t\\t&& !supportedProtocols.has(protocol);\\n\\t} catch {\\n\\t\\treturn false;\\n\\t}\\n}\", \"new\": \"const hasCustomProtocol = urlString => {\\n\\ttry {\\n\\t\\tconst {protocol} = new URL(urlString);\\n\\n\\t\\treturn protocol.endsWith(':')\\n\\t\\t\\t&& !protocol.includes('.')\\n\\t\\t\\t&& !supportedProtocols.has(protocol);\\n\\t} catch {\\n\\t\\treturn false;\\n\\t}\\n}\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "remedy",
+    "promptTokens": 3320,
+    "completionTokens": 2335,
+    "costUsd": 0.0030975,
+    "latencyMs": 14424
+  }
+}

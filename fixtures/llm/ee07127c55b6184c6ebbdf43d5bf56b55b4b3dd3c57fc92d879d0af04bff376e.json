@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":21,\"severity\":\"major\",\"message\":\"Removing the `!protocol.includes('.')` check in `hasCustomProtocol` causes hostnames with colons (e.g., 'example.com:path' or 'example.com:8080') to be incorrectly treated as custom protocols. The URL constructor parses 'example.com' as the protocol in such cases, and without the dot check, these URLs are returned unnormalized instead of having the default protocol prepended.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2519,
+    "completionTokens": 998,
+    "costUsd": 0.005513,
+    "latencyMs": 4197
+  }
+}

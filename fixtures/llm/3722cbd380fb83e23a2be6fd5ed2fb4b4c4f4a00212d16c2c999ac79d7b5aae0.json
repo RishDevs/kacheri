@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The removed condition `!protocol.includes('.')` was incorrectly filtering out valid custom protocols like 'foo.bar:' that contain dots. The witness test expects such protocols to be treated as custom and thus normalized with the default protocol, which aligns with the function's purpose. The change correctly allows dot-containing protocols to be recognized as custom, enabling proper normalization.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3251,
+    "completionTokens": 82,
+    "costUsd": 0.0010490999999999999,
+    "latencyMs": 1292
+  }
+}

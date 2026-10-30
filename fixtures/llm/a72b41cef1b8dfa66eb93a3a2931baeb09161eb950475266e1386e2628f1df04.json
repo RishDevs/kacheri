@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removing the try-catch around decodeURI causes the function to throw on invalid percent-encoded pathnames instead of leaving them unchanged.\", \"file\": \"index.js\", \"line\": 180, \"severity\": \"critical\", \"witnessCode\": \"import normalizeUrl from '../index.js';\\nimport { strict as assert } from 'node:assert';\\nimport { describe, it } from 'node:test';\\n\\ndescribe('normalizeUrl handles invalid percent-encoding in pathname', () => {\\n  it('should return the input unchanged when decodeURI fails (base behavior)', () => {\\n    const input = 'http://example.com/path%zz';\\n    const expected = 'http://example.com/path%zz';\\n    assert.strictEqual(normalizeUrl(input, {}), expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2913,
+    "completionTokens": 12413,
+    "costUsd": 0.0120456,
+    "latencyMs": 63772
+  }
+}

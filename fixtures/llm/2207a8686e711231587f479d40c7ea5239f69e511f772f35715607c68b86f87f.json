@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\nconst input = 'foo.bar:baz';\\nassert.strictEqual(x(input), 'http:///foo.bar:baz');\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3013,
+    "completionTokens": 303,
+    "costUsd": 0.0011765999999999999,
+    "latencyMs": 2260
+  }
+}

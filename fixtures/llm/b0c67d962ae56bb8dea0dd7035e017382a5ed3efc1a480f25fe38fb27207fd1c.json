@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":183,\"severity\":\"major\",\"message\":\"Removed try-catch around decodeURI() call. If decodeURI() throws on malformed percent-encoding (e.g., '%GG', '%2'), the error will now propagate and crash normalizeUrl(), whereas before it was silently ignored and the original pathname preserved. This breaks robustness for malformed but commonly encountered URLs.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2542,
+    "completionTokens": 566,
+    "costUsd": 0.00424,
+    "latencyMs": 2312
+  }
+}

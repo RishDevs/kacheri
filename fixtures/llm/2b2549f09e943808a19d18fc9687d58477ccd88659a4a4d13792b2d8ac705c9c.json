@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"stripWWW regex incorrectly excludes hostnames with TLD longer than 5 characters, causing incomplete stripping\",\n      \"file\": \"index.js\",\n      \"line\": 206,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\ntest('normalizeUrl strips www when stripWWW true and hostname matches old regex', async (t) => {\\n  const url = 'http://www.abcdefghijk.lmnopqrstuvwxyz';\\n  const opts = { stripWWW: true };\\n  const result = await x(url, opts);\\n  assert.strictEqual(result, 'http://abcdefghijk.lmnopqrstuvwxyz');\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3032,
+    "completionTokens": 5146,
+    "costUsd": 0.00141696,
+    "latencyMs": 16630
+  }
+}

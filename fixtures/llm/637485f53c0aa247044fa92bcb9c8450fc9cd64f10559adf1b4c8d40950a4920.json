@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Removing the dot check in hasCustomProtocol treats dotted protocols as custom, causing early return and skipping URL normalization, which changes output for URLs with unescaped characters.\",\n      \"file\": \"__kacheri__/regression-1.test.mjs\",\n      \"line\": 16,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strictEqual } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'my.protocol://example.com/path with space';\\nconst expected = 'my.protocol://example.com/path%20with%20space';\\nconst result = normalizeUrl(input);\\nstrictEqual(result, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2890,
+    "completionTokens": 5226,
+    "costUsd": 0.0014276400000000002,
+    "latencyMs": 21310
+  }
+}

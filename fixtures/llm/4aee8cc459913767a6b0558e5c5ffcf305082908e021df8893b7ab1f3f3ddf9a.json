@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The witness test passes on the original code and fails on the changed code, demonstrating a behavioral regression. The removal of the dot check causes URLs like 'my.protocol://...' to be treated as custom protocols and returned unchanged, whereas the original behavior (and the test's expectation) was to normalize them with the default protocol. The defense argues the new behavior is correct per RFC, but the existing test defines the intended behavior, and the change breaks it without updating the test.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3194,
+    "completionTokens": 1139,
+    "costUsd": 0.006611,
+    "latencyMs": 17941
+  }
+}

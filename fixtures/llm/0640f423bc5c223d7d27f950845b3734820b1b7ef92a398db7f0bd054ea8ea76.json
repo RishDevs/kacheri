@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The change removes the dot check in hasCustomProtocol, causing URLs like 'foo.bar:baz' to be treated as custom protocols and returned unchanged instead of being normalized with the default protocol. The witness test demonstrates this regression by expecting 'foo:foo.bar:baz' but receiving 'foo.bar:baz'.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3363,
+    "completionTokens": 556,
+    "costUsd": 0.005031,
+    "latencyMs": 2224
+  }
+}

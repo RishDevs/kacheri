@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removing the dot check in hasCustomProtocol causes URLs with dot-containing custom protocols to be incorrectly left unchanged instead of getting the default protocol prepended.\", \"file\": \"index.js\", \"line\": 16, \"severity\": \"major\", \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl adds default protocol to dot-containing custom protocol', async t => {\\n  const input = 'example.com:foo';\\n  const expected = 'http:example.com:foo';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2890,
+    "completionTokens": 3027,
+    "costUsd": 0.0035913000000000004,
+    "latencyMs": 17731
+  }
+}

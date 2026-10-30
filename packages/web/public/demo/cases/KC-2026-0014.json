@@ -1,0 +1,143 @@
+{
+ "id": "KC-2026-0014",
+ "title": "Refactor URL normalization edge handling",
+ "repoPath": "sindresorhus/normalize-url",
+ "baseRef": "d74a32e0c9f48e22963af74d94582ec4c2e1048b",
+ "headRef": "ec3ab37f2c59a14b841c531bc5be6123180bc5cd",
+ "status": "closed",
+ "charges": [
+  {
+   "claim": "Removing the dot check in hasCustomProtocol causes URLs with dot-containing custom protocols to be returned unchanged instead of being normalized.",
+   "file": "index.js",
+   "line": 18,
+   "severity": "major",
+   "witnessCode": "import { describe, it } from 'node:test';\nimport { strict as assert } from 'node:assert/strict';\nimport normalizeUrl from '../index.js';\n\ndescribe('normalizeUrl', () => {\n  it('should normalize a URL with a custom protocol containing a dot', () => {\n    const input = 'foo.bar:baz';\n    const expected = 'foo:foo.bar:baz';\n    const actual = normalizeUrl(input, { defaultProtocol: 'foo' });\n    assert.strictEqual(actual, expected);\n  });\n});",
+   "id": "c1",
+   "witnessPath": "__kacheri__/c1.test.mjs",
+   "revised": true
+  }
+ ],
+ "evidence": [
+  {
+   "chargeId": "c1",
+   "base": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "head": [
+    "fail",
+    "fail",
+    "fail"
+   ],
+   "admissible": true,
+   "reason": "fails on head 3/3, passes on base 3/3",
+   "headLog": "\u25b6 normalizeUrl\n  \u2716 should normalize a URL with a custom protocol containing a dot (0.913166ms)\n\u2716 normalizeUrl (1.336791ms)\n\u2139 tests 1\n\u2139 suites 1\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 4.061417\n\n\u2716 failing tests:\n\ntest at __kacheri__/c1.test.mjs:6:3\n\u2716 should normalize a URL with a custom protocol containing a dot (0.913166ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + 'foo.bar:baz'\n  - 'foo:foo.bar:baz'\n        ^\n  \n      at TestContext.<anonymous> (file:///private/var/folders/tr/1xxm_21s2sb89h33b8nqn33m0000gn/T/kacheri-court-wOWqdM/wt/__kacheri__/c1.test.mjs:10:12)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1201:25)\n      at Test.start (node:internal/test_runner/test:1096:17)\n      at node:internal/test_runner/test:1617:71\n      at node:internal/per_context/primordials:466:82\n      at new Promise (<anonymous>)\n      at new SafePromise (node:internal/per_context/primordials:435:3)\n      at node:internal/per_context/primordials:466:9\n      at Array.map (<anonymous>) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 'foo.bar:baz',\n    expected: 'foo:foo.bar:baz',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }"
+  }
+ ],
+ "rebuttals": [
+  {
+   "chargeId": "c1",
+   "argument": "The removed condition `!protocol.includes('.')` was incorrectly filtering out valid custom protocols like 'foo.bar:' that contain dots. The witness test expects such protocols to be treated as custom and thus normalized with the default protocol, which aligns with the function's purpose. The change correctly allows dot-containing protocols to be recognized as custom, enabling proper normalization.",
+   "concedes": false
+  }
+ ],
+ "rulings": [
+  {
+   "chargeId": "c1",
+   "decision": "convicted",
+   "reason": "The change removes the dot check in hasCustomProtocol, causing URLs like 'foo.bar:baz' to be treated as custom protocols and returned unchanged instead of being normalized with the default protocol. The witness test demonstrates this regression by expecting 'foo:foo.bar:baz' but receiving 'foo.bar:baz'."
+  }
+ ],
+ "usage": [
+  {
+   "tier": "super",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "role": "prosecutor",
+   "promptTokens": 2890,
+   "completionTokens": 6784,
+   "costUsd": 0.006972600000000001,
+   "latencyMs": 32067
+  },
+  {
+   "tier": "nano",
+   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+   "role": "prosecutor",
+   "promptTokens": 2890,
+   "completionTokens": 11112,
+   "costUsd": 0.00284028,
+   "latencyMs": 40761
+  },
+  {
+   "tier": "super",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "role": "prosecutor",
+   "promptTokens": 3230,
+   "completionTokens": 10962,
+   "costUsd": 0.0108348,
+   "latencyMs": 71631
+  },
+  {
+   "tier": "super",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "role": "defense",
+   "promptTokens": 3251,
+   "completionTokens": 82,
+   "costUsd": 0.0010490999999999999,
+   "latencyMs": 1292
+  },
+  {
+   "tier": "ultra",
+   "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+   "role": "judge",
+   "promptTokens": 3363,
+   "completionTokens": 556,
+   "costUsd": 0.005031,
+   "latencyMs": 2224
+  },
+  {
+   "tier": "super",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "role": "remedy",
+   "promptTokens": 3272,
+   "completionTokens": 6091,
+   "costUsd": 0.0064635,
+   "latencyMs": 33130
+  },
+  {
+   "tier": "super",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "role": "remedy",
+   "promptTokens": 3320,
+   "completionTokens": 2335,
+   "costUsd": 0.0030975,
+   "latencyMs": 14424
+  }
+ ],
+ "error": null,
+ "startedAt": "2026-10-30T09:08:41.825Z",
+ "endedAt": "2026-10-30T09:11:26.457Z",
+ "patch": "diff --git a/index.js b/index.js\nindex 94e2b5b..eb5d68b 100644\n--- a/index.js\n+++ b/index.js\n@@ -15,7 +15,6 @@ const hasCustomProtocol = urlString => {\n \t\tconst {protocol} = new URL(urlString);\n \n \t\treturn protocol.endsWith(':')\n-\t\t\t&& !protocol.includes('.')\n \t\t\t&& !supportedProtocols.has(protocol);\n \t} catch {\n \t\treturn false;\n",
+ "remedy": {
+  "chargeIds": [
+   "c1"
+  ],
+  "explanation": "Restore the dot check in hasCustomProtocol to treat protocols containing a dot as non-custom, ensuring they get normalized by prepending the default protocol.",
+  "patch": "diff --git a/index.js b/index.js\nindex eb5d68b..94e2b5b 100644\n--- a/index.js\n+++ b/index.js\n@@ -15,6 +15,7 @@ const hasCustomProtocol = urlString => {\n \t\tconst {protocol} = new URL(urlString);\n \n \t\treturn protocol.endsWith(':')\n+\t\t\t&& !protocol.includes('.')\n \t\t\t&& !supportedProtocols.has(protocol);\n \t} catch {\n \t\treturn false;\n",
+  "attempts": 2,
+  "witnesses": [
+   {
+    "chargeId": "c1",
+    "outcomes": [
+     "pass",
+     "pass",
+     "pass"
+    ]
+   }
+  ],
+  "suite": "pass",
+  "suiteLog": "\u2714 defaultProtocol option (1.107208ms)\n\u2714 stripAuthentication option (0.283834ms)\n\u2714 stripProtocol option (0.117125ms)\n\u2714 stripTextFragment option (0.21475ms)\n\u2714 stripWWW option (0.117166ms)\n\u2714 removeQueryParameters option (0.312ms)\n\u2714 removeQueryParameters boolean `true` option (0.074333ms)\n\u2714 removeQueryParameters boolean `false` option (0.089042ms)\n\u2714 keepQueryParameters option (0.121625ms)\n\u2714 forceHttp option (0.138125ms)\n\u2714 forceHttp option with forceHttps (0.526209ms)\n\u2714 forceHttps option (0.074666ms)\n\u2714 removeTrailingSlash option (0.110209ms)\n\u2714 removeExplicitPort option (0.077833ms)\n\u2714 removeSingleSlash option (0.064583ms)\n\u2714 removeSingleSlash option combined with removeTrailingSlash option (0.053333ms)\n\u2714 removeDirectoryIndex option (0.209541ms)\n\u2714 removeTrailingSlash and removeDirectoryIndex options) (0.088958ms)\n\u2714 sortQueryParameters option (0.118416ms)\n\u2714 invalid urls (0.0805ms)\n\u2714 remove duplicate pathname slashes (0.166875ms)\n\u2714 data URL (0.15925ms)\n\u2714 prevents homograph attack (0.060625ms)\n\u2714 does not have exponential performance for data URLs (0.444875ms)\n\u2714 ignore custom schemes (0.028792ms)\n\u2139 tests 25\n\u2139 suites 0\n\u2139 pass 25\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 72.123667",
+  "verified": true
+ },
+ "mode": "replay"
+}

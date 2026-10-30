@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":245,\"severity\":\"major\",\"message\":\"Removal of decodeURIComponent after searchParams.sort() may cause double-encoded query parameters. The removed code had a comment explaining that '.sort() encodes the search parameters, so we need to decode them again.' This suggests a known engine-specific bug where sort() triggers percent-encoding, requiring a decode/re-encode cycle to normalize. Removing this workaround could reintroduce double-encoding (e.g., '%2520' instead of '%20') in affected JavaScript environments.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2522,
+    "completionTokens": 2395,
+    "costUsd": 0.009707,
+    "latencyMs": 9909
+  }
+}

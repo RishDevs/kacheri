@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"HEAD removes dot-check causing custom protocol with dot to be treated as custom\",\n      \"file\": \"__kacheri__/1.test.mjs\",\n      \"line\": 7,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'assert';\\nimport { normalizeUrl } from '../index.js';\\n\\nconst input = 'custom.protocol:';\\nconst result = normalizeUrl(input);\\nassert.match(result, /:\\\\/\\\\//, 'Expected result to contain \\\\\\\"://\\\\\\\"');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2828,
+    "completionTokens": 4913,
+    "costUsd": 0.0013488,
+    "latencyMs": 29998
+  }
+}

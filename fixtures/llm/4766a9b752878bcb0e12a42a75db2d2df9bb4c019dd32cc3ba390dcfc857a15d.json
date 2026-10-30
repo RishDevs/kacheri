@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removal of try-catch block that decodes the search string after sorting query parameters causes percent-encoded '+' (%2B) to remain encoded instead of being decoded to '+'.\", \"file\": \"index.js\", \"line\": 245, \"severity\": \"major\", \"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict'; import normalizeUrl from '../index.js';\\ntest('decode percent-encoded plus after sorting', async () => {\\n  const input = 'http://example.com?foo=%2B';\\n  const expected = 'http://example.com?foo=+';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2893,
+    "completionTokens": 2006,
+    "costUsd": 0.0026733,
+    "latencyMs": 14141
+  }
+}
