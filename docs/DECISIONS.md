@@ -12,3 +12,4 @@
 - 2026-10-30 User rejected the docket look as AI slop; approved minimal Claude Design mockups (docs/design/*.dc.html). DESIGN.md rewritten to match.
 - 2026-10-30 User asked for an actual courtroom look: canvas revamped to a court filing (pleading paper, caption, exhibits, judgment, order). DESIGN.md rewritten.
 - 2026-10-30 Prosecutor panel changed from Nano x2 to Nano+Super in parallel (+Super escalation), 2 repair rounds: live runs 1-2 showed Nano alone rarely writes runnable proof.
+- 2026-10-30 Bench run 1 (research/bench-run1.md): Court hit 56.8%/0 clean FPs vs Ultra single-pass 78.4%/1 clean FP. Council (grand-jury): add Ultra grand-jury leads, time-boxed, run once, report both runs (run 2 exploratory), disclose matching asymmetry; claim = proof-carrying review, not superior detection.

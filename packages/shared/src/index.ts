@@ -212,7 +212,7 @@ export interface LlmClient {
   chat(req: ChatRequest): Promise<ChatResponse>;
 }
 
-export type CourtRole = 'prosecutor' | 'defense' | 'judge' | 'baseline' | 'remedy';
+export type CourtRole = 'investigator' | 'prosecutor' | 'defense' | 'judge' | 'baseline' | 'remedy';
 
 
 
@@ -272,7 +272,15 @@ export interface CaseRecord {
   endedAt: string | null;
   patch?: string; // unified diff base -> head, for display
   remedy?: Remedy | null;
+  leads?: Lead[]; // grand jury: suspected regressions handed to the prosecutors (unproven)
   mode?: 'live' | 'replay'; // replay = recorded Token Factory responses
+}
+
+// Grand jury lead: an unproven suspicion from a single-pass reviewer. Never shown as a finding.
+export interface Lead {
+  file: string;
+  line: number | null;
+  message: string;
 }
 
 // Remedy: after a conviction Nemotron proposes a fix, and the court re-runs the evidence on head+fix.
