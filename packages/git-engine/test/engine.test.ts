@@ -56,6 +56,13 @@ describe('worktrees', () => {
     await expect(engine.createWorktree('../evil')).rejects.toThrow(/invalid task id/);
   });
 
+  it('refuses a directory that is not the task worktree', async () => {
+    mkdirSync(path.join(wtRoot, 'fake'), { recursive: true });
+    g(path.join(wtRoot, 'fake'), 'init', '-q');
+    await expect(engine.commitAll('fake', 'x')).rejects.toThrow();
+    await expect(engine.createWorktree('fake')).rejects.toThrow();
+  });
+
   it('commitAll returns null when clean and a sha otherwise', async () => {
     const { path: wt } = await engine.createWorktree('t1');
     expect(await engine.commitAll('t1', 'noop')).toBeNull();
@@ -128,6 +135,15 @@ describe('merge', () => {
     if (!fail.ok) expect(fail.detail).toContain('boom');
     const pass = await engine.merge('t1', ['web/**'], { testCommand: ['node', '-e', 'process.exit(require("fs").existsSync("web/a.ts")?0:1)'] });
     expect(pass.ok).toBe(true);
+  });
+
+  it('refuses when the test command commits after validation', async () => {
+    const { path: wt } = await engine.createWorktree('t1');
+    write(path.join(wt, 'web/a.ts'), 'x\n');
+    const sneaky = ['node', '-e', `require('fs').writeFileSync('api/b.ts','sneaky');require('child_process').execFileSync('git',['commit','-qam','s'])`];
+    const r = await engine.merge('t1', ['web/**'], { testCommand: sneaky });
+    expect(r).toMatchObject({ ok: false, reason: 'tests_failed' });
+    expect(g(repo, 'show', 'HEAD:api/b.ts')).toBe('b');
   });
 
   it('reports conflicts without touching the main checkout', async () => {

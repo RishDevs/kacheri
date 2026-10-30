@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import type {
@@ -108,7 +108,12 @@ function parseNumstat(out: string): Map<string, { additions: number; deletions: 
   for (let i = 0; i < parts.length; ) {
     const rec = parts[i++];
     if (!rec) continue;
-    const [a, d, p] = rec.split('\t');
+    // Split on the first two tabs only: the path itself may contain tabs.
+    const t1 = rec.indexOf('\t');
+    const t2 = rec.indexOf('\t', t1 + 1);
+    const a = rec.slice(0, t1);
+    const d = rec.slice(t1 + 1, t2);
+    const p = rec.slice(t2 + 1);
     let file = p;
     if (p === '') {
       i++; // rename: old path, then new path
@@ -137,9 +142,20 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
     return { branch: `kacheri/${taskId}`, wt: path.join(worktreeRoot, taskId) };
   }
 
-  function requireWorktree(taskId: string): { branch: string; wt: string } {
+  // A directory at the expected path is not enough: it must be this repo's worktree on the task branch,
+  // otherwise commitAll could stage and commit some unrelated checkout.
+  async function requireWorktree(taskId: string): Promise<{ branch: string; wt: string }> {
     const loc = locate(taskId);
     if (!existsSync(loc.wt)) throw new Error(`no worktree for task ${taskId}`);
+    const [top, branch, common, rootCommon] = await Promise.all([
+      git(['rev-parse', '--show-toplevel'], loc.wt),
+      git(['rev-parse', '--abbrev-ref', 'HEAD'], loc.wt),
+      git(['rev-parse', '--path-format=absolute', '--git-common-dir'], loc.wt),
+      git(['rev-parse', '--path-format=absolute', '--git-common-dir'], root),
+    ]);
+    if (realpathSync(top.trim()) !== realpathSync(loc.wt)) throw new Error(`${loc.wt} is not a worktree root`);
+    if (realpathSync(common.trim()) !== realpathSync(rootCommon.trim())) throw new Error(`${loc.wt} belongs to another repository`);
+    if (branch.trim() !== loc.branch) throw new Error(`${loc.wt} is on ${branch.trim()}, expected ${loc.branch}`);
     return loc;
   }
 
@@ -161,6 +177,7 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
     async createWorktree(taskId) {
       const { branch, wt } = locate(taskId);
       if (existsSync(wt)) {
+        await requireWorktree(taskId);
         return { branch, path: wt, baseRef: await mergeBase(wt) } satisfies WorktreeInfo;
       }
       const baseRef = (await git(['rev-parse', '--verify', `${baseBranch}^{commit}`])).trim();
@@ -175,7 +192,7 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
     },
 
     async commitAll(taskId, message) {
-      const { wt } = requireWorktree(taskId);
+      const { wt } = await requireWorktree(taskId);
       await git(['add', '-A'], wt);
       const staged = await exec('git', ['diff', '--cached', '--quiet'], wt);
       if (staged.code === 0) return null;
@@ -184,7 +201,7 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
     },
 
     async diff(taskId) {
-      const { wt } = requireWorktree(taskId);
+      const { wt } = await requireWorktree(taskId);
       // Intent-to-add makes untracked files show up in `git diff <base>` without staging their content.
       await git(['add', '-A', '-N'], wt);
       const baseRef = await mergeBase(wt);
@@ -202,13 +219,15 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
     checkOwnership,
 
     async merge(taskId, ownedPaths, mopts: MergeOptions = {}): Promise<MergeResult> {
-      const { branch, wt } = requireWorktree(taskId);
+      const { branch, wt } = await requireWorktree(taskId);
       const message = mopts.message ?? `kacheri: merge ${taskId}`;
       await engine.commitAll(taskId, `kacheri: ${taskId} (uncommitted changes)`);
 
       const d = await engine.diff(taskId);
       if (d.files.length === 0) return { ok: false, reason: 'nothing_to_merge', detail: `${branch} has no changes vs ${baseBranch}` };
 
+      // Everything below validates this exact commit; it is what gets merged, never the moving branch name.
+      const sha = d.headRef;
       const own = checkOwnership(d.files, ownedPaths);
       if (!own.ok) return { ok: false, reason: 'ownership', detail: `outside owned paths: ${own.violations.join(', ')}` };
 
@@ -219,6 +238,8 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
           const out = `${r.stdout}\n${r.stderr}`.trim();
           return { ok: false, reason: 'tests_failed', detail: `${mopts.testCommand.join(' ')} exited ${r.code}\n${out.slice(-4000)}` };
         }
+        const after = (await git(['rev-parse', 'HEAD'], wt)).trim();
+        if (after !== sha) return { ok: false, reason: 'tests_failed', detail: `test command moved ${branch} from ${sha} to ${after}; refusing to merge` };
       }
 
       // The merge happens in the main checkout, so it must be on the base branch with no local edits.
@@ -228,14 +249,14 @@ export function createGitEngine(repoRoot: string, opts: GitEngineOptions = {}): 
       if (status) return { ok: false, reason: 'dirty_base', detail: `${root} has uncommitted changes:\n${status}` };
 
       // Dry run first so a conflict never leaves the main checkout half-merged.
-      const dry = await exec('git', ['merge-tree', '--write-tree', '--name-only', '--no-messages', baseBranch, branch], root);
+      const dry = await exec('git', ['merge-tree', '--write-tree', '--name-only', '--no-messages', baseBranch, sha], root);
       if (dry.code === 1) {
         const conflicted = dry.stdout.split('\n').slice(1).filter(Boolean);
         return { ok: false, reason: 'conflict', detail: `conflicts in: ${conflicted.join(', ')}` };
       }
       if (dry.code !== 0) throw new GitError(['merge-tree'], dry);
 
-      const m = await exec('git', [...(await identityArgs(root)), 'merge', '--no-ff', '--no-edit', '-m', message, branch], root);
+      const m = await exec('git', [...(await identityArgs(root)), 'merge', '--no-ff', '--no-edit', '-m', message, sha], root);
       if (m.code !== 0) {
         await exec('git', ['merge', '--abort'], root);
         return { ok: false, reason: 'conflict', detail: (m.stdout + m.stderr).trim() };

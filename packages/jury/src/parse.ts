@@ -46,8 +46,9 @@ function validate(value: unknown, reviewer: AgentId): Validated {
   const v = value as Record<string, unknown>;
   const status = typeof v.status === 'string' ? v.status.trim().toUpperCase() : '';
   if (status !== 'PASS' && status !== 'FAIL') return { ok: false, error: `status must be PASS or FAIL, got ${JSON.stringify(v.status)}` };
-  if (v.summary !== undefined && v.summary !== null && typeof v.summary !== 'string') return { ok: false, error: 'summary must be a string' };
-  const rawFindings = v.findings ?? [];
+  // summary and findings are required: a bare {"status":"PASS"} is not a review.
+  if (typeof v.summary !== 'string') return { ok: false, error: 'summary must be a string' };
+  const rawFindings = v.findings;
   if (!Array.isArray(rawFindings)) return { ok: false, error: 'findings must be an array' };
 
   const findings: Finding[] = [];
@@ -69,7 +70,7 @@ function validate(value: unknown, reviewer: AgentId): Validated {
 
   // A reviewer cannot pass a change it found a critical problem in.
   const finalStatus = status === 'PASS' && findings.some((f) => f.severity === 'critical') ? 'FAIL' : status;
-  return { ok: true, verdict: { reviewer, status: finalStatus, summary: ((v.summary as string | undefined) ?? '').trim(), findings } };
+  return { ok: true, verdict: { reviewer, status: finalStatus, summary: v.summary.trim(), findings } };
 }
 
 export function parseVerdict(raw: string, reviewer: AgentId): ParseVerdictResult {

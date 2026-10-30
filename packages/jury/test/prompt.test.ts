@@ -14,3 +14,12 @@ describe('buildReviewPrompt', () => {
     expect(p.length).toBeLessThan(160_000);
   });
 });
+
+import { parseVerdict } from '../src/parse';
+describe('parseVerdict required fields', () => {
+  it('rejects a bare status with no summary or findings', () => {
+    expect(parseVerdict('{"status":"PASS"}', 'codex').ok).toBe(false);
+    expect(parseVerdict('{"status":"PASS","summary":"ok","findings":null}', 'codex').ok).toBe(false);
+    expect(parseVerdict('{"status":"PASS","summary":"ok","findings":[]}', 'codex').ok).toBe(true);
+  });
+});
