@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { CaseRecord, Charge } from '@kacheri/shared';
 import {
   afterColon,
   caseNumber,
+  claimText,
   countList,
   defendant,
   dismissal,
@@ -46,16 +47,50 @@ export function useNow(ticking: boolean, intervalMs = 1000): number {
 }
 
 const LINE_NUMBERS = Array.from({ length: 28 }, (_, i) => String(i + 1)).join('\n');
-const PARENS = Array.from({ length: 40 }, () => ')').join('\n');
+// Paragraphs in the parties column; the ")" count until the column has been measured.
+const PARTY_LINES = 5;
 
 function location(charge: Pick<Charge, 'file' | 'line'>): string {
   return charge.line === null ? charge.file : `${charge.file}:${charge.line}`;
 }
 
+// Lines of text that fit a content box; null when there is no layout to measure.
+export function parenLines(contentHeightPx: number, lineHeightPx: number): number | null {
+  if (!(contentHeightPx > 0) || !(lineHeightPx > 0)) return null;
+  return Math.max(1, Math.round(contentHeightPx / lineHeightPx));
+}
+
+// "v." is always a single line, so its height is the caption's line height.
+function measuredLines(parties: HTMLElement): number | null {
+  const paragraphs = parties.querySelectorAll('p');
+  const probe = parties.querySelector('.versus');
+  if (paragraphs.length === 0 || !probe) return null;
+  const top = paragraphs[0].getBoundingClientRect().top;
+  const bottom = paragraphs[paragraphs.length - 1].getBoundingClientRect().bottom;
+  return parenLines(bottom - top, probe.getBoundingClientRect().height);
+}
+
+function useLineCount(ref: RefObject<HTMLElement>, fallback: number): number {
+  const [lines, setLines] = useState(fallback);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setLines(measuredLines(el) ?? fallback);
+    update();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, fallback]);
+  return lines;
+}
+
 function Caption({ record }: { record: CaseRecord }) {
+  const parties = useRef<HTMLDivElement>(null);
+  const lines = useLineCount(parties, PARTY_LINES);
   return (
     <div className="caption" role="group" aria-label="Caption">
-      <div className="caption-parties">
+      <div className="caption-parties" ref={parties}>
         <p>{`${plaintiff(record)},`}</p>
         <p className="party-role">Plaintiff,</p>
         <p className="versus">v.</p>
@@ -63,7 +98,7 @@ function Caption({ record }: { record: CaseRecord }) {
         <p className="party-role">Defendant.</p>
       </div>
       <div className="caption-parens" aria-hidden="true">
-        <span>{PARENS}</span>
+        <span>{Array.from({ length: lines }, () => ')').join('\n')}</span>
       </div>
       <div className="caption-matter">
         <p>
@@ -159,7 +194,7 @@ function Charges({ record }: { record: CaseRecord }) {
           const tone = state === 'convicted' ? 'proven' : state === 'dismissed' ? 'dismissed' : 'pending';
           return (
             <li key={c.id} className={`count count-${tone}`}>
-              <strong>{`Count ${i + 1}.`}</strong> {c.claim}{' '}
+              <strong>{`Count ${i + 1}.`}</strong> {claimText(c)}{' '}
               {state !== 'dismissed' && (
                 <>
                   <span className="loc">{location(c)}</span>{' '}

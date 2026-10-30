@@ -259,7 +259,7 @@ a:hover {
   margin: 0 0 14px 24px;
 }
 
-/* The ")" column fills whatever height the parties take, never more. */
+/* One ")" per line of the parties column (counted in CaseView); clipped so it can never stretch the caption. */
 .caption-parens {
   position: relative;
   overflow: hidden;
@@ -437,12 +437,15 @@ a:hover {
 .counts {
   margin: 0;
   padding: 0 0 0 24px;
+  font-family: var(--doc);
   font-size: 17px;
   line-height: 1.75;
 }
 
 .counts li {
   margin-bottom: 6px;
+  font-family: var(--doc);
+  text-wrap: pretty;
 }
 
 .counts li:last-child {
@@ -453,10 +456,14 @@ a:hover {
   color: var(--ink-3);
 }
 
+/* file:line stays on one line when it fits and breaks inside itself only when it is wider than the column. */
 .loc {
+  display: inline-block;
+  max-width: 100%;
   font-family: var(--tt);
   font-size: 14px;
   color: var(--ink-3);
+  overflow-wrap: anywhere;
 }
 
 .count-status {
@@ -464,6 +471,7 @@ a:hover {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
 .count-proven .count-status {
@@ -500,6 +508,8 @@ a:hover {
 }
 
 .exhibit-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 15px;
   font-style: italic;
   color: var(--ink-3);
@@ -1086,7 +1096,7 @@ a:hover {
   font-size: 12px;
 }
 
-.count {
+.column-count {
   font-family: var(--tt);
   color: var(--ink-3);
 }
@@ -1342,9 +1352,11 @@ details summary {
     flex-basis: 100%;
   }
 
+  /* Wide exhibits and tables scroll inside their own box; the page itself never scrolls sideways. */
   .sheet-wrap {
     margin-top: 20px;
     padding: 0 12px;
+    overflow-x: clip;
   }
 
   .filing {

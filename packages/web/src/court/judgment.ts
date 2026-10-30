@@ -116,6 +116,31 @@ export function afterColon(text: string): string {
   return /^(?!I\b)[A-Z][a-z]+\b/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;
 }
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// The count shows file:line on its own, so the claim drops the prosecutor's mentions of the charged file.
+export function claimText(charge: Pick<Charge, 'claim' | 'file'>): string {
+  const claim = charge.claim.trim().replace(/\s+/g, ' ');
+  const base = charge.file.replace(/\\/g, '/').split('/').filter(Boolean).pop();
+  if (!base) return claim;
+  const at = `(?:(?:in|at|see|from)\\s+)?`;
+  const path =
+    '`?(?:\\.?/)?(?:[\\w.@-]+/)*' +
+    escapeRe(base) +
+    '(?::\\d+(?:[:-]\\d+)?)?`?(?:,?\\s+(?:on\\s+)?lines?\\s+\\d+(?:\\s*[-–]\\s*\\d+)?)?(?![\\w/])';
+  const body = claim.replace(new RegExp(`\\s*[([]\\s*${at}${path}\\s*[)\\]]`, 'gi'), '');
+  const lead = new RegExp(`^${at}${path}\\s*[:,—–-]?\\s*`, 'i');
+  const leading = lead.test(body);
+  const out = body
+    .replace(lead, '')
+    .replace(new RegExp(`[\\s,]+${at}${path}(?=\\s*(?:[.;!?]|$))`, 'gi'), '')
+    .replace(new RegExp(`\\s+(?:in|at)\\s+${path}`, 'gi'), '')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .trim();
+  if (!out) return claim;
+  return leading && /^[a-z]+\b/.test(out) ? out[0].toUpperCase() + out.slice(1) : out;
+}
+
 export type EvidenceFault = 'passes-on-head' | 'fails-on-base' | 'broken' | 'timeout' | 'flaky' | 'lint' | 'sandbox';
 export type DismissalKind = EvidenceFault | 'unheard' | 'judge';
 
