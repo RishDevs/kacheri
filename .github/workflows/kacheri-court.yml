@@ -1,0 +1,27 @@
+name: Kacheri Court
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: kacheri-court-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  court:
+    # Fork PRs have no API secret or write token. Never expose secrets via pull_request_target.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          nebius-api-key: ${{ secrets.NEBIUS_API_KEY }}
