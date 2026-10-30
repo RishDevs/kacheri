@@ -11,6 +11,6 @@ import { parseVerdict, buildReviewPrompt } from '@kacheri/jury';
 import { createServer, createStore, createAdapters } from './index.js';
 const repoRoot = resolve(process.env.KACHERI_REPO_ROOT ?? process.cwd());
 const store = createStore(process.env.KACHERI_DB_PATH ?? resolve(repoRoot, 'kacheri.sqlite'));
-const server = createServer({ engine: createGitEngine(repoRoot), store, adapters: createAdapters(), repoRoot, parseVerdict, buildReviewPrompt, runCase, llm: createClientFromEnv() });
+const server = createServer({ engine: createGitEngine(repoRoot), store, adapters: createAdapters(), repoRoot, parseVerdict, buildReviewPrompt, runCase: (input, o) => runCase({ ...input, ...o }), llm: createClientFromEnv() });
 for (const signal of ['SIGINT', 'SIGTERM'] as const) process.once(signal, () => { void server.close().then(() => store.close()); });
 await server.listen({ host: '127.0.0.1', port: 4317 });

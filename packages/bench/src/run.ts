@@ -10,8 +10,11 @@ async function main() {
   const items = JSON.parse(readFileSync(join(benchRoot, 'fixtures/survivors.json'), 'utf8')) as FixtureItem[];
   const llm = createClientFromEnv();
   const results = await runBenchmark(items.slice(0,n), systems, {
-    court: input => runCase(input, {llm}),
-    baseline: input => runBaseline(input, {llm}),
+    court: input => runCase({ ...input, llm }),
+    baseline: async input => {
+      const r = await runBaseline({ ...input, llm });
+      return { usage: r.usage, findings: r.findings.map(f => ({ ...f, suggestion: null })) };
+    },
   });
   console.log(writeResults(results));
 }
