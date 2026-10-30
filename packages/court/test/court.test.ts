@@ -121,7 +121,8 @@ describe('runCase', () => {
     // Only one defense and one judge call: models are not consulted on inadmissible charges.
     expect(llm.calls.filter((c) => c.role === 'defense')).toHaveLength(1);
     expect(llm.calls.filter((c) => c.role === 'judge').map((c) => c.tier)).toEqual(['ultra']);
-    expect(llm.calls.filter((c) => c.role === 'prosecutor').every((c) => c.tier === 'nano')).toBe(true);
+    const filings = llm.calls.filter((c) => c.role === 'prosecutor' && c.messages[0].content.startsWith('You are the prosecutor'));
+    expect(filings.map((c) => c.tier).sort()).toEqual(['nano', 'super']);
     expect(events.some((e) => e.type === 'ruling')).toBe(true);
     expect(renderVerdict(r)).toContain('GUILTY on 1 charge');
     // Throwaway checkouts are cleaned up and the user's repo is untouched.
@@ -164,8 +165,8 @@ describe('runCase', () => {
     const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm });
     expect(r.status).toBe('closed');
     expect(r.charges).toHaveLength(0);
-    // 2 Nano prosecutors x (call + JSON retry), then one Super escalation x (call + retry) because nothing was proven.
-    expect(llm.calls.filter((c) => c.role === 'prosecutor').map((c) => c.tier)).toEqual(['nano', 'nano', 'nano', 'nano', 'super', 'super']);
+    // Panel (Nano + Super) x (call + JSON retry), then one Super escalation x (call + retry) because nothing was proven.
+    expect(llm.calls.filter((c) => c.role === 'prosecutor').map((c) => c.tier).sort()).toEqual(['nano', 'nano', 'super', 'super', 'super', 'super']);
   });
 
   it('records a case error for a bad ref instead of throwing', async () => {

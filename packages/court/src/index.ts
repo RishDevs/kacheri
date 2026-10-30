@@ -40,7 +40,6 @@ export interface CaseOptions {
 }
 
 const SEVERITIES: Severity[] = ['critical', 'major', 'minor'];
-const PROSECUTOR_TEMPS = [0.2, 0.7, 1.0];
 
 async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -162,7 +161,7 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
         return added;
       };
       const prosecute = (tier: 'nano' | 'super', temperature: number) =>
-        callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature, maxTokens: 8000, messages: prosecutorMessages(ctx, opts.maxCharges ?? 4) }, onUsage).then(toCharges, () => []);
+        callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature, maxTokens: 16000, messages: prosecutorMessages(ctx, opts.maxCharges ?? 4) }, onUsage).then(toCharges, () => []);
 
       // 2. Trial. Sequential on purpose: concurrent witnesses could share ports or temp files and fake a head-only failure.
       const tryCharges = async (charges: Charge[], tier: 'nano' | 'super') => {
@@ -171,10 +170,10 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
           let b = lint ? null : await runWitness(baseWt.path, charge, opts.witness);
           // Passing on base is a precondition, not evidence: one repair round may fix a witness that cannot even
           // run on the original code. The head run below is still the first and only test of the accusation.
-          if (lint || (b && !b.outcomes.every((o) => o === 'pass'))) {
+          for (let round = 0; round < 2 && (lint || (b && !b.outcomes.every((o) => o === 'pass'))); round++) {
             const problem = lint ? `It was rejected before running: it ${lint}.` : `On the BASE commit it did not pass:\n${b!.lastOutput.slice(-2500)}`;
             try {
-              const fixed = (await callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature: 0.2, maxTokens: 6000, messages: repairMessages(ctx, charge, problem) }, onUsage)) as { witnessCode?: unknown };
+              const fixed = (await callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature: 0.2, maxTokens: 12000, messages: repairMessages(ctx, charge, problem) }, onUsage)) as { witnessCode?: unknown };
               if (typeof fixed.witnessCode === 'string' && fixed.witnessCode.trim()) {
                 charge.witnessCode = fixed.witnessCode;
                 charge.revised = true;
@@ -183,7 +182,7 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
                 b = lint ? null : await runWitness(baseWt.path, charge, opts.witness);
               }
             } catch {
-              // keep the original witness and its outcome
+              break; // keep the current witness and its outcome
             }
           }
           let ev: Evidence;
@@ -200,14 +199,15 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
         }
       };
 
-      // 1. Filing: independent Nano prosecutors; one Super prosecutor only if Nano proves nothing.
-      const n = Math.max(1, Math.min(opts.prosecutors ?? 2, PROSECUTOR_TEMPS.length));
-      const nano = file((await Promise.all(PROSECUTOR_TEMPS.slice(0, n).map((t) => prosecute('nano', t)))).flat());
+      // 1. Filing: a panel of independent prosecutors (Nano first, then Super), filed in parallel.
+      // Live runs showed Nano alone rarely writes runnable proof; a second, stronger model raises the hit rate cheaply.
+      const panel: ['nano' | 'super', number][] = ([['nano', 0.2], ['super', 0.3], ['nano', 0.7]] as ['nano' | 'super', number][]).slice(0, Math.max(1, Math.min(opts.prosecutors ?? 2, 3)));
+      const filed = await Promise.all(panel.map(([tier, t]) => prosecute(tier, t).then((cs) => ({ tier, charges: file(cs) }))));
       setStatus('trial');
-      await tryCharges(nano, 'nano');
+      for (const f of filed) await tryCharges(f.charges, f.tier);
       if (opts.escalate !== false && !record.evidence.some((e) => e.admissible)) {
         setStatus('filing');
-        const sup = file(await prosecute('super', 0.3));
+        const sup = file(await prosecute('super', 0.8));
         setStatus('trial');
         await tryCharges(sup, 'super');
       }
