@@ -14,9 +14,9 @@ import type {
 import { checkout, git, resolveRef } from './git';
 import { extractJson } from './json';
 import { baselineMessages, type CaseContext, defenseMessages, judgeMessages, prosecutorMessages } from './prompts';
-import { judgeAdmissibility, runWitness, type WitnessOptions, witnessPathFor } from './witness';
+import { judgeAdmissibility, lintWitness, runWitness, type WitnessOptions, witnessPathFor } from './witness';
 
-export { classify, judgeAdmissibility, runWitness, witnessPathFor, DEFAULT_WITNESS_COMMAND } from './witness';
+export { classify, judgeAdmissibility, lintWitness, runWitness, witnessPathFor, DEFAULT_WITNESS_COMMAND } from './witness';
 export { extractJson } from './json';
 export { renderVerdict } from './render';
 
@@ -157,12 +157,21 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
     if (record.charges.length) {
       const [baseWt, headWt] = await Promise.all([checkout(repo, base), checkout(repo, head)]);
       try {
-        await mapLimit(record.charges, 3, async (charge) => {
-          const [b, h] = await Promise.all([runWitness(baseWt.path, charge, opts.witness), runWitness(headWt.path, charge, opts.witness)]);
+        // Sequential on purpose: concurrent witnesses could share ports or temp files and fake a head-only failure.
+        for (const charge of record.charges) {
+          const lint = lintWitness(charge.witnessCode);
+          if (lint) {
+            const ev: Evidence = { chargeId: charge.id, base: [], head: [], admissible: false, reason: `witness rejected before running: ${lint}`, headLog: '' };
+            record.evidence.push(ev);
+            emit({ type: 'evidence', caseId: record.id, evidence: ev });
+            continue;
+          }
+          const b = await runWitness(baseWt.path, charge, opts.witness);
+          const h = await runWitness(headWt.path, charge, opts.witness);
           const ev = judgeAdmissibility(charge.id, b.outcomes, h.outcomes, h.lastOutput);
           record.evidence.push(ev);
           emit({ type: 'evidence', caseId: record.id, evidence: ev });
-        });
+        }
       } finally {
         await Promise.all([baseWt.dispose(), headWt.dispose()]);
       }
@@ -195,11 +204,13 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
     if (admitted.length) {
       const items = admitted.map((evidence) => ({ charge: byId.get(evidence.chargeId)!, evidence, rebuttal: record.rebuttals.find((r) => r.chargeId === evidence.chargeId) ?? null }));
       let rulings: unknown[] = [];
-      try {
-        const v = (await callJson(opts.llm, { tier: 'ultra', role: 'judge', reasoning: true, temperature: 0.1, maxTokens: 6000, messages: judgeMessages(ctx, items) }, onUsage)) as { rulings?: unknown };
-        if (Array.isArray(v.rulings)) rulings = v.rulings;
-      } catch {
-        // Fall through: every admitted charge gets the default below.
+      for (let attempt = 0; attempt < 2 && !rulings.length; attempt++) {
+        try {
+          const v = (await callJson(opts.llm, { tier: 'ultra', role: 'judge', reasoning: true, temperature: 0.1, maxTokens: 6000, messages: judgeMessages(ctx, items) }, onUsage)) as { rulings?: unknown };
+          if (Array.isArray(v.rulings)) rulings = v.rulings;
+        } catch {
+          // Retry once; after that every admitted charge gets the default below.
+        }
       }
       for (const { charge, rebuttal } of items) {
         const raw = rulings.find((x) => (x as { chargeId?: unknown })?.chargeId === charge.id) as Record<string, unknown> | undefined;
@@ -210,7 +221,7 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
           // The evidence already proves a regression; without a ruling, conviction requires the defense to concede.
           r = rebuttal?.concedes
             ? { chargeId: charge.id, decision: 'convicted', reason: 'No ruling returned; the defense conceded the evidence.' }
-            : { chargeId: charge.id, decision: 'dismissed', reason: 'No ruling returned; dismissed without a conviction.' };
+            : { chargeId: charge.id, decision: 'dismissed', reason: 'The judge was unavailable; admissible evidence stands but no conviction was entered. Re-run the case.' };
         }
         record.rulings.push(r);
         emit({ type: 'ruling', caseId: record.id, ruling: r });

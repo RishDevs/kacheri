@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ChatRequest, ChatResponse, CourtEvent, LlmClient } from '@kacheri/shared';
-import { classify, judgeAdmissibility, renderVerdict, runBaseline, runCase } from '../src/index';
+import { classify, judgeAdmissibility, lintWitness, renderVerdict, runBaseline, runCase } from '../src/index';
 
 const g = (cwd: string, ...a: string[]) => execFileSync('git', a, { cwd, encoding: 'utf8' }).trim();
 const w = (p: string, s: string) => (mkdirSync(path.dirname(p), { recursive: true }), writeFileSync(p, s));
@@ -65,6 +65,22 @@ describe('classification', () => {
   });
 });
 
+describe('witness lint', () => {
+  it('rejects witnesses that inspect source, env, time or the system instead of behaviour', () => {
+    expect(lintWitness("import fs from 'node:fs';\nimport { clamp } from '../src/clamp.js';")).toMatch(/system module/);
+    expect(lintWitness("import { clamp } from '../src/clamp.js';\nassert.ok(clamp.toString().includes('>='))")).toMatch(/function source/);
+    expect(lintWitness("import { clamp } from '../src/clamp.js';\nprocess.env.NEBIUS_API_KEY")).toMatch(/process state/);
+    expect(lintWitness("import { clamp } from '../src/clamp.js';\nDate.now()")).toMatch(/time/);
+    expect(lintWitness("import assert from 'node:assert/strict';")).toMatch(/does not import/);
+    expect(lintWitness(witness('assert.equal(clamp(1, 0, 2), 1);'))).toBeNull();
+  });
+  it('treats base-pass + head-crash as a breaking change, but not a sandbox violation', () => {
+    expect(judgeAdmissibility('c1', ['pass', 'pass', 'pass'], ['error'], 'SyntaxError: does not provide an export named clamp').admissible).toBe(true);
+    expect(judgeAdmissibility('c1', ['pass', 'pass', 'pass'], ['error'], 'ERR_ACCESS_DENIED').admissible).toBe(false);
+    expect(judgeAdmissibility('c1', ['error'], ['error'], '').reason).toMatch(/errors on base/);
+  });
+});
+
 describe('runCase', () => {
   it('convicts only on admissible evidence and never shows inadmissible charges to the judge', async () => {
     const llm = fakeLlm({
@@ -119,6 +135,10 @@ describe('runCase', () => {
     const llm = fakeLlm({ prosecutor: () => JSON.stringify({ charges: [{ claim: 'x', file: 'src/clamp.js', line: 1, severity: 'critical', witnessCode: escape }] }) });
     const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1 });
     expect(r.evidence[0].admissible).toBe(false);
+    expect(r.evidence[0].reason).toMatch(/rejected before running/);
+    // Even if the lint were bypassed (custom command, no lint), the sandbox itself denies the spawn.
+    const raw = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', prosecutors: 1, llm: fakeLlm({ prosecutor: () => JSON.stringify({ charges: [{ claim: 'x', file: 'src/clamp.js', line: 1, severity: 'critical', witnessCode: "import { clamp } from '../src/clamp.js';\nconst cp = await import('node:child_process');\ncp.execSync('touch " + path.join(dir, 'pwned') + "');" }] }) }) });
+    expect(raw.evidence[0].admissible).toBe(false);
     expect(r.rulings[0].decision).toBe('dismissed');
     expect(readdirSync(dir)).not.toContain('pwned');
   });

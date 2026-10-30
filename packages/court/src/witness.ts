@@ -21,16 +21,28 @@ export function witnessPathFor(charge: Pick<Charge, 'id'>): string {
   return `${WITNESS_DIR}/${charge.id.replace(/[^A-Za-z0-9_-]/g, '_')}.test.mjs`;
 }
 
-// Signs that the witness itself is broken rather than that it caught a bug.
-const BROKEN = [
-  /SyntaxError/,
-  /ERR_MODULE_NOT_FOUND/,
-  /Cannot find module/,
-  /does not provide an export named/,
-  /ReferenceError: \w+ is not defined/,
-  /ERR_ACCESS_DENIED/,
-  /^# tests 0$/m,
+// A witness must exercise behaviour through the code's API. These would let it "prove" a bug by
+// inspecting source text, the environment or the clock instead, so such witnesses are inadmissible.
+const FORBIDDEN: [RegExp, string][] = [
+  [/\b(?:node:)?(?:fs|fs\/promises|child_process|net|http|https|dgram|worker_threads|vm|module|os|process)['"]/, 'imports a system module'],
+  [/\brequire\s*\(/, 'uses require()'],
+  [/\bimport\s*\(/, 'uses dynamic import()'],
+  [/\bprocess\s*\.\s*(?:env|argv|version|versions|cwd|platform|binding|hrtime)\b/, 'reads process state'],
+  [/\bimport\.meta\b|__dirname|__filename/, 'inspects file locations'],
+  [/\bDate\.now\b|\bnew Date\(\s*\)|Math\.random|performance\.now|setTimeout|setInterval/, 'depends on time or randomness'],
+  [/\bfetch\s*\(|\bWebSocket\b|\beval\s*\(|\bFunction\s*\(/, 'uses network or eval'],
+  [/\.toString\s*\(\s*\)\s*\.(?:includes|match|indexOf|search)|\.source\b/, 'inspects function source'],
 ];
+
+export function lintWitness(code: string): string | null {
+  for (const [re, why] of FORBIDDEN) if (re.test(code)) return why;
+  if (!/from\s+['"]\.\.?\//.test(code)) return 'does not import the code under test';
+  return null;
+}
+
+// Signs that the witness itself is broken rather than that it caught a bug. On the head side only the
+// sandbox denial counts: a missing export or ReferenceError there can be the regression itself.
+const BROKEN = [/SyntaxError/, /ERR_MODULE_NOT_FOUND/, /Cannot find module/, /does not provide an export named/, /ReferenceError: \w+ is not defined/, /ERR_ACCESS_DENIED/, /ERR_CHILD_PROCESS_STDIO_MAXBUFFER/, /^# tests 0$/m];
 
 export function classify(code: number | null, timedOut: boolean, output: string): WitnessOutcome {
   if (timedOut) return 'timeout';
@@ -38,11 +50,14 @@ export function classify(code: number | null, timedOut: boolean, output: string)
   return BROKEN.some((re) => re.test(output)) ? 'error' : 'fail';
 }
 
+const SANDBOX_DENIED = /ERR_ACCESS_DENIED|ERR_CHILD_PROCESS_STDIO_MAXBUFFER/;
+
 function runOnce(cmd: string[], cwd: string, timeoutMs: number): Promise<{ outcome: WitnessOutcome; output: string }> {
   return new Promise((resolve) => {
     const [bin, ...args] = cmd;
-    execFile(bin, args, { cwd, timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, NODE_OPTIONS: '' } }, (err, stdout, stderr) => {
-      const output = `${stdout}\n${stderr}`;
+    // Minimal environment: the witness must not see API keys or anything else from the parent.
+    execFile(bin, args, { cwd, timeout: timeoutMs, maxBuffer: 2 * 1024 * 1024, env: { PATH: process.env.PATH ?? '/usr/bin:/bin', NODE_OPTIONS: '' } }, (err, stdout, stderr) => {
+      const output = `${stdout}\n${stderr}${err && (err as { code?: unknown }).code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' ? '\nERR_CHILD_PROCESS_STDIO_MAXBUFFER' : ''}`;
       const timedOut = Boolean(err && (err as NodeJS.ErrnoException & { killed?: boolean }).killed);
       const code = err ? (typeof (err as { code?: unknown }).code === 'number' ? (err as { code: number }).code : 1) : 0;
       resolve({ outcome: classify(code, timedOut, output), output });
@@ -78,7 +93,14 @@ export function judgeAdmissibility(chargeId: string, base: WitnessOutcome[], hea
   const n = (xs: WitnessOutcome[], o: WitnessOutcome) => xs.filter((x) => x === o).length;
   let admissible = false;
   let reason: string;
-  if (base.includes('error') || head.includes('error')) reason = `witness is broken (${base.includes('error') ? 'base' : 'head'} run errored)`;
+  const basePasses = base.length > 0 && n(base, 'pass') === base.length;
+  if (base.includes('error')) reason = 'witness is broken (errors on base)';
+  else if (head.includes('error') && SANDBOX_DENIED.test(headLog)) reason = 'witness violated the sandbox on head';
+  else if (basePasses && head.length > 0 && n(head, 'error') === head.length) {
+    // Works on base, cannot even load on head: e.g. a removed export. That is a breaking change.
+    admissible = true;
+    reason = 'passes on base, crashes on head (breaking change)';
+  } else if (head.includes('error')) reason = 'witness is broken (errors on head)';
   else if (base.includes('timeout') || head.includes('timeout')) reason = 'witness timed out';
   else if (n(head, 'fail') === head.length && n(base, 'pass') === base.length) {
     admissible = true;
