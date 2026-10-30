@@ -35,6 +35,8 @@ export function applyToRecord(record: CaseRecord, event: CourtEvent): CaseRecord
       return { ...record, rulings: upsert(record.rulings, event.ruling, (r) => r.chargeId) };
     case 'usage':
       return { ...record, usage: [...record.usage, event.usage] };
+    case 'remedy':
+      return { ...record, remedy: event.remedy };
   }
 }
 
