@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { CaseRecord, CourtEvent, Evidence } from '@kacheri/shared';
@@ -7,7 +9,7 @@ import { parseBench, type BenchData } from '../src/court/bench';
 import { applyCommand } from '../src/court/repro';
 import type { CourtHandlers, CourtSource } from '../src/court/source';
 import { BenchPage } from '../src/components/court/BenchPage';
-import { CaseView } from '../src/components/court/CaseView';
+import { CaseView, parenLines } from '../src/components/court/CaseView';
 import { CourtPage } from '../src/components/court/CourtPage';
 import { Root, parseRoute, routeHash } from '../src/Root';
 import { makeCase, makeCharge, makeEvidence, makeRemedy, makeUsage, readDemo } from './court-fixtures';
@@ -65,6 +67,38 @@ function mockClipboard() {
 afterEach(() => {
   delete (navigator as { clipboard?: unknown }).clipboard;
 });
+
+function styleRules(): CSSStyleRule[] {
+  const out: CSSStyleRule[] = [];
+  const walk = (rules: CSSRuleList) => {
+    for (const rule of Array.from(rules)) {
+      if ('selectorText' in rule) out.push(rule as CSSStyleRule);
+      else if ('cssRules' in rule) walk((rule as CSSGroupingRule).cssRules);
+    }
+  };
+  for (const sheet of Array.from(document.styleSheets)) walk(sheet.cssRules);
+  return out;
+}
+
+// font-family values of every stylesheet rule that matches the element, media queries included.
+function declaredFonts(el: Element, rules: readonly CSSStyleRule[]): string[] {
+  const matches = (selector: string) => {
+    if (selector.includes('::')) return false;
+    try {
+      return el.matches(selector);
+    } catch {
+      return false;
+    }
+  };
+  return rules
+    .filter((r) => r.style.getPropertyValue('font-family') && r.selectorText.split(',').some((s) => matches(s.trim())))
+    .map((r) => r.style.getPropertyValue('font-family').trim());
+}
+
+function parens(): string[] {
+  const caption = screen.getByRole('group', { name: 'Caption' });
+  return (caption.querySelector('.caption-parens')?.textContent ?? '').split('\n');
+}
 
 describe('CourtPage (live)', () => {
   it('fills the judgment in as events arrive, with the current stage in plain words', async () => {
@@ -354,6 +388,57 @@ describe('CaseView', () => {
     expect(within(caption).getByText('v.')).toBeTruthy();
     expect(within(caption).getByText('KC-2026-CASE1')).toBeTruthy();
     expect(screen.getByText('sitting in review of tinysemver')).toBeTruthy();
+  });
+
+  it('draws one ")" per line of the parties column, not a fixed run of them', () => {
+    render(<CaseView record={makeCase(closed)} />);
+    const caption = screen.getByRole('group', { name: 'Caption' });
+    expect(parens().every((p) => p === ')')).toBe(true);
+    expect(parens()).toHaveLength(caption.querySelectorAll('.caption-parties p').length);
+  });
+
+  it('sizes the ")" column to the measured height of the parties column', () => {
+    const line = 25.5;
+    const box = (top: number, height: number) =>
+      ({ top, bottom: top + height, height, left: 0, right: 0, width: 0, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+    // Plaintiff and defendant wrap to two lines each; two 14px gaps: 7 lines of text plus 28px.
+    const columnHeight = 7 * line + 28;
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (this.textContent === 'THE MAINTAINERS OF REPO,') return box(100, 2 * line);
+      if (this.classList.contains('versus')) return box(0, line);
+      if (this.textContent === 'Defendant.') return box(100 + columnHeight - line, line);
+      return box(0, 0);
+    });
+    try {
+      render(<CaseView record={makeCase(closed)} />);
+      expect(parens()).toHaveLength(8);
+    } finally {
+      rect.mockRestore();
+    }
+    expect(parenLines(7 * line, line)).toBe(7);
+    expect(parenLines(0, line)).toBeNull();
+    expect(parenLines(100, 0)).toBeNull();
+  });
+
+  it('sets the count text in Libre Caslon Text and only file:line in Courier', () => {
+    const sheet = document.createElement('style');
+    sheet.textContent = readFileSync(join(__dirname, '..', 'src', 'styles.css'), 'utf8');
+    document.head.appendChild(sheet);
+    try {
+      render(<CaseView record={makeCase({ status: 'trial', charges: [makeCharge('c1', { line: 7 })] })} />);
+      const rules = styleRules();
+      const item = countItem(1);
+      expect(declaredFonts(item, rules)).toContain('var(--doc)');
+      for (let el: Element | null = item; el; el = el.parentElement) {
+        for (const font of declaredFonts(el, rules)) expect(font).toBe('var(--doc)');
+      }
+      expect(declaredFonts(item.querySelector('strong')!, rules)).toEqual([]);
+      expect(declaredFonts(item.querySelector('.loc')!, rules)).toEqual(['var(--tt)']);
+      expect(declaredFonts(within(item).getByText('PENDING'), rules)).toEqual(['var(--ui)']);
+      expect(sheet.textContent).toMatch(/--doc:\s*'Libre Caslon Text'/);
+    } finally {
+      sheet.remove();
+    }
   });
 
   it('labels each count PROVEN, DISMISSED or PENDING and shows locations only for live counts', () => {

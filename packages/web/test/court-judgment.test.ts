@@ -4,6 +4,7 @@ import {
   afterColon,
   caseNumber,
   chargedExcerpt,
+  claimText,
   countList,
   defendant,
   dismissal,
@@ -40,6 +41,23 @@ describe('caption and wording helpers', () => {
     expect(defendant({ headRef: 'feature-branch', title: ' Add range support ' })).toBe(
       'PULL REQUEST feature-branch, “Add range support,”',
     );
+  });
+
+  it('keeps a count to its claim, without repeating the charged file', () => {
+    const claim = (text: string, file = 'src/index.js') => claimText({ claim: text, file });
+    const plain = 'Hostnames with a port lose their protocol.';
+    expect(claim(plain)).toBe(plain);
+    expect(claim('In src/index.js:17, hostnames with a port lose their protocol.')).toBe(plain);
+    expect(claim('`index.js:17`: hostnames with a port lose their protocol.')).toBe(plain);
+    expect(claim('Hostnames with a port lose their protocol (src/index.js:17).')).toBe(plain);
+    expect(claim('Hostnames with a port lose their protocol in index.js, line 17.')).toBe(plain);
+    expect(claim('The check at src/index.js:17 drops the protocol for hosts with a port.')).toBe(
+      'The check drops the protocol for hosts with a port.',
+    );
+    expect(claim('  Hostnames   with a port\nlose their protocol. ')).toBe(plain);
+    expect(claim('src/index.js:17')).toBe('src/index.js:17');
+    expect(claim('claim c1', 'src/a.js')).toBe('claim c1');
+    expect(claim('lib/other.js breaks too', 'src/index.js')).toBe('lib/other.js breaks too');
   });
 
   it('lists counts and exhibits the way a court writes them', () => {

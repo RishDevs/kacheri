@@ -61,6 +61,11 @@ async function fetchJsonAsset(doFetch: typeof fetch, url: string): Promise<unkno
   }
 }
 
+// Real runner output is published as bench/latest.json; the flagged sample is only the fallback.
+function benchUrls(assetBase: string): string[] {
+  return [`${assetBase}bench/latest.json`, `${assetBase}demo/bench.json`];
+}
+
 async function loadBenchFrom(doFetch: typeof fetch, urls: string[]): Promise<BenchData | null> {
   for (const url of urls) {
     const json = await fetchJsonAsset(doFetch, url);
@@ -101,8 +106,7 @@ export function createLiveCourtSource(opts: LiveSourceOptions = {}): CourtSource
       };
       return { close: () => source.close() };
     },
-    // Real results are published as bench/latest.json; the flagged sample is the fallback.
-    loadBench: () => loadBenchFrom(doFetch, [`${assets}bench/latest.json`, `${assets}demo/bench.json`]),
+    loadBench: () => loadBenchFrom(doFetch, benchUrls(assets)),
   };
 }
 
@@ -196,6 +200,6 @@ export function createDemoCourtSource(opts: DemoSourceOptions): CourtSource {
         if (record && !finished) emit({ type: 'case', record });
       };
     },
-    loadBench: () => loadBenchFrom(doFetch, [`${opts.assetBase}demo/bench.json`]),
+    loadBench: () => loadBenchFrom(doFetch, benchUrls(opts.assetBase)),
   };
 }

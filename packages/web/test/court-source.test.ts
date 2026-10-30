@@ -157,10 +157,35 @@ describe('createDemoCourtSource', () => {
     expect(events).toHaveLength(2);
   });
 
-  it('serves the demo bench file', async () => {
-    const fetch = vi.fn(async () => jsonResponse({ sample: true, label: 'SAMPLE', results: [] }));
+  it('serves the demo bench file when no real results are published', async () => {
+    const fetch = vi.fn(async (url: string) =>
+      url.endsWith('bench/latest.json')
+        ? jsonResponse({ error: 'missing' }, 404)
+        : jsonResponse({ sample: true, label: 'SAMPLE', results: [] }),
+    );
     const src = createDemoCourtSource({ assetBase: '/', files: [], fetch: fetch as unknown as typeof globalThis.fetch });
-    expect((await src.loadBench())?.label).toBe('SAMPLE');
-    expect(fetch.mock.calls[0]).toEqual(['/demo/bench.json', expect.anything()]);
+    const bench = await src.loadBench();
+    expect(bench?.label).toBe('SAMPLE');
+    expect(bench?.sample).toBe(true);
+    expect(fetch.mock.calls.map((c) => c[0])).toEqual(['/bench/latest.json', '/demo/bench.json']);
+  });
+
+  it('prefers the runner output in bench/latest.json and does not mark it as a sample', async () => {
+    const result = { itemId: 'm1', system: 'court', kind: 'mutant', hit: true, findings: 1, convicted: 1, falsePositives: 0, costUsd: 0.01, latencyMs: 900 };
+    const fetch = vi.fn(async (url: string) =>
+      url.endsWith('bench/latest.json')
+        ? jsonResponse({ results: [result], summary: '| System | ... |' })
+        : jsonResponse({ sample: true, results: [] }),
+    );
+    const src = createDemoCourtSource({ assetBase: '/k/', files: [], fetch: fetch as unknown as typeof globalThis.fetch });
+    const bench = await src.loadBench();
+    expect(bench?.sample).toBe(false);
+    expect(bench?.results).toHaveLength(1);
+    expect(fetch.mock.calls.map((c) => c[0])).toEqual(['/k/bench/latest.json']);
+
+    const bare = vi.fn(async () => jsonResponse([result]));
+    const fromArray = await createDemoCourtSource({ assetBase: '/', files: [], fetch: bare as unknown as typeof globalThis.fetch }).loadBench();
+    expect(fromArray?.sample).toBe(false);
+    expect(fromArray?.results[0].itemId).toBe('m1');
   });
 });

@@ -64,7 +64,8 @@ function checkItem(v: unknown): BenchItemInfo | null {
   };
 }
 
-// Accepts a bare BenchResult[] or an object `{ sample?, label?, generatedAt?, items?, results }`.
+// Accepts a bare BenchResult[] or an object `{ sample?, label?, generatedAt?, items?, summary?, results }`.
+// Only an explicit `sample: true` marks the data as a sample; the runner's summary is recomputed, not read.
 export function parseBench(json: unknown): BenchData {
   if (Array.isArray(json)) {
     return { sample: false, label: null, generatedAt: null, results: json.map(checkResult), items: [] };
@@ -73,10 +74,11 @@ export function parseBench(json: unknown): BenchData {
     throw new Error('bench JSON must be an array of BenchResult or an object with a "results" array');
   }
   const items = Array.isArray(json.items) ? json.items.map(checkItem).filter((x): x is BenchItemInfo => x !== null) : [];
+  const generatedAt = json.generatedAt ?? json.timestamp;
   return {
     sample: json.sample === true,
     label: typeof json.label === 'string' ? json.label : null,
-    generatedAt: typeof json.generatedAt === 'string' ? json.generatedAt : null,
+    generatedAt: typeof generatedAt === 'string' ? generatedAt : null,
     results: json.results.map(checkResult),
     items,
   };

@@ -42,7 +42,7 @@ export function Board({ tasks, selectedId, onSelect }: BoardProps) {
       {STATUS_ORDER.map((status) => (
         <section key={status} className={`column status-${status}`} role="listitem" aria-label={STATUS_LABEL[status]}>
           <h3 className="column-title">
-            {STATUS_LABEL[status]} <span className="count">{groups[status].length}</span>
+            {STATUS_LABEL[status]} <span className="column-count">{groups[status].length}</span>
           </h3>
           <ul className="cards">
             {groups[status].map((task) => (
