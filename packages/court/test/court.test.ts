@@ -121,13 +121,30 @@ describe('runCase', () => {
     // Only one defense and one judge call: models are not consulted on inadmissible charges.
     expect(llm.calls.filter((c) => c.role === 'defense')).toHaveLength(1);
     expect(llm.calls.filter((c) => c.role === 'judge').map((c) => c.tier)).toEqual(['ultra']);
-    expect(llm.calls.filter((c) => c.role === 'prosecutor').every((c) => c.tier === 'nano')).toBe(true);
+    const filings = llm.calls.filter((c) => c.role === 'prosecutor' && c.messages[0].content.startsWith('You are the prosecutor'));
+    expect(filings.map((c) => c.tier).sort()).toEqual(['nano', 'super']);
     expect(events.some((e) => e.type === 'ruling')).toBe(true);
     expect(renderVerdict(r)).toContain('GUILTY on 1 charge');
     // Throwaway checkouts are cleaned up and the user's repo is untouched.
     expect(g(repo, 'worktree', 'list').split('\n')).toHaveLength(1);
     expect(g(repo, 'status', '--porcelain')).toBe('');
     expect(existsSync(path.join(repo, '__kacheri__'))).toBe(false);
+  });
+
+  it('repairs a witness that cannot pass on base once, then tries it on head; tells the prosecutor the public API', async () => {
+    const llm = fakeLlm({
+      prosecutor: (req) =>
+        req.messages[0].content.includes('Before it can be used as evidence')
+          ? JSON.stringify({ witnessCode: witness('assert.equal(clamp(10, 0, 10), 10);') })
+          : JSON.stringify({ charges: [{ claim: 'upper bound', file: 'src/clamp.js', line: 3, severity: 'major', witnessCode: "import { clampInternal } from '../src/clamp.js';\nclampInternal();" }] }),
+      defense: () => JSON.stringify({ argument: 'x', concedes: true }),
+      judge: () => JSON.stringify({ rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'proven' }] }),
+    });
+    const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, remedy: false });
+    expect(llm.calls[0].messages[1].content).toContain("import { clamp } from '../src/clamp.js'");
+    expect(r.charges[0].revised).toBe(true);
+    expect(r.evidence[0].admissible).toBe(true);
+    expect(r.rulings[0].decision).toBe('convicted');
   });
 
   it('a witness cannot escape the sandbox to fake evidence', async () => {
@@ -148,7 +165,8 @@ describe('runCase', () => {
     const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm });
     expect(r.status).toBe('closed');
     expect(r.charges).toHaveLength(0);
-    expect(llm.calls.filter((c) => c.role === 'prosecutor')).toHaveLength(4); // 2 prosecutors x (call + JSON retry)
+    // Panel (Nano + Super) x (call + JSON retry), then one Super escalation x (call + retry) because nothing was proven.
+    expect(llm.calls.filter((c) => c.role === 'prosecutor').map((c) => c.tier).sort()).toEqual(['nano', 'nano', 'super', 'super', 'super', 'super']);
   });
 
   it('records a case error for a bad ref instead of throwing', async () => {

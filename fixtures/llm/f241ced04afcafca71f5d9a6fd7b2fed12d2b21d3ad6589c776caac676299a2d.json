@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Standard URLs with trailing slashes are no longer normalized, breaking expected behavior\",\n      \"file\": \"index.js\",\n      \"line\": 18,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { normalizeUrl } from \\\"../index.js\\\";\\nimport { strict as assert } from \\\"node:assert\\\";\\nassert.strictEqual(\\\\n  normalizeUrl(\\\"http://example.com/\\\"),\\\\n  \\\"http://example.com\\\",\\\\n  \\\"Standard URL should have trailing slash removed\\\"\\\\n);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2741,
+    "completionTokens": 3983,
+    "costUsd": 0.0011203799999999998,
+    "latencyMs": 21032
+  }
+}

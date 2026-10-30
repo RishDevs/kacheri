@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Removing the dot check in hasCustomProtocol incorrectly treats protocols with dots as custom, causing a regression.\",\n      \"file\": \"index.js\",\n      \"line\": 17,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { test } from 'node:test';import assert from 'node:assert/strict';import * as mod from '../index.js';test('hasCustomProtocol should reject protocols containing a dot', () => {assert.strictEqual(mod.hasCustomProtocol('custom.protocol:'), false);});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2741,
+    "completionTokens": 3465,
+    "costUsd": 0.00099606,
+    "latencyMs": 18506
+  }
+}

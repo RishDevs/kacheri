@@ -14,7 +14,8 @@ import type {
 } from '@kacheri/shared';
 import { checkout, git, resolveRef } from './git';
 import { extractJson } from './json';
-import { baselineMessages, type CaseContext, defenseMessages, judgeMessages, prosecutorMessages } from './prompts';
+import { baselineMessages, type CaseContext, defenseMessages, judgeMessages, prosecutorMessages, repairMessages } from './prompts';
+import { describeApi } from './api';
 import { runRemedy } from './remedy';
 import { judgeAdmissibility, lintWitness, runWitness, type WitnessOptions, witnessPathFor } from './witness';
 
@@ -34,11 +35,11 @@ export interface CaseOptions {
   maxCharges?: number; // per prosecutor, default 4
   onEvent?: (e: CourtEvent) => void;
   remedy?: boolean; // propose and verify a fix for convicted charges, default true
+  escalate?: boolean; // one Super prosecutor when Nano produces no admissible evidence, default true
   testCommand?: string[]; // repo's own test suite, re-run on the fix
 }
 
 const SEVERITIES: Severity[] = ['critical', 'major', 'minor'];
-const PROSECUTOR_TEMPS = [0.2, 0.7, 1.0];
 
 async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -86,7 +87,7 @@ export async function buildContext(repo: string, base: string, head: string, tit
   } catch {
     // no package.json at the root: CommonJS is Node's default
   }
-  return { title, diff, files, testExample, packageType };
+  return { title, diff, files, testExample, packageType, api: '' };
 }
 
 function toCharges(value: unknown): Omit<Charge, 'id' | 'witnessPath'>[] {
@@ -140,47 +141,78 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
     const ctx = await buildContext(repo, base, head, record.title);
     record.patch = ctx.diff.slice(0, 200_000);
 
-    // 1. Filing: independent Nano prosecutors, merged and de-duplicated.
-    const n = Math.max(1, Math.min(opts.prosecutors ?? 2, PROSECUTOR_TEMPS.length));
-    const filings = await Promise.all(
-      PROSECUTOR_TEMPS.slice(0, n).map((temperature) =>
-        callJson(opts.llm, { tier: 'nano', role: 'prosecutor', reasoning: true, temperature, maxTokens: 8000, messages: prosecutorMessages(ctx, opts.maxCharges ?? 4) }, onUsage).then(toCharges, () => []),
-      ),
-    );
-    const seen = new Set<string>();
-    for (const c of filings.flat()) {
-      const key = `${c.file}:${c.line ?? ''}:${c.claim.toLowerCase().slice(0, 40)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const id = `c${record.charges.length + 1}`;
-      const charge: Charge = { ...c, id, witnessPath: witnessPathFor({ id }) };
-      record.charges.push(charge);
-      emit({ type: 'charge', caseId: record.id, charge });
-    }
+    // Checkouts first: the prosecutor is told the real public API, measured on the base commit in the sandbox.
+    const [baseWt, headWt] = await Promise.all([checkout(repo, base), checkout(repo, head)]);
+    try {
+      ctx.api = await describeApi(baseWt.path, ctx.files.map((f) => f.path));
+      const seen = new Set<string>();
+      const file = (charges: Omit<Charge, 'id' | 'witnessPath'>[]): Charge[] => {
+        const added: Charge[] = [];
+        for (const c of charges) {
+          const key = `${c.file}:${c.line ?? ''}:${c.claim.toLowerCase().slice(0, 40)}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const id = `c${record.charges.length + 1}`;
+          const charge: Charge = { ...c, id, witnessPath: witnessPathFor({ id }) };
+          record.charges.push(charge);
+          added.push(charge);
+          emit({ type: 'charge', caseId: record.id, charge });
+        }
+        return added;
+      };
+      const prosecute = (tier: 'nano' | 'super', temperature: number) =>
+        callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature, maxTokens: 16000, messages: prosecutorMessages(ctx, opts.maxCharges ?? 4) }, onUsage).then(toCharges, () => []);
 
-    // 2. Trial: every witness runs on both sides; the outcome decides admissibility, not a model.
-    setStatus('trial');
-    if (record.charges.length) {
-      const [baseWt, headWt] = await Promise.all([checkout(repo, base), checkout(repo, head)]);
-      try {
-        // Sequential on purpose: concurrent witnesses could share ports or temp files and fake a head-only failure.
-        for (const charge of record.charges) {
-          const lint = lintWitness(charge.witnessCode);
-          if (lint) {
-            const ev: Evidence = { chargeId: charge.id, base: [], head: [], admissible: false, reason: `witness rejected before running: ${lint}`, headLog: '' };
-            record.evidence.push(ev);
-            emit({ type: 'evidence', caseId: record.id, evidence: ev });
-            continue;
+      // 2. Trial. Sequential on purpose: concurrent witnesses could share ports or temp files and fake a head-only failure.
+      const tryCharges = async (charges: Charge[], tier: 'nano' | 'super') => {
+        for (const charge of charges) {
+          let lint = lintWitness(charge.witnessCode);
+          let b = lint ? null : await runWitness(baseWt.path, charge, opts.witness);
+          // Passing on base is a precondition, not evidence: one repair round may fix a witness that cannot even
+          // run on the original code. The head run below is still the first and only test of the accusation.
+          for (let round = 0; round < 2 && (lint || (b && !b.outcomes.every((o) => o === 'pass'))); round++) {
+            const problem = lint ? `It was rejected before running: it ${lint}.` : `On the BASE commit it did not pass:\n${b!.lastOutput.slice(-2500)}`;
+            try {
+              const fixed = (await callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature: 0.2, maxTokens: 12000, messages: repairMessages(ctx, charge, problem) }, onUsage)) as { witnessCode?: unknown };
+              if (typeof fixed.witnessCode === 'string' && fixed.witnessCode.trim()) {
+                charge.witnessCode = fixed.witnessCode;
+                charge.revised = true;
+                emit({ type: 'charge', caseId: record.id, charge });
+                lint = lintWitness(charge.witnessCode);
+                b = lint ? null : await runWitness(baseWt.path, charge, opts.witness);
+              }
+            } catch {
+              break; // keep the current witness and its outcome
+            }
           }
-          const b = await runWitness(baseWt.path, charge, opts.witness);
-          const h = await runWitness(headWt.path, charge, opts.witness);
-          const ev = judgeAdmissibility(charge.id, b.outcomes, h.outcomes, h.lastOutput);
+          let ev: Evidence;
+          if (lint || !b) ev = { chargeId: charge.id, base: [], head: [], admissible: false, reason: `witness rejected before running: ${lint}`, headLog: '' };
+          else if (b.outcomes.includes('error')) ev = judgeAdmissibility(charge.id, b.outcomes, [], b.lastOutput);
+          else if (!b.outcomes.every((o) => o === 'pass'))
+            ev = { chargeId: charge.id, base: b.outcomes, head: [], admissible: false, reason: 'witness also fails on base: it proves nothing about this change', headLog: b.lastOutput.trim().slice(-3000) };
+          else {
+            const h = await runWitness(headWt.path, charge, opts.witness);
+            ev = judgeAdmissibility(charge.id, b.outcomes, h.outcomes, h.lastOutput);
+          }
           record.evidence.push(ev);
           emit({ type: 'evidence', caseId: record.id, evidence: ev });
         }
-      } finally {
-        await Promise.all([baseWt.dispose(), headWt.dispose()]);
+      };
+
+      // 1. Filing: a panel of independent prosecutors (Nano first, then Super), filed in parallel.
+      // Live runs showed Nano alone rarely writes runnable proof; a second, stronger model raises the hit rate cheaply.
+      const panel: ['nano' | 'super', number][] = ([['nano', 0.2], ['super', 0.3], ['nano', 0.7]] as ['nano' | 'super', number][]).slice(0, Math.max(1, Math.min(opts.prosecutors ?? 2, 3)));
+      const filed = await Promise.all(panel.map(([tier, t]) => prosecute(tier, t).then((cs) => ({ tier, charges: file(cs) }))));
+      setStatus('trial');
+      for (const f of filed) await tryCharges(f.charges, f.tier);
+      if (opts.escalate !== false && !record.evidence.some((e) => e.admissible)) {
+        setStatus('filing');
+        const sup = file(await prosecute('super', 0.8));
+        setStatus('trial');
+        await tryCharges(sup, 'super');
       }
+    } finally {
+      await Promise.all([baseWt.dispose(), headWt.dispose()]);
     }
     record.evidence.sort((a, b) => Number(a.chargeId.slice(1)) - Number(b.chargeId.slice(1)));
 
