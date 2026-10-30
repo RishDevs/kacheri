@@ -4,14 +4,17 @@ AI code review that must prove every accusation.
 
 Nebius x NVIDIA Global AI Hackathon · Coding & Agentic Engineering track. Built during the hackathon period, October 30, 2026.
 
-[Live demo]([DEMO_URL]) · [Video]([VIDEO_URL])
+[Live demo](https://rishdevs.github.io/kacheri/) · [Video]([VIDEO_URL])
 
 ## The problem
 
-AI review findings often sound plausible but cannot be verified. Developers must reconstruct the bug themselves. Kacheri requires an executable witness before a finding reaches judgment.
+AI reviewers are good at sounding sure. A comment says "this breaks X", and now you have to go figure out whether it's true. When it isn't, you've lost time, and after a few of those you stop reading the comments at all.
+
+Kacheri Court won't let a model accuse your code unless it brings a test that shows the bug. The test has to pass on the old code and fail on the new code, three times each, in a sandbox. If it can't do that, the accusation is thrown out before a judge ever sees it.
 
 ## How it works
 
+0. **Suspects (experimental):** Nemotron Ultra reads the change once and names places that might be broken. This was added after benchmark run 1 and only used in the exploratory run 2; the recorded demo case predates it.
 1. **Accuse:** Nemotron Nano and Super prosecutors independently write witness tests against the public API.
 2. **Prove:** Run each witness in a sandbox three times on base and head. Evidence is admissible only when it passes on base and fails on head; broken, inconsistent and non-differential witnesses are dismissed.
 3. **Defend:** Nemotron Super challenges whether the demonstrated change is actually a bug.
@@ -29,7 +32,7 @@ assert.strictEqual(
 );
 ```
 
-Base passed 3/3; head failed 3/3, returning `foo.bar:baz`. Super defended the change; Ultra convicted. The remedy restored one line, matching the upstream maintainers' fix byte for byte:
+Base passed 3/3; head failed 3/3, returning `foo.bar:baz`. Super defended the change; Ultra convicted. The remedy restored one line, the same line the upstream maintainers wrote. (We built the case by deleting that line, so this shows the fix is minimal and correct, not that the model invented something new.)
 
 ```diff
 +            && !protocol.includes('.')
@@ -39,9 +42,25 @@ Base passed 3/3; head failed 3/3, returning `foo.bar:baz`. Super defended the ch
 
 ## Benchmark
 
-<!-- BENCH_TABLE -->
+The test set: 32 surviving mutants (small planted edits, like a flipped comparison, that the library's own 25 tests don't catch; a surviving mutant isn't always a real bug), 5 real bugs the maintainers fixed upstream (we put each one back), and 12 harmless refactors where any accusation is a false one.
 
-Method: 32 mutants surviving the repository suite, 5 real upstream regressions reconstructed by reverting fixes, and 12 behaviour-preserving changes; compare Court with Nemotron Super and Ultra single-pass baselines on detection, false positives, cost and latency.
+We ran all 49 changes against `sindresorhus/normalize-url` live on Token Factory (run 1, October 30 2026). Every number below is from recorded runs; the per-case results are in [`packages/web/public/bench/latest.json`](packages/web/public/bench/latest.json) and on the [Court record page](https://rishdevs.github.io/kacheri/#/bench).
+
+| Reviewer | Bugs caught (of 37) | False accusations | Precision | Clean changes accused | Cost per change | Median time |
+|---|---|---|---|---|---|---|
+| Kacheri Court (proof required) | 21 (56.8%) | 4 | 88.2% | 0 of 12 | $0.0114 | 32 s |
+| Nemotron Super, single pass | 14 (37.8%) | 0 | 100% | 0 of 12 | $0.0022 | 14 s |
+| Nemotron Ultra, single pass | 29 (78.4%) | 3 | 90.6% | 1 of 12 | $0.0078 | 3.9 s |
+
+What this does and doesn't show:
+
+- **Ultra on its own finds more bugs than the court does.** We aren't claiming better detection. The bottleneck is writing a test that really reproduces the bug, not spotting it.
+- **What the court adds is proof.** Every conviction comes with a test you can run yourself. It filed 34 convictions across the 21 changes it caught; 4 of them pointed somewhere other than the planted bug and count as false accusations. Ultra's hits are comments you'd still have to check by hand.
+- **It's slower.** Running tests on both versions takes time: a median of 32 seconds per change, against 4 seconds for Ultra alone.
+- **The scoring favours the single reviewers.** Any of their comments within three lines of the bug counts as a hit; the court only gets credit for a conviction.
+- On the 5 real upstream regressions the court convicted 4, Ultra 3 and Super 0.
+- We tried one improvement afterwards: Ultra reads the change first and names suspects, and the prosecutors still have to prove each one ([run 2](research/bench-run2.md), exploratory). Precision went up to 93.5% and false accusations halved to 0.04 per change, but the overall catch rate stayed at 56.8%, real-regression catches dropped from 4 of 5 to 3 of 5, and cost and median time went up (about $0.019 and 67 s per change). One rerun isn't enough to say which way it really cuts, so run 1 is the headline.
+- One small library, one language. Planted mutants are a stand-in for real bugs, not the same thing.
 
 ## NVIDIA Nemotron and Nebius Token Factory
 
@@ -109,7 +128,7 @@ JS/Node witnesses only. Differential evidence proves changed behaviour, not wron
 
 ## Feedback on Token Factory and NVIDIA models
 
-JSON mode worked for structured charges, rulings and edits. Reasoning tokens consume `max_tokens`, so small output budgets could leave no usable JSON. The documentation we consulted did not document the Nemotron thinking toggle; explicitly setting `enable_thinking` made per-role control practical. Super improved runnable witness generation over Nano, while Ultra rejected Super's incorrect defense in the recorded case.
+JSON mode worked for structured charges, rulings and edits. Reasoning tokens consume `max_tokens`, so small output budgets could leave no usable JSON. We couldn't find the Nemotron thinking toggle in the docs; setting `enable_thinking` made per-role control practical. Super improved runnable witness generation over Nano, while Ultra rejected Super's incorrect defense in the recorded case.
 
 ## License
 
