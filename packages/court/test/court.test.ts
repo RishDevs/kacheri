@@ -190,8 +190,8 @@ describe('remedy', () => {
       ...convict,
       remedy: () =>
         ++n === 1
-          ? JSON.stringify({ explanation: 'sneaky', files: [{ path: 'test/clamp.test.js', content: '' }] })
-          : JSON.stringify({ explanation: 'Restore the inclusive upper bound.', files: [{ path: 'src/clamp.js', content: fixed }] }),
+          ? JSON.stringify({ explanation: 'sneaky', edits: [{ path: 'test/clamp.test.js', old: 'import', new: '' }] })
+          : JSON.stringify({ explanation: 'Restore the inclusive upper bound.', edits: [{ path: 'src/clamp.js', old: '  if (x >= hi) return hi - 1;', new: '  if (x > hi) return hi;' }] }),
     });
     const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, testCommand: ['node', '-e', "require('fs').readFileSync('src/clamp.js','utf8').includes('x > hi')||process.exit(1)"] });
     expect(r.remedy?.verified).toBe(true);
@@ -205,7 +205,7 @@ describe('remedy', () => {
   });
 
   it('does not verify a fix that breaks the existing suite, and never changes the verdict', async () => {
-    const llm = fakeLlm({ ...convict, remedy: () => JSON.stringify({ explanation: 'x', files: [{ path: 'src/clamp.js', content: fixed }] }) });
+    const llm = fakeLlm({ ...convict, remedy: () => JSON.stringify({ explanation: 'x', edits: [{ path: 'src/clamp.js', old: 'x >= hi', new: 'x > hi' }] }) });
     const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, testCommand: ['node', '-e', 'process.exit(1)'] });
     expect(r.remedy?.verified).toBe(false);
     expect(r.remedy?.suite).toBe('fail');
