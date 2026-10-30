@@ -1,0 +1,9 @@
+{
+  "name": "@kacheri/bench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/run.ts",
+  "scripts": {"gen": "tsx src/mutate.ts", "bench": "tsx src/run.ts"},
+  "dependencies": {"@kacheri/shared": "*", "@kacheri/court": "*", "@kacheri/llm": "*"}
+}

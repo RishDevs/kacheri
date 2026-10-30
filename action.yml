@@ -1,0 +1,62 @@
+name: Kacheri Court
+description: Proof-carrying review with a sticky PR verdict and executable witnesses
+inputs:
+  base:
+    description: Base commit SHA or ref
+    required: true
+  head:
+    description: Head commit SHA or ref
+    required: true
+  nebius-api-key:
+    description: Nebius Token Factory API key
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - name: Install dependencies
+      shell: bash
+      run: npm install --ignore-scripts --no-package-lock
+    - name: Try the case
+      id: court
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base }}
+        HEAD_REF: ${{ inputs.head }}
+        NEBIUS_API_KEY: ${{ inputs.nebius-api-key }}
+      run: |
+        set +e
+        npx tsx packages/court/src/cli.ts --base "$BASE_REF" --head "$HEAD_REF" --out case.json
+        result=$?
+        echo "result=$result" >> "$GITHUB_OUTPUT"
+        exit 0
+    - name: Render comment
+      shell: bash
+      run: npx tsx packages/ci/src/comment.ts case.json comment.md
+    - name: Post sticky verdict
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        set -euo pipefail
+        # Scope updates to this action's marker, preserving other bot comments.
+        author='github-actions[bot]'
+        comments=$(gh api --paginate "repos/$GH_REPO/issues/$PR_NUMBER/comments" --slurp)
+        existing=$(jq -r --arg author "$author" '[.[][] | select(.user.login == $author and (.body | startswith("<!-- kacheri-court -->")))] | last | .id // empty' <<< "$comments")
+        last=$(jq -r --arg author "$author" '[.[][] | select(.user.login == $author)] | last | .id // empty' <<< "$comments")
+        if [[ -z "$existing" ]]; then
+          gh pr comment "$PR_NUMBER" --body-file comment.md
+        elif [[ "$existing" == "$last" ]]; then
+          gh pr comment "$PR_NUMBER" --edit-last --body-file comment.md
+        else
+          jq -n --rawfile body comment.md '{body: $body}' | gh api --method PATCH "repos/$GH_REPO/issues/comments/$existing" --input -
+        fi
+    - name: Enforce verdict
+      shell: bash
+      env:
+        COURT_RESULT: ${{ steps.court.outputs.result }}
+      run: exit "$COURT_RESULT"

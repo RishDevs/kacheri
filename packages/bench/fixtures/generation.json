@@ -1,0 +1,5 @@
+{
+  "candidates": 151,
+  "survivors": 32,
+  "suite": "node --test test.js"
+}

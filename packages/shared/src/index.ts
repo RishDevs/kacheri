@@ -269,6 +269,8 @@ export interface CaseRecord {
   error: string | null;
   startedAt: string;
   endedAt: string | null;
+  patch?: string; // unified diff base -> head, for display
+  mode?: 'live' | 'replay'; // replay = recorded Token Factory responses
 }
 
 export type CourtEvent =

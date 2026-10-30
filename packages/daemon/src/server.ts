@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import type { CaseRecord, CourtEvent, LlmClient } from '@kacheri/shared';
 import { randomUUID } from 'node:crypto';
 import type { ServerResponse } from 'node:http';
 import { AGENT_IDS } from '@kacheri/shared';
@@ -6,7 +7,12 @@ import type { AgentAdapter, AgentId, CreateTaskInput, GitEngine, ParseVerdictRes
 import type { Store } from './store.js';
 import { runCommand } from './runner.js';
 
+export interface CaseInput { title: string; repoPath: string; baseRef: string; headRef: string }
+export type CaseRunner = (input: CaseInput, options: { llm: LlmClient; onEvent: (event: CourtEvent) => void }) => Promise<CaseRecord>;
+
 export interface ServerOptions {
+  runCase?: CaseRunner;
+  llm?: LlmClient;
   engine: GitEngine;
   store: Store;
   adapters: Partial<Record<AgentId, AgentAdapter>>;
@@ -14,11 +20,12 @@ export interface ServerOptions {
   parseVerdict: (raw: string, reviewer: AgentId) => ParseVerdictResult;
   buildReviewPrompt: (task: Task, diff: TaskDiff) => string;
 }
-export function createServer({ engine, store, adapters, parseVerdict, buildReviewPrompt }: ServerOptions) {
+export function createServer({ engine, store, adapters, parseVerdict, buildReviewPrompt, runCase, llm }: ServerOptions) {
   const app = Fastify();
   const clients = new Set<ServerResponse>();
   const active = new Map<string, { controller: AbortController; promise: Promise<void> }>();
-  const emit = (event: ServerEvent) => { for (const client of clients) client.write(`data: ${JSON.stringify(event)}\n\n`); };
+  const cases = new Map<string, CaseRecord>();
+  const emit = (event: ServerEvent | { type: 'court'; event: CourtEvent }) => { for (const client of clients) client.write(`data: ${JSON.stringify(event)}\n\n`); };
   const saveTask = (task: Task) => { task.updatedAt = new Date().toISOString(); store.saveTask(task); emit({ type: 'task', task }); return task; };
   const saveRun = (run: Run) => { store.saveRun(run); emit({ type: 'run', run }); };
   const get = (id: string) => { const task = store.getTask(id); if (!task) throw Object.assign(new Error('Task not found'), { statusCode: 404 }); return task; };
@@ -62,6 +69,21 @@ export function createServer({ engine, store, adapters, parseVerdict, buildRevie
   app.setErrorHandler((error, _request, reply) => {
     const failure = error as { statusCode?: number; message?: string };
     reply.code(failure.statusCode ?? 500).send({ error: failure.message ?? 'Internal server error' });
+  });
+  app.get('/api/cases', async () => [...cases.values()]);
+  app.get<{ Params: { id: string } }>('/api/cases/:id', async ({ params }, reply) => {
+    const record = cases.get(params.id);
+    return record ?? reply.code(404).send({ error: 'Case not found' });
+  });
+  app.post<{ Body: CaseInput }>('/api/cases', async ({ body }, reply) => {
+    if (!body || !(['title', 'repoPath', 'baseRef', 'headRef'] as const).every(key => typeof body[key] === 'string' && body[key].trim())) return reply.code(400).send({ error: 'Invalid case input' });
+    if (!runCase || !llm) return reply.code(503).send({ error: 'Court runner is not configured' });
+    const record = await runCase({ title: body.title, repoPath: body.repoPath, baseRef: body.baseRef, headRef: body.headRef }, { llm, onEvent(event) {
+      if (event.type === 'case') cases.set(event.record.id, structuredClone(event.record));
+      emit({ type: 'court', event });
+    } });
+    cases.set(record.id, structuredClone(record));
+    return record;
   });
   app.get('/api/tasks', async () => store.listTasks());
   app.post<{ Body: CreateTaskInput }>('/api/tasks', async (request, reply) => {
