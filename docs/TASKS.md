@@ -1,35 +1,31 @@
-# Tasks and ownership
+# Tasks and ownership (Court build)
 
-Contracts: `packages/shared/src/index.ts` (owner claude). Do NOT edit it; if you need a change, write it under ISSUES in your report.
-Only edit files inside your owned paths. Root config (package.json, tsconfig.json, vitest.config.ts) is claude's; add your package's deps in YOUR package.json.
+Contracts: `packages/shared/src/index.ts` (owner claude, do NOT edit; request changes under ISSUES). Spec: docs/COURT.md.
+Only edit your owned paths. Add deps to your own package.json. Root config is claude's.
 
 | ID | Owner | Paths | Deliverable | Reviewer |
 |---|---|---|---|---|
-| T1 | claude | packages/shared/**, packages/git-engine/** | `createGitEngine(repoRoot, {worktreeRoot?}) : GitEngine` + tests on temp repos | codex |
-| T2 | claude | packages/jury/src/** | `buildReviewPrompt(task, diff): string`, `parseVerdict(raw, reviewer): ParseVerdictResult` | gemini |
-| T3 | codex | packages/daemon/** | Fastify server on :4317 implementing the API in shared/index.ts; node:sqlite store; adapters; runner; orchestration flow | cursor |
-| T4 | cursor | packages/web/** | Vite+React UI: task board by status, create-task form, task view with live logs (SSE), diff viewer with verdict findings inline, Start/Merge/Reject | codex |
-| T5 | gemini | packages/jury/prompts/**, packages/jury/test/** | `prompts/review.md` template; adversarial vitest suite for parseVerdict | claude |
+| T1-T5 | done | git-engine, jury, daemon, web (orchestrator v1) | merged | done |
+| T6 | claude | packages/court/** | `runCase`, `runBaseline`, witness runner, CLI `src/cli.ts` | codex |
+| T7 | codex | packages/llm/**, packages/daemon/** | Token Factory client + replay client; daemon court routes | gemini |
+| T8 | codex (2nd worktree) | packages/bench/** | mutant generator over a vendored JS fixture repo, bench runner, results | claude |
+| T9 | cursor | packages/web/** | Courtroom UI (live via daemon SSE, or static demo JSON), benchmark page | codex |
 
-## T3 details (daemon)
-- `src/server.ts` exports `createServer({ engine: GitEngine, store, adapters, repoRoot })` so tests can inject a fake GitEngine; `src/main.ts` wires the real one from `@kacheri/git-engine` and listens on 127.0.0.1:4317.
-- Adapters (build kind / review kind):
-  - codex: `codex exec --skip-git-repo-check --sandbox workspace-write <prompt>` / `--sandbox read-only`
-  - cursor: `cursor-agent -p --trust --output-format text <prompt>` (review: prefix prompt with "Do not edit files.")
-  - gemini: `~/.local/bin/agy -p <prompt> --print-timeout 600s`
-  - claude: `claude -p <prompt>` (review: `--permission-mode plan`)
-  - spawn with `stdio: ['ignore','pipe','pipe']` (stdin closed — codex hangs otherwise), cwd = worktree, kill on timeout (build 20 min, review 10 min).
-- After a build run succeeds: `engine.commitAll(id, "kacheri: <title>")`, then review runs. Review stdout -> `parseVerdict` from `@kacheri/jury`; parse failure = one retry, then a FAIL verdict with summary "unparseable review".
-- Merge endpoint calls `engine.merge(id, task.ownedPaths, { testCommand })`; testCommand from env `KACHERI_TEST_CMD` (space-split), default none.
-- SSE: broadcast every task/run change and log chunks.
-- Tests: vitest + fastify.inject with a fake engine and a fake adapter (e.g. `node -e`), no real agent CLIs.
+## T7 llm + daemon
+- `createTokenFactoryClient({ apiKey?, baseUrl?, fetch? }): LlmClient` in packages/llm/src/index.ts. POST {baseUrl}/chat/completions with model = MODELS[tier].id, messages, max_tokens, temperature, `response_format: {type:'json_object'}` when json. Reasoning on/off: send `chat_template_kwargs: { enable_thinking: bool }` (check docs.tokenfactory.nebius.com for the correct field for Nemotron 3; if it differs, implement what the docs say and note it). Strip `<think>...</think>` and any `reasoning_content` from the returned content. Retries: 429/5xx exponential backoff, max 4, honour Retry-After. Cost from MODELS prices and returned usage. Timeout 180 s per call.
+- `createReplayClient({ dir, live?: LlmClient, mode: 'replay'|'record' })`: key = sha256 of JSON {tier, messages, json, reasoning, temperature}; replay reads `dir/<key>.json`, record calls live and writes it. Missing fixture in replay mode -> throw a clear error naming the key.
+- `createClientFromEnv()`: KACHERI_LLM=replay|record|live (default: live if NEBIUS_API_KEY set else replay), fixtures dir KACHERI_FIXTURES (default ./fixtures/llm).
+- Daemon: `POST /api/cases {title, repoPath, baseRef, headRef}` -> CaseRecord (runs `runCase` from `@kacheri/court`, injected like the engine so tests use a fake), `GET /api/cases`, `GET /api/cases/:id`; broadcast CourtEvents on the existing /api/events SSE as `{type:'court', event: CourtEvent}`.
+- Tests with fake fetch: request shape, retry on 429, think-stripping, cost math, replay hit/miss, record writes.
 
-## T4 details (web)
-- Dev proxy `/api` -> http://127.0.0.1:4317. Import types from `@kacheri/shared` only.
-- No UI framework beyond React; plain CSS modules or one stylesheet. Light/dark via prefers-color-scheme.
-- Tests: vitest + @testing-library/react with jsdom for at least the board and diff viewer (use `// @vitest-environment jsdom`).
+## T8 bench
+- Vendor ONE real small MIT/ISC-licensed pure-JS ESM library with a node:test (or easily ported) test suite into `packages/bench/fixtures/<name>/` with its LICENSE (e.g. a semver, date, string-utils, or query-string style lib, 300-1500 LOC). Tests must run with `node --test` and no npm install.
+- `src/mutate.ts`: line-level operators: off-by-one (`<`<->`<=`, `>`<->`>=`, `+1`/`-1`), flip comparison (`===`<->`!==`), boolean/logical swap (`&&`<->`||`), drop negation, wrong boundary in slice/substring, swap return of early-exit. Generate candidates, keep SURVIVORS: mutants for which the fixture's own test suite still passes. Each survivor -> BenchItem + a git repo dir (base commit, head commit = mutant, commit message describing a plausible feature change so it looks like a PR).
+- `src/run.ts`: `npm -w @kacheri/bench run bench -- --n 25 --systems court,baseline` uses `runCase`/`runBaseline` from `@kacheri/court` and `createClientFromEnv` from `@kacheri/llm`; scores BenchResult per item (hit = convicted/finding in same file within 3 lines); writes `packages/bench/results/<timestamp>.json` and `results/latest.md` with a summary table (hit rate, FP/PR, precision, $ per PR, p50 latency) per system.
+- Tests: mutate operators, survivor filter on a tiny inline fixture, scoring function.
 
-## T5 details (jury tests)
-- `parseVerdict(raw: string, reviewer: AgentId): ParseVerdictResult` from `../src/parse` (claude writes it in parallel; write tests against the contract).
-- Expected reviewer output: a single fenced ```json block `{ "status": "PASS"|"FAIL", "summary": string, "findings": [{ "severity": "critical"|"major"|"minor", "file": string, "line": number|null, "message": string, "suggestion": string|null }] }`. Prose may surround it; if several json blocks, the LAST valid one wins. Bare JSON with no fence is accepted. Unknown severity -> error. Missing optional fields (line, suggestion) -> null. FAIL with zero findings is allowed; PASS with critical findings -> coerce to FAIL.
-- `prompts/review.md`: template with `{{title}}`, `{{prompt}}`, `{{ownedPaths}}`, `{{diff}}` placeholders that tells the reviewer to check correctness, security and scope, and to end with exactly that json block.
+## T9 web
+- New route/view "Court" alongside the existing board: case list; case view showing the PR diff, then four lanes: Charges (claim, file:line, witness code collapsible), Evidence (base/head run chips pass/fail per run, admissible badge, log), Defense (argument, concedes), Ruling (convicted in red / dismissed in grey with reason). Animate events as they stream in. Header: total cost ($, 4 decimals), tokens per tier, elapsed.
+- Benchmark page: renders `latest` bench JSON: court vs baseline bar comparison (hit rate, false positives per PR, cost per PR) and a per-item table.
+- Data source: live daemon (/api/cases + SSE, type 'court') OR static demo mode when `VITE_DEMO=1`: loads `public/demo/cases/*.json` (CaseRecord) and `public/demo/bench.json`, and replays case events with timing so it looks live. Must build to static files deployable on GitHub Pages (`base` configurable via VITE_BASE).
+- Design: polished, dense, courtroom feel without kitsch: neutral palette, one accent, monospace for code, clear verdict colours, light/dark.

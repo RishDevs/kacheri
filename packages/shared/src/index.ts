@@ -164,3 +164,139 @@ export type ServerEvent =
   | { type: 'run'; run: Run }
   | { type: 'log'; runId: string; taskId: string; stream: 'stdout' | 'stderr'; chunk: string }
   | { type: 'verdict'; taskId: string; verdict: Verdict };
+
+// =====================================================================
+// Kacheri Court: proof-carrying code review on Nemotron (Token Factory)
+// =====================================================================
+
+export type ModelTier = 'nano' | 'super' | 'ultra';
+
+// Token Factory model ids (verified in the public catalog 2026-10-30) and USD per 1M tokens.
+export const MODELS: Record<ModelTier, { id: string; inPerM: number; outPerM: number }> = {
+  nano: { id: 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B', inPerM: 0.06, outPerM: 0.24 },
+  super: { id: 'nvidia/nemotron-3-super-120b-a12b', inPerM: 0.3, outPerM: 0.9 },
+  ultra: { id: 'nvidia/Nemotron-3-Ultra-550b-a55b', inPerM: 1, outPerM: 3 },
+};
+
+export interface LlmUsage {
+  tier: ModelTier;
+  model: string;
+  role: CourtRole;
+  promptTokens: number;
+  completionTokens: number;
+  costUsd: number;
+  latencyMs: number;
+}
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatRequest {
+  tier: ModelTier;
+  role: CourtRole; // for cost accounting
+  messages: ChatMessage[];
+  json?: boolean; // ask for a JSON object response
+  reasoning?: boolean; // Nemotron reasoning on/off
+  maxTokens?: number;
+  temperature?: number;
+}
+
+export interface ChatResponse {
+  content: string; // final answer, reasoning trace stripped
+  usage: LlmUsage;
+}
+
+export interface LlmClient {
+  chat(req: ChatRequest): Promise<ChatResponse>;
+}
+
+export type CourtRole = 'prosecutor' | 'defense' | 'judge' | 'baseline';
+
+
+
+export interface Charge {
+  id: string; // "c1", "c2", ...
+  claim: string; // what is wrong, one sentence
+  file: string;
+  line: number | null;
+  severity: Severity;
+  witnessCode: string; // complete test file content
+  witnessPath: string; // repo-relative path where the witness is written, e.g. "__kacheri__/c1.test.mjs"
+}
+
+export type WitnessOutcome = 'pass' | 'fail' | 'error' | 'timeout';
+
+export interface Evidence {
+  chargeId: string;
+  base: WitnessOutcome[]; // one per run
+  head: WitnessOutcome[];
+  // Admissible iff every head run fails and every base run passes.
+  admissible: boolean;
+  reason: string; // e.g. "fails on head 3/3, passes on base 3/3" or "flaky on head"
+  headLog: string; // trimmed output of the last head run
+}
+
+export interface Rebuttal {
+  chargeId: string;
+  argument: string;
+  concedes: boolean; // defense agrees the evidence shows a real bug
+}
+
+export type Decision = 'convicted' | 'dismissed';
+
+export interface Ruling {
+  chargeId: string;
+  decision: Decision;
+  reason: string;
+}
+
+export type CaseStatus = 'filing' | 'trial' | 'deliberation' | 'closed' | 'error';
+
+export interface CaseRecord {
+  id: string;
+  title: string;
+  repoPath: string;
+  baseRef: string;
+  headRef: string;
+  status: CaseStatus;
+  charges: Charge[];
+  evidence: Evidence[];
+  rebuttals: Rebuttal[];
+  rulings: Ruling[];
+  usage: LlmUsage[];
+  error: string | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export type CourtEvent =
+  | { type: 'case'; record: CaseRecord }
+  | { type: 'charge'; caseId: string; charge: Charge }
+  | { type: 'evidence'; caseId: string; evidence: Evidence }
+  | { type: 'rebuttal'; caseId: string; rebuttal: Rebuttal }
+  | { type: 'ruling'; caseId: string; ruling: Ruling }
+  | { type: 'usage'; caseId: string; usage: LlmUsage };
+
+// Benchmark: one injected bug (a mutant that survives the repo's own tests).
+export interface BenchItem {
+  id: string;
+  repo: string; // fixture name
+  file: string;
+  line: number;
+  operator: string; // e.g. "off-by-one", "flip-comparison"
+  description: string;
+  patch: string; // unified diff base -> buggy head
+}
+
+export interface BenchResult {
+  itemId: string;
+  system: 'court' | 'baseline';
+  findings: number; // total findings/charges reported
+  convicted: number; // court only: convicted charges
+  hit: boolean; // a reported (court: convicted) finding points at the injected bug (same file, |line diff| <= 3)
+  falsePositives: number; // reported (court: convicted) findings that are not the injected bug
+  costUsd: number;
+  latencyMs: number;
+}

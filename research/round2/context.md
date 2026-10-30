@@ -1,0 +1,7 @@
+# Context: Nebius x NVIDIA Global AI Hackathon (Devpost), deadline 2026-10-30 (~9 h left), ~29,500 participants incl. CMU/Stanford/UPenn grad students and professionals.
+Hard rule: must run on Nebius Token Factory or Nebius AI Cloud and use >=1 NVIDIA open model (Nemotron etc).
+Tracks: (1) Coding & Agentic Engineering: coding agents/dev tools that write, run, test code in Token Factory. (2) Best Apps & Agents: an app/agent someone would actually use; Nemotron 3 Ultra for reasoning, Nano/Super for fast calls; Nebius Serverless Endpoints/Jobs encouraged. (3) Personal AI: always-on private assistant, persistent memory, reusable skills, tools; NVIDIA NemoClaw, OpenShell, Hermes Agent, Nebius Serverless. (4) Physical AI: robotics/IoT/edge with Nemotron, GROOT, Cosmos, Sonic (we have no hardware).
+Extra prize: Best Use of Tavily ($3,000). Grand $20k / $10k / $6k.
+Judging: Technological Implementation (how well built + how effectively it uses Token Factory and Nemotron); Design (complete coherent product, not a PoC); Potential Impact (credible specific case for a real problem for a real audience, demonstrated); Quality of Idea (creative, NON-OBVIOUS use of Token Factory/Nemotron, genuine understanding of problem space).
+Submission: working demo URL, <=3 min YouTube video, public repo with OSS license + README.
+Our team: 4 AI coding agents, ~6 h of build time. Solo human (no hardware).
