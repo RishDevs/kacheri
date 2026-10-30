@@ -1,0 +1,39 @@
+Reading additional input from stdin...
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/krrish/Desktop/kacheri/research
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 01a18ba0-107c-7240-98f0-79b98602614e
+--------
+user
+Read shortlist.md in the current directory. Do not edit any files. You are assessing ENGINEERING FEASIBILITY for each idea A-E. Output ONLY a markdown table: Idea | Recommended stack | Hardest technical part | Days to solid MVP (4 agents) | Parallelizable modules (count + names) | Feasibility 1-5 | Fatal risk. Then one line: your pick and why. Max 250 words.
+codex
+I’ll read `shortlist.md` and assess engineering feasibility without changing any files.
+exec
+/bin/zsh -lc 'cat shortlist.md' in /Users/krrish/Desktop/kacheri/research
+ succeeded in 0ms:
+# Shortlist (merged Claude + Gemini)
+Constraints: 4 AI agents build a working MVP in a few days; solo dev user on macOS; no paid API calls (may shell out to locally installed, already-logged-in agent CLIs: codex, cursor-agent, agy).
+A. Kacheri Office — local web app + daemon to orchestrate coding-agent CLIs: task board, one git worktree per task/agent, file-ownership locks + conflict warnings, live logs, diff view, merge button.
+B. Kacheri Jury — adversarial multi-role review of a git diff (security/logic/perf "judges") using locally installed agent CLIs, verdict + patch suggestions UI. (Could be a module of A.)
+C. Kacheri Docs-Office — private local tracker for warranties/IDs/insurance/subscriptions: upload PDF/photo, local OCR (tesseract) extracts dates, user confirms, expiry calendar + ICS/email reminders.
+D. Kacheri Relay — local webhook interceptor (Stripe/Clerk etc.) logging to SQLite, payload diff, edit + one-click replay.
+E. Kacheri MockHouse — stateful mock API server inferred from JSON/OpenAPI, SQLite-backed CRUD, UI toggles for latency/4xx/5xx faults.
+
+codex
+| Idea | Recommended stack | Hardest technical part | Days to solid MVP (4 agents) | Parallelizable modules (count + names) | Feasibility 1-5 | Fatal risk |
+|---|---|---|---|---|---|---|
+| A. Kacheri Office | TypeScript, React/Vite, Fastify daemon, SQLite, Git CLI, SSE | Reliable agent lifecycle, worktree isolation, safe merges; ownership locks require enforcement | 7–10 | 4: CLI adapters; Git/worktrees; task persistence; board/logs/diffs UI | 3 | Agent CLIs lack usable unattended execution; advisory locks cannot prevent conflicting writes |
+| B. Kacheri Jury | TypeScript, React/Vite, Fastify, Git CLI, local agent subprocesses | Grounding findings in diff lines, handling malformed output, deduplicating verdicts | 3–4 | 4: diff/context extraction; role orchestration; verdict normalization; review UI | 4 | Local CLI automation unavailable; correlated reviewers produce convincing false confidence |
+| C. Kacheri Docs-Office | Python/FastAPI, React, SQLite, Tesseract, PDF rasterizer, macOS launchd, ICS | Accurate dates from variable documents; reminders while app is closed | 4–6 | 4: ingestion/OCR; extraction/confirmation; document UI; scheduling/ICS | 4 | Unconfirmed OCR dates cause missed deadlines; email requires configured delivery |
+| D. Kacheri Relay | TypeScript, Fastify, React, SQLite; user-provided tunnel | Preserving raw payloads and distinguishing exact replay from edited requests | 2–4 | 4: capture/storage; replay engine; payload diff/editor; inspection UI | 5 | External delivery needs ingress; edited signed payloads fail verification without signing secrets |
+| E. Kacheri MockHouse | TypeScript, Fastify, React, SQLite, OpenAPI parser | Inferring relationships and realistic state transitions from sparse schemas | 3–5 | 4: schema import; CRUD/state; fault injection; configuration UI | 4 | Arbitrary business behavior cannot be inferred reliably; scope must stay CRUD-focused |
+
+Pick: **D**, for its bounded scope, independently buildable modules, and easily verified capture/replay behavior.
+tokens used
+18,445

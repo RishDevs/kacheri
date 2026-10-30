@@ -1,0 +1,18 @@
+{
+  "name": "kacheri",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev:daemon": "npm -w @kacheri/daemon run dev",
+    "dev:web": "npm -w @kacheri/web run dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0"
+  }
+}
