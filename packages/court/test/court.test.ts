@@ -130,6 +130,22 @@ describe('runCase', () => {
     expect(existsSync(path.join(repo, '__kacheri__'))).toBe(false);
   });
 
+  it('repairs a witness that cannot pass on base once, then tries it on head; tells the prosecutor the public API', async () => {
+    const llm = fakeLlm({
+      prosecutor: (req) =>
+        req.messages[0].content.includes('Before it can be used as evidence')
+          ? JSON.stringify({ witnessCode: witness('assert.equal(clamp(10, 0, 10), 10);') })
+          : JSON.stringify({ charges: [{ claim: 'upper bound', file: 'src/clamp.js', line: 3, severity: 'major', witnessCode: "import { clampInternal } from '../src/clamp.js';\nclampInternal();" }] }),
+      defense: () => JSON.stringify({ argument: 'x', concedes: true }),
+      judge: () => JSON.stringify({ rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'proven' }] }),
+    });
+    const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, remedy: false });
+    expect(llm.calls[0].messages[1].content).toContain("import { clamp } from '../src/clamp.js'");
+    expect(r.charges[0].revised).toBe(true);
+    expect(r.evidence[0].admissible).toBe(true);
+    expect(r.rulings[0].decision).toBe('convicted');
+  });
+
   it('a witness cannot escape the sandbox to fake evidence', async () => {
     const escape = `import { execSync } from 'node:child_process';\nexecSync('touch ${path.join(dir, 'pwned')}');\nprocess.exit(1);\n`;
     const llm = fakeLlm({ prosecutor: () => JSON.stringify({ charges: [{ claim: 'x', file: 'src/clamp.js', line: 1, severity: 'critical', witnessCode: escape }] }) });
@@ -148,7 +164,8 @@ describe('runCase', () => {
     const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm });
     expect(r.status).toBe('closed');
     expect(r.charges).toHaveLength(0);
-    expect(llm.calls.filter((c) => c.role === 'prosecutor')).toHaveLength(4); // 2 prosecutors x (call + JSON retry)
+    // 2 Nano prosecutors x (call + JSON retry), then one Super escalation x (call + retry) because nothing was proven.
+    expect(llm.calls.filter((c) => c.role === 'prosecutor').map((c) => c.tier)).toEqual(['nano', 'nano', 'nano', 'nano', 'super', 'super']);
   });
 
   it('records a case error for a bad ref instead of throwing', async () => {

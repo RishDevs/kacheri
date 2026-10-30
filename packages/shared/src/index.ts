@@ -224,6 +224,7 @@ export interface Charge {
   severity: Severity;
   witnessCode: string; // complete test file content
   witnessPath: string; // repo-relative path where the witness is written, e.g. "__kacheri__/c1.test.mjs"
+  revised?: boolean; // the witness was repaired once because it did not pass on base
 }
 
 export type WitnessOutcome = 'pass' | 'fail' | 'error' | 'timeout';
