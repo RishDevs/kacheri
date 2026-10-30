@@ -1,0 +1,91 @@
+[
+  {
+    "sha": "dec5dc6b40e664194db97cd74ea5cb977f23d219",
+    "url": "https://github.com/sindresorhus/normalize-url/commit/dec5dc6b40e664194db97cd74ea5cb977f23d219",
+    "title": "Fix handling of protocol-less URLs with a port\n\nFixes #187\nCloses #186",
+    "before": "",
+    "after": "\n\t\t\t&& !protocol.includes('.')",
+    "diffs": [
+      {
+        "file": "index.js",
+        "patch": "@@ -13,7 +13,10 @@ const supportedProtocols = new Set([\n const hasCustomProtocol = urlString => {\n \ttry {\n \t\tconst {protocol} = new URL(urlString);\n-\t\treturn protocol.endsWith(':') && !supportedProtocols.has(protocol);\n+\n+\t\treturn protocol.endsWith(':')\n+\t\t\t&& !protocol.includes('.')\n+\t\t\t&& !supportedProtocols.has(protocol);\n \t} catch {\n \t\treturn false;\n \t}"
+      },
+      {
+        "file": "test.js",
+        "patch": "@@ -39,6 +39,7 @@ test('main', t => {\n \t// t.is(normalizeUrl('sindre://www.sorhus.com/'), 'sindre://sorhus.com');\n \t// t.is(normalizeUrl('sindre://www.sorhus.com/foo/bar'), 'sindre://sorhus.com/foo/bar');\n \tt.is(normalizeUrl('https://i.vimeocdn.com/filter/overlay?src0=https://i.vimeocdn.com/video/598160082_1280x720.jpg&src1=https://f.vimeocdn.com/images_v6/share/play_icon_overlay.png'), 'https://i.vimeocdn.com/filter/overlay?src0=https://i.vimeocdn.com/video/598160082_1280x720.jpg&src1=https://f.vimeocdn.com/images_v6/share/play_icon_overlay.png');\n+\tt.is(normalizeUrl('sindresorhus.com:123'), 'http://sindresorhus.com:123');\n });\n \n test('defaultProtocol option', t => {"
+      }
+    ]
+  },
+  {
+    "sha": "c42f53bb05ec6666514580107925207ff54ad8d0",
+    "url": "https://github.com/sindresorhus/normalize-url/commit/c42f53bb05ec6666514580107925207ff54ad8d0",
+    "title": "Fix encoding consistency with sorted and non-sorted URL parameters (#158)\n\nCo-authored-by: Sindre Sorhus <sindresorhus@gmail.com>",
+    "before": "",
+    "after": "\n\t\t// Calling `.sort()` encodes the search parameters, so we need to decode them again.\n\t\ttry {\n\t\t\turlObject.search = decodeURIComponent(urlObject.search);\n\t\t} catch {}",
+    "diffs": [
+      {
+        "file": "index.js",
+        "patch": "@@ -206,6 +206,11 @@ export default function normalizeUrl(urlString, options) {\n \t// Sort query parameters\n \tif (options.sortQueryParameters) {\n \t\turlObject.searchParams.sort();\n+\n+\t\t// Calling `.sort()` encodes the search parameters, so we need to decode them again.\n+\t\ttry {\n+\t\t\turlObject.search = decodeURIComponent(urlObject.search);\n+\t\t} catch {}\n \t}\n \n \tif (options.removeTrailingSlash) {"
+      },
+      {
+        "file": "test.js",
+        "patch": "@@ -28,7 +28,7 @@ test('main', t => {\n \tt.is(normalizeUrl('http://sindresorhus.com/?'), 'http://sindresorhus.com');\n \tt.is(normalizeUrl('\u00eaxample.com'), 'http://xn--xample-hva.com');\n \tt.is(normalizeUrl('http://sindresorhus.com/?b=bar&a=foo'), 'http://sindresorhus.com/?a=foo&b=bar');\n-\tt.is(normalizeUrl('http://sindresorhus.com/?foo=bar*|<>:\"'), 'http://sindresorhus.com/?foo=bar*%7C%3C%3E%3A%22');\n+\tt.is(normalizeUrl('http://sindresorhus.com/?foo=bar*|<>:\"'), 'http://sindresorhus.com/?foo=bar*|%3C%3E:%22');\n \tt.is(normalizeUrl('http://sindresorhus.com:5000'), 'http://sindresorhus.com:5000');\n \tt.is(normalizeUrl('//sindresorhus.com/', {normalizeProtocol: false}), '//sindresorhus.com');\n \tt.is(normalizeUrl('//sindresorhus.com:80/', {normalizeProtocol: false}), '//sindresorhus.com');\n@@ -40,7 +40,7 @@ test('main', t => {\n \tt.is(normalizeUrl('sindre://www.sorhus.com'), 'sindre://sorhus.com');\n \tt.is(normalizeUrl('sindre://www.sorhus.com/'), 'sindre://sorhus.com');\n \tt.is(normalizeUrl('sindre://www.sorhus.com/foo/bar'), 'sindre://sorhus.com/foo/bar');\n-\tt.is(normalizeUrl('https://i.vimeocdn.com/filter/overlay?src0=https://i.vimeocdn.com/video/598160082_1280x720.jpg&src1=https://f.vimeocdn.com/images_v6/share/play_icon_overlay.png'), 'https://i.vimeocdn.com/filter/overlay?src0=https%3A%2F%2Fi.vimeocdn.com%2Fvideo%2F598160082_1280x720.jpg&src1=https%3A%2F%2Ff.vimeocdn.com%2Fimages_v6%2Fshare%2Fplay_icon_overlay.png');\n+\tt.is(normalizeUrl('https://i.vimeocdn.com/filter/overlay?src0=https://i.vimeocdn.com/video/598160082_1280x720.jpg&src1=https://f.vimeocdn.com/images_v6/share/play_icon_overlay.png'), 'https://i.vimeocdn.com/filter/overlay?src0=https://i.vimeocdn.com/video/598160082_1280x720.jpg&src1=https://f.vimeocdn.com/images_v6/share/play_icon_overlay.png');\n });\n \n test('stripAuthentication option', t => {\n@@ -263,6 +263,7 @@ test('sortQueryParameters option', t => {\n \tt.is(normalizeUrl('http://sindresorhus.com/?b=Y&c=X&a=Z&d=W', options2), 'http://sindresorhus.com/?b=Y&c=X&a=Z&d=W');\n \tt.is(normalizeUrl('http://sindresorhus.com/?a=Z&d=W&b=Y&c=X', options2), 'http://sindresorhus.com/?a=Z&d=W&b=Y&c=X');\n \tt.is(normalizeUrl('http://sindresorhus.com/', options2), 'http://sindresorhus.com');\n+\tt.is(normalizeUrl('http://sindresorhus.com/?a=/path', options1), normalizeUrl('http://sindresorhus.com/?a=/path', options2));\n });\n \n test('invalid urls', t => {"
+      }
+    ]
+  },
+  {
+    "sha": "1e067539ff6a7b455c9f53a744c7570f5183c4e3",
+    "url": "https://github.com/sindresorhus/normalize-url/commit/1e067539ff6a7b455c9f53a744c7570f5183c4e3",
+    "title": "Fix `removeSingleSlash` option adding slashes (#122)",
+    "before": "",
+    "after": "\tif (!options.removeSingleSlash && urlObject.pathname === '/' && !oldUrlString.endsWith('/') && urlObject.hash === '') {\n\t\turlString = urlString.replace(/\\/$/, '');\n\t}\n",
+    "diffs": [
+      {
+        "file": "index.js",
+        "patch": "@@ -175,9 +175,15 @@ const normalizeUrl = (urlString, options) => {\n \t\turlObj.pathname = urlObj.pathname.replace(/\\/$/, '');\n \t}\n \n+\tconst oldUrlString = urlString;\n+\n \t// Take advantage of many of the Node `url` normalizations\n \turlString = urlObj.toString();\n \n+\tif (!options.removeSingleSlash && urlObj.pathname === '/' && !oldUrlString.endsWith('/') && urlObj.hash === '') {\n+\t\turlString = urlString.replace(/\\/$/, '');\n+\t}\n+\n \t// Remove ending `/` unless removeSingleSlash is false\n \tif ((options.removeTrailingSlash || urlObj.pathname === '/') && urlObj.hash === '' && options.removeSingleSlash) {\n \t\turlString = urlString.replace(/\\/$/, '');"
+      },
+      {
+        "file": "index.test-d.ts",
+        "patch": "@@ -16,6 +16,7 @@ normalizeUrl('www.sindresorhus.com?foo=bar&ref=test_ref', {\n \tremoveQueryParameters: ['ref', /test/]\n });\n normalizeUrl('http://sindresorhus.com/', {removeTrailingSlash: false});\n+normalizeUrl('http://sindresorhus.com/', {removeSingleSlash: false});\n normalizeUrl('www.sindresorhus.com/foo/default.php', {\n \tremoveDirectoryIndex: [/^default\\.[a-z]+$/, 'foo']\n });"
+      },
+      {
+        "file": "test.js",
+        "patch": "@@ -119,26 +119,35 @@ test('forceHttps option', t => {\n \n test('removeTrailingSlash option', t => {\n \tconst options = {removeTrailingSlash: false};\n+\tt.is(normalizeUrl('http://sindresorhus.com'), 'http://sindresorhus.com');\n \tt.is(normalizeUrl('http://sindresorhus.com/'), 'http://sindresorhus.com');\n+\tt.is(normalizeUrl('http://sindresorhus.com', options), 'http://sindresorhus.com');\n \tt.is(normalizeUrl('http://sindresorhus.com/', options), 'http://sindresorhus.com');\n+\tt.is(normalizeUrl('http://sindresorhus.com/redirect'), 'http://sindresorhus.com/redirect');\n \tt.is(normalizeUrl('http://sindresorhus.com/redirect/'), 'http://sindresorhus.com/redirect');\n \tt.is(normalizeUrl('http://sindresorhus.com/redirect/', options), 'http://sindresorhus.com/redirect/');\n+\tt.is(normalizeUrl('http://sindresorhus.com/redirect/', options), 'http://sindresorhus.com/redirect/');\n+\tt.is(normalizeUrl('http://sindresorhus.com/#/'), 'http://sindresorhus.com/#/');\n \tt.is(normalizeUrl('http://sindresorhus.com/#/', options), 'http://sindresorhus.com/#/');\n \tt.is(normalizeUrl('http://sindresorhus.com/?unicorns=true'), 'http://sindresorhus.com/?unicorns=true');\n \tt.is(normalizeUrl('http://sindresorhus.com/?unicorns=true', options), 'http://sindresorhus.com/?unicorns=true');\n });\n \n test('removeSingleSlash option', t => {\n \tconst options = {removeSingleSlash: false};\n+\tt.is(normalizeUrl('https://sindresorhus.com', options), 'https://sindresorhus.com');\n \tt.is(normalizeUrl('https://sindresorhus.com/', options), 'https://sindresorhus.com/');\n+\tt.is(normalizeUrl('https://sindresorhus.com/redirect', options), 'https://sindresorhus.com/redirect');\n \tt.is(normalizeUrl('https://sindresorhus.com/redirect/', options), 'https://sindresorhus.com/redirect');\n \tt.is(normalizeUrl('https://sindresorhus.com/#/', options), 'https://sindresorhus.com/#/');\n \tt.is(normalizeUrl('https://sindresorhus.com/?unicorns=true', options), 'https://sindresorhus.com/?unicorns=true');\n });\n \n test('removeSingleSlash option combined with removeTrailingSlash option', t => {\n \tconst options = {removeTrailingSlash: false, removeSingleSlash: false};\n+\tt.is(normalizeUrl('https://sindresorhus.com', options), 'https://sindresorhus.com');\n \tt.is(normalizeUrl('https://sindresorhus.com/', options), 'https://sindresorhus.com/');\n+\tt.is(normalizeUrl('https://sindresorhus.com/redirect', options), 'https://sindresorhus.com/redirect');\n \tt.is(normalizeUrl('https://sindresorhus.com/redirect/', options), 'https://sindresorhus.com/redirect/');\n \tt.is(normalizeUrl('https://sindresorhus.com/#/', options), 'https://sindresorhus.com/#/');\n \tt.is(normalizeUrl('https://sindresorhus.com/?unicorns=true', options), 'https://sindresorhus.com/?unicorns=true');"
+      }
+    ]
+  },
+  {
+    "sha": "062b4263c7b4c0dc8cc28ba24242c27cb0876587",
+    "url": "https://github.com/sindresorhus/normalize-url/commit/062b4263c7b4c0dc8cc28ba24242c27cb0876587",
+    "title": "Don't throw if decoding the path fails (#104)",
+    "before": "\t\turlObject.pathname = decodeURI(urlObject.pathname);",
+    "after": "\t\ttry {\n\t\t\turlObject.pathname = decodeURI(urlObject.pathname);\n\t\t} catch {}",
+    "diffs": [
+      {
+        "file": "index.js",
+        "patch": "@@ -146,7 +146,9 @@ const normalizeUrl = (urlString, options) => {\n \n \t// Decode URI octets\n \tif (urlObj.pathname) {\n-\t\turlObj.pathname = decodeURI(urlObj.pathname);\n+\t\ttry {\n+\t\t\turlObj.pathname = decodeURI(urlObj.pathname);\n+\t\t} catch (_) {}\n \t}\n \n \t// Remove directory index"
+      },
+      {
+        "file": "test.js",
+        "patch": "@@ -24,6 +24,7 @@ test('main', t => {\n \tt.is(normalizeUrl('https://foo.com/http://bar.com'), 'https://foo.com/http://bar.com');\n \tt.is(normalizeUrl('https://foo.com/http://bar.com/foo//bar'), 'https://foo.com/http://bar.com/foo/bar');\n \tt.is(normalizeUrl('http://sindresorhus.com/%7Efoo/'), 'http://sindresorhus.com/~foo', 'decode URI octets');\n+\tt.is(normalizeUrl('https://foo.com/%FAIL%/07/94/ca/55.jpg'), 'https://foo.com/%FAIL%/07/94/ca/55.jpg');\n \tt.is(normalizeUrl('http://sindresorhus.com/?'), 'http://sindresorhus.com');\n \tt.is(normalizeUrl('\u00eaxample.com'), 'http://xn--xample-hva.com');\n \tt.is(normalizeUrl('http://sindresorhus.com/?b=bar&a=foo'), 'http://sindresorhus.com/?a=foo&b=bar');"
+      }
+    ]
+  },
+  {
+    "sha": "0ee9d949e5ade23e3d1199fa697a7974ec335613",
+    "url": "https://github.com/sindresorhus/normalize-url/commit/0ee9d949e5ade23e3d1199fa697a7974ec335613",
+    "title": "Improve `stripWWW` logic (#117)",
+    "before": "/^www\\.(?:[a-z\\-\\d]{2,63})\\.(?:[a-z.]{2,5})$/",
+    "after": "/^www\\.(?!www\\.)[a-z\\-\\d]{1,63}\\.[a-z.\\-\\d]{2,63}$/",
+    "diffs": [
+      {
+        "file": "index.js",
+        "patch": "@@ -147,10 +147,11 @@ const normalizeUrl = (urlString, options) => {\n \t\turlObj.hostname = urlObj.hostname.replace(/\\.$/, '');\n \n \t\t// Remove `www.`\n-\t\tif (options.stripWWW && /^www\\.(?:[a-z\\-\\d]{2,63})\\.(?:[a-z.]{2,5})$/.test(urlObj.hostname)) {\n-\t\t\t// Each label should be max 63 at length (min: 2).\n-\t\t\t// The extension should be max 5 at length (min: 2).\n+\t\tif (options.stripWWW && /^www\\.(?!www\\.)(?:[a-z\\-\\d]{1,63})\\.(?:[a-z.\\-\\d]{2,63})$/.test(urlObj.hostname)) {\n+\t\t\t// Each label should be max 63 at length (min: 1).\n \t\t\t// Source: https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names\n+\t\t\t// Each TLD should be up to 63 characters long (min: 2).\n+\t\t\t// It is technically possible to have a single character TLD, but none currently exist.\n \t\t\turlObj.hostname = urlObj.hostname.replace(/^www\\./, '');\n \t\t}\n \t}"
+      },
+      {
+        "file": "test.js",
+        "patch": "@@ -75,6 +75,13 @@ test('stripWWW option', t => {\n \tt.is(normalizeUrl('www.sindresorhus.com', options), 'http://www.sindresorhus.com');\n \tt.is(normalizeUrl('http://www.\u00eaxample.com', options), 'http://www.xn--xample-hva.com');\n \tt.is(normalizeUrl('sindre://www.sorhus.com', options), 'sindre://www.sorhus.com');\n+\n+\tconst options2 = {stripWWW: true};\n+\tt.is(normalizeUrl('http://www.vue.amsterdam', options2), 'http://vue.amsterdam');\n+\tt.is(normalizeUrl('http://www.sorhus.xx--bck1b9a5dre4c', options2), 'http://sorhus.xx--bck1b9a5dre4c');\n+\n+\tconst tooLongTLDURL = 'http://www.sorhus.' + ''.padEnd(64, 'a');\n+\tt.is(normalizeUrl(tooLongTLDURL, options2), tooLongTLDURL);\n });\n \n test('removeQueryParameters option', t => {"
+      }
+    ]
+  }
+]

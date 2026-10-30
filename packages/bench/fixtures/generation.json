@@ -1,5 +1,7 @@
 {
   "candidates": 151,
   "survivors": 32,
+  "clean": 12,
+  "historical": 5,
   "suite": "node --test test.js"
 }

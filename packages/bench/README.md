@@ -1,18 +1,51 @@
 # @kacheri/bench
 
-`npm -w @kacheri/bench run gen` regenerates `fixtures/survivors.json`, generation counts, and isolated git repositories in `fixtures/repos/`. Each repository has an upstream base commit and one mutated head commit. Generated repository internals are ignored; the portable, reviewable fixture data is the manifest with complete patches and deterministic commit IDs. The benchmark recreates missing repositories automatically. No parent repository commits are made.
+`npm -w @kacheri/bench run gen` regenerates the portable item manifest and counts.
+Repositories are reconstructed lazily under ignored `fixtures/repos/`, with deterministic
+base/head commits in those isolated repositories. The workspace branch is untouched.
 
-`npm -w @kacheri/bench run bench -- --n 25 --systems court,baseline` uses `createClientFromEnv()` and writes a timestamped BenchResult array plus `results/latest.md`. Configure live/replay mode through @kacheri/llm. Court and LLM must be present in the workspace to run the CLI. Tests inject reviewers and need neither package. The current integration expects `runCase(input, {llm})` and `runBaseline(input, {llm})`, with baseline returning `{findings, usage}`.
+`npm -w @kacheri/bench run bench -- --n 25 --kinds clean,historical,mutant --systems court,baseline,baseline-ultra --concurrency 2`
 
-Scores count only convictions for Court and all findings for baseline. A hit requires the same file and a non-null line within three lines of the mutated line. Precision counts matching reports, including multiple reports at the injected location. Error cases stop the benchmark instead of being counted as misses. Latency includes the complete reviewer call and p50 uses the median.
+`--n` caps total selected PRs after filtering; kinds are selected in the supplied order
+(default clean,historical,mutant), so the default 25 includes every clean and historical
+item. All three systems run by default. Concurrency defaults to two reviewer calls.
+Court uses `runCase`; baseline uses `runBaseline` with Super; baseline-ultra uses Ultra.
+The runner uses `createClientFromEnv` and the LLM package's existing credit cap.
+Each run writes timestamped JSON and replaces `results/latest.md`. An unmeasured
+report shows N/A rather than invented model scores. Reviewer errors abort reporting.
 
-## Vendored source
+Reports group by system and by kind, plus all kinds. Hit rate excludes clean PRs.
+Only Court convictions count as positive reports; all baseline findings count.
+Every report on a clean PR is a false positive, even at the edit location.
+For bug items, matching requires the same file (ignoring leading ./), a non-null
+line, and distance at most three from the edited line. Unmatched reports are false
+positives. Precision is matching reports / all positive reports; duplicate matching
+reports count separately. FP/PR and cost/PR include every PR in each group. p50
+is median reviewer wall time, excluding repository preparation. Location matching
+is a proxy, not semantic verification. Equivalent surviving mutants may remain.
 
-normalize-url **8.0.1**, MIT, Sindre Sorhus; source and license fetched from:
+## Fixture and historical provenance
 
+Vendored normalize-url **8.0.1**, MIT, Sindre Sorhus:
 - https://registry.npmjs.org/normalize-url/-/normalize-url-8.0.1.tgz
 - https://github.com/sindresorhus/normalize-url/blob/v8.0.1/test.js
 
-`fixtures/normalize-url/index.js` is unmodified upstream source. `license`, package metadata, declarations and readme are retained. The complete upstream test.js is ported by replacing its AVA import with a small node:test/assert adapter; no assertions or tests are removed. Run with `node --test packages/bench/fixtures/normalize-url/test.js`; no npm install required.
+The upstream source stays unchanged. The complete upstream suite uses a node:test
+adapter in place of AVA. Mutants must survive this full suite. Twelve clean items
+rename locals, reorder independent assignments, or add JSDoc; each passes it too.
 
-Mutation operators change one source line at a time. Numeric offsets include regex range endpoints and collection lengths; slice/substring boundaries are perturbed independently; comparisons, logical operators, negations and early returns are also mutated. Every candidate runs in a separate Node process with a five-second timeout. The pristine suite must pass first, and its source is restored even after failures. The original upstream suite is the only survivor filter. Survival does not prove a semantic defect: equivalent mutants can remain, and the manifest should be audited before interpreting scores as real-bug recall. No live model scores are fabricated or checked in.
+`fixtures/history.json` records five actual upstream fix SHAs, URLs, commit messages,
+source/test diffs, and the exact fixed and buggy source snippets. History was fetched
+using `curl https://api.github.com/repos/sindresorhus/normalize-url/commits?per_page=100`
+and individual commit API diffs. Fixes cover protocol-less ports, sorted query encoding,
+unwanted single slashes, malformed URI path escapes, and www stripping. Older
+`urlObj` identifiers and redundant regex grouping are adapted to the vendored source.
+
+For each historical PR, the base source equals vendored fixed source; head reverts
+only that fix and presents it as a refactor. Generation runs the full suite against
+the buggy head, identifies every failing named test block, and removes those blocks
+from **both** base and head for that item only. `omittedTests` records their names;
+the PR diff contains source changes only. Removing whole blocks can also remove
+unrelated assertions in those blocks. The original suite is untouched. Tests verify
+that both reduced suites pass and restoring the full suite catches each regression.
+No historical item uses the ReDoS fix, avoiding timing-dependent ground truth.
