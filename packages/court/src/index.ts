@@ -15,10 +15,12 @@ import type {
 import { checkout, git, resolveRef } from './git';
 import { extractJson } from './json';
 import { baselineMessages, type CaseContext, defenseMessages, judgeMessages, prosecutorMessages } from './prompts';
+import { runRemedy } from './remedy';
 import { judgeAdmissibility, lintWitness, runWitness, type WitnessOptions, witnessPathFor } from './witness';
 
 export { classify, judgeAdmissibility, lintWitness, runWitness, witnessPathFor, DEFAULT_WITNESS_COMMAND } from './witness';
 export { extractJson } from './json';
+export { runRemedy } from './remedy';
 export { renderVerdict } from './render';
 
 export interface CaseOptions {
@@ -31,6 +33,8 @@ export interface CaseOptions {
   prosecutors?: number; // independent prosecutor samples, default 2
   maxCharges?: number; // per prosecutor, default 4
   onEvent?: (e: CourtEvent) => void;
+  remedy?: boolean; // propose and verify a fix for convicted charges, default true
+  testCommand?: string[]; // repo's own test suite, re-run on the fix
 }
 
 const SEVERITIES: Severity[] = ['critical', 'major', 'minor'];
@@ -230,6 +234,20 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
       }
     }
     record.rulings.sort((a, b) => Number(a.chargeId.slice(1)) - Number(b.chargeId.slice(1)));
+
+    // 5. Remedy: a fix only counts if the same witnesses now pass and the repo's suite stays green.
+    const convicted = record.rulings.filter((r) => r.decision === 'convicted').map((r) => ({ charge: byId.get(r.chargeId)!, evidence: record.evidence.find((e) => e.chargeId === r.chargeId)! }));
+    record.remedy = null;
+    if (convicted.length && opts.remedy !== false) {
+      try {
+        record.remedy = await runRemedy({ repoPath: repo, head, ctx, convicted, llm: opts.llm, onUsage, witness: opts.witness, testCommand: opts.testCommand });
+        emit({ type: 'remedy', caseId: record.id, remedy: record.remedy });
+      } catch (err) {
+        // A failed remedy never changes the verdict.
+        record.remedy = null;
+        record.error = `remedy failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
     record.endedAt = new Date().toISOString();
     setStatus('closed');
   } catch (err) {

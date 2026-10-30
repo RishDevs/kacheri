@@ -19,6 +19,10 @@ export function renderVerdict(r: CaseRecord): string {
   for (const c of r.charges.filter((x) => convicted.some((v) => v.chargeId === x.id))) {
     lines.push('', `## ${c.id} witness (fails on head, passes on base)`, '', '```js', c.witnessCode.trim(), '```');
   }
+  if (r.remedy) {
+    const m = r.remedy;
+    lines.push('', `## Remedy: ${m.verified ? 'VERIFIED' : 'NOT VERIFIED'} (${m.attempts} attempt${m.attempts > 1 ? 's' : ''})`, '', m.explanation, '', `Witnesses on head+fix: ${m.witnesses.map((w) => `${w.chargeId} ${w.outcomes.join('/')}`).join(', ')}. Existing suite: ${m.suite}.`, '', '```diff', m.patch.trim(), '```');
+  }
   if (r.error) lines.push('', `> Case error: ${r.error}`);
   return lines.join('\n');
 }

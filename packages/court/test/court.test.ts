@@ -158,6 +158,43 @@ describe('runCase', () => {
   });
 });
 
+describe('remedy', () => {
+  const convict = {
+    prosecutor: () => JSON.stringify({ charges: [{ claim: 'clamp(10,0,10) returns 9', file: 'src/clamp.js', line: 3, severity: 'major', witnessCode: witness('assert.equal(clamp(10, 0, 10), 10);') }] }),
+    defense: () => JSON.stringify({ argument: 'none', concedes: true }),
+    judge: () => JSON.stringify({ rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'proven' }] }),
+  };
+  const fixed = 'export function clamp(x, lo, hi) {\n  if (x < lo) return lo;\n  if (x > hi) return hi;\n  return x;\n}\n';
+
+  it('verifies a fix only when the witness now passes and the suite stays green; rejects out-of-scope edits first', async () => {
+    let n = 0;
+    const llm = fakeLlm({
+      ...convict,
+      remedy: () =>
+        ++n === 1
+          ? JSON.stringify({ explanation: 'sneaky', files: [{ path: 'test/clamp.test.js', content: '' }] })
+          : JSON.stringify({ explanation: 'Restore the inclusive upper bound.', files: [{ path: 'src/clamp.js', content: fixed }] }),
+    });
+    const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, testCommand: ['node', '-e', "require('fs').readFileSync('src/clamp.js','utf8').includes('x > hi')||process.exit(1)"] });
+    expect(r.remedy?.verified).toBe(true);
+    expect(r.remedy?.attempts).toBe(2);
+    expect(r.remedy?.suite).toBe('pass');
+    expect(r.remedy?.witnesses).toEqual([{ chargeId: 'c1', outcomes: ['pass', 'pass', 'pass'] }]);
+    expect(r.remedy?.patch).toContain('+  if (x > hi) return hi;');
+    expect(renderVerdict(r)).toContain('Remedy: VERIFIED');
+    expect(g(repo, 'status', '--porcelain')).toBe('');
+    expect(g(repo, 'worktree', 'list').split('\n')).toHaveLength(1);
+  });
+
+  it('does not verify a fix that breaks the existing suite, and never changes the verdict', async () => {
+    const llm = fakeLlm({ ...convict, remedy: () => JSON.stringify({ explanation: 'x', files: [{ path: 'src/clamp.js', content: fixed }] }) });
+    const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, testCommand: ['node', '-e', 'process.exit(1)'] });
+    expect(r.remedy?.verified).toBe(false);
+    expect(r.remedy?.suite).toBe('fail');
+    expect(r.rulings[0].decision).toBe('convicted');
+  });
+});
+
 describe('runBaseline', () => {
   it('returns whatever the single reviewer claims, unverified', async () => {
     const llm = fakeLlm({ baseline: () => JSON.stringify({ findings: [{ file: 'src/clamp.js', line: 3, severity: 'major', message: 'off by one' }, { file: 'src/clamp.js', line: 1, message: 'naming' }] }) });

@@ -212,7 +212,7 @@ export interface LlmClient {
   chat(req: ChatRequest): Promise<ChatResponse>;
 }
 
-export type CourtRole = 'prosecutor' | 'defense' | 'judge' | 'baseline';
+export type CourtRole = 'prosecutor' | 'defense' | 'judge' | 'baseline' | 'remedy';
 
 
 
@@ -270,7 +270,20 @@ export interface CaseRecord {
   startedAt: string;
   endedAt: string | null;
   patch?: string; // unified diff base -> head, for display
+  remedy?: Remedy | null;
   mode?: 'live' | 'replay'; // replay = recorded Token Factory responses
+}
+
+// Remedy: after a conviction Nemotron proposes a fix, and the court re-runs the evidence on head+fix.
+export interface Remedy {
+  chargeIds: string[]; // convicted charges this fix addresses
+  explanation: string;
+  patch: string; // unified diff head -> head+fix
+  attempts: number;
+  witnesses: { chargeId: string; outcomes: WitnessOutcome[] }[]; // must all pass on head+fix
+  suite: 'pass' | 'fail' | 'not_run'; // the repo's own test command on head+fix
+  suiteLog: string;
+  verified: boolean; // every witness passes 3/3 and the suite is not failing
 }
 
 export type CourtEvent =
@@ -279,7 +292,8 @@ export type CourtEvent =
   | { type: 'evidence'; caseId: string; evidence: Evidence }
   | { type: 'rebuttal'; caseId: string; rebuttal: Rebuttal }
   | { type: 'ruling'; caseId: string; ruling: Ruling }
-  | { type: 'usage'; caseId: string; usage: LlmUsage };
+  | { type: 'usage'; caseId: string; usage: LlmUsage }
+  | { type: 'remedy'; caseId: string; remedy: Remedy };
 
 // Benchmark: one injected bug (a mutant that survives the repo's own tests).
 export interface BenchItem {

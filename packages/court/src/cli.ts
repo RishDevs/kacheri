@@ -13,6 +13,8 @@ const { values } = parseArgs({
     title: { type: 'string' },
     out: { type: 'string' },
     prosecutors: { type: 'string', default: '2' },
+    'test-cmd': { type: 'string' }, // e.g. "node --test test.js"; re-run on the remedy
+    'no-remedy': { type: 'boolean', default: false },
   },
 });
 
@@ -24,10 +26,13 @@ const record = await runCase({
   title: values.title,
   llm: createClientFromEnv(),
   prosecutors: Number(values.prosecutors),
+  remedy: !values['no-remedy'],
+  testCommand: values['test-cmd']?.split(' ').filter(Boolean),
   onEvent: (e) => {
     if (e.type === 'charge') process.stderr.write(`charge ${e.charge.id}: ${e.charge.claim}\n`);
     if (e.type === 'evidence') process.stderr.write(`evidence ${e.evidence.chargeId}: ${e.evidence.reason}\n`);
     if (e.type === 'ruling') process.stderr.write(`ruling ${e.ruling.chargeId}: ${e.ruling.decision}\n`);
+    if (e.type === 'remedy') process.stderr.write(`remedy: ${e.remedy.verified ? 'verified' : 'not verified'}\n`);
   },
 });
 if (values.out) await writeFile(values.out, JSON.stringify(record, null, 2));
