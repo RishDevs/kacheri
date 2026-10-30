@@ -4,6 +4,20 @@
   "private": true,
   "type": "module",
   "exports": "./src/index.ts",
-  "scripts": { "dev": "tsx src/main.ts" },
-  "dependencies": { "@kacheri/shared": "*", "fastify": "^5.0.0" }
+  "scripts": {
+    "dev": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@kacheri/shared": "*",
+    "fastify": "^5.0.0",
+    "@kacheri/llm": "*"
+  },
+  "peerDependencies": {
+    "@kacheri/court": "*"
+  },
+  "peerDependenciesMeta": {
+    "@kacheri/court": {
+      "optional": true
+    }
+  }
 }
