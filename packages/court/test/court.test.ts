@@ -147,6 +147,20 @@ describe('runCase', () => {
     expect(r.rulings[0].decision).toBe('convicted');
   });
 
+  it('grand jury leads reach the prosecutors but are never findings by themselves', async () => {
+    const llm = fakeLlm({
+      investigator: () => JSON.stringify({ findings: [{ file: 'src/clamp.js', line: 3, severity: 'major', message: 'upper bound off by one' }] }),
+      prosecutor: () => JSON.stringify({ charges: [] }),
+    });
+    const r = await runCase({ repoPath: repo, baseRef: 'main', headRef: 'feature', llm, prosecutors: 1, escalate: false });
+    const ultra = llm.calls.find((c) => c.role === 'investigator');
+    expect(ultra?.tier).toBe('ultra');
+    expect(llm.calls.find((c) => c.role === 'prosecutor')?.messages[1].content).toContain('src/clamp.js:3: upper bound off by one');
+    expect(r.leads).toHaveLength(1);
+    expect(r.charges).toHaveLength(0);
+    expect(r.rulings).toHaveLength(0);
+  });
+
   it('a witness cannot escape the sandbox to fake evidence', async () => {
     const escape = `import { execSync } from 'node:child_process';\nexecSync('touch ${path.join(dir, 'pwned')}');\nprocess.exit(1);\n`;
     const llm = fakeLlm({ prosecutor: () => JSON.stringify({ charges: [{ claim: 'x', file: 'src/clamp.js', line: 1, severity: 'critical', witnessCode: escape }] }) });

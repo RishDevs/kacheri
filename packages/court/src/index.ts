@@ -6,6 +6,7 @@ import type {
   CourtEvent,
   Evidence,
   LlmClient,
+  Lead,
   LlmUsage,
   ModelTier,
   Rebuttal,
@@ -36,6 +37,7 @@ export interface CaseOptions {
   onEvent?: (e: CourtEvent) => void;
   remedy?: boolean; // propose and verify a fix for convicted charges, default true
   escalate?: boolean; // one Super prosecutor when Nano produces no admissible evidence, default true
+  investigate?: boolean; // grand jury: an Ultra single pass names suspects for the prosecutors, default true
   testCommand?: string[]; // repo's own test suite, re-run on the fix
 }
 
@@ -160,8 +162,23 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
         }
         return added;
       };
+      // Grand jury: a single Ultra pass names suspects. Its output is only ever a lead; nothing reaches the
+      // verdict without a witness that fails on head and passes on base.
+      const leads: Lead[] = [];
+      if (opts.investigate !== false) {
+        try {
+          const v = (await callJson(opts.llm, { tier: 'ultra', role: 'investigator', reasoning: true, temperature: 0.2, maxTokens: 6000, messages: baselineMessages(ctx) }, onUsage)) as { findings?: unknown };
+          for (const f of Array.isArray(v.findings) ? v.findings.slice(0, 6) : []) {
+            const r = f as Record<string, unknown>;
+            if (r && typeof r.file === 'string' && typeof r.message === 'string') leads.push({ file: r.file, line: typeof r.line === 'number' ? r.line : null, message: r.message });
+          }
+        } catch {
+          // no leads: prosecutors work unaided
+        }
+      }
+      record.leads = leads;
       const prosecute = (tier: 'nano' | 'super', temperature: number) =>
-        callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature, maxTokens: 16000, messages: prosecutorMessages(ctx, opts.maxCharges ?? 4) }, onUsage).then(toCharges, () => []);
+        callJson(opts.llm, { tier, role: 'prosecutor', reasoning: true, temperature, maxTokens: 16000, messages: prosecutorMessages(ctx, opts.maxCharges ?? 4, leads) }, onUsage).then(toCharges, () => []);
 
       // 2. Trial. Sequential on purpose: concurrent witnesses could share ports or temp files and fake a head-only failure.
       const tryCharges = async (charges: Charge[], tier: 'nano' | 'super') => {
