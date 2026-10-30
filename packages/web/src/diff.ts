@@ -1,4 +1,4 @@
-import type { AgentId, Finding, Verdict } from '@kacheri/shared';
+import type { AgentId, FileChange, FileChangeKind, Finding, TaskDiff, Verdict } from '@kacheri/shared';
 
 export type DiffLineKind = 'context' | 'add' | 'del' | 'meta';
 
@@ -135,6 +135,29 @@ export function parsePatch(patch: string): PatchFile[] {
   }
 
   return files;
+}
+
+const NEW_FILE_HUNK_RE = /^@@ -0,0 /;
+const DELETED_FILE_HUNK_RE = /^@@ -\d+(?:,\d+)? \+0,0 @@/;
+
+// Builds a TaskDiff (file stats included) from a bare unified diff.
+export function patchToDiff(patch: string, baseRef: string, headRef: string): TaskDiff {
+  const files: FileChange[] = parsePatch(patch).map((f) => {
+    const lines = f.hunks.flatMap((h) => h.lines);
+    const headers = f.hunks.map((h) => h.header);
+    let kind: FileChangeKind = 'modified';
+    if (f.oldPath) kind = 'renamed';
+    else if (headers.length > 0 && headers.every((h) => NEW_FILE_HUNK_RE.test(h))) kind = 'added';
+    else if (headers.length > 0 && headers.every((h) => DELETED_FILE_HUNK_RE.test(h))) kind = 'deleted';
+    return {
+      path: f.path,
+      ...(f.oldPath ? { oldPath: f.oldPath } : {}),
+      kind,
+      additions: lines.filter((l) => l.kind === 'add').length,
+      deletions: lines.filter((l) => l.kind === 'del').length,
+    };
+  });
+  return { baseRef, headRef, files, patch };
 }
 
 export interface PlacedFinding extends Finding {

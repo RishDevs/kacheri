@@ -1,0 +1,197 @@
+{
+  "id": "demo-1",
+  "title": "feat: prerelease support in compare() and satisfies()",
+  "repoPath": "fixtures/tinysemver",
+  "baseRef": "4f1c2a9e7b3d58c0a6e91f2d7c4b8a05e3f6d912",
+  "headRef": "b82e6d07c19a4f3e5d28b7c60a9f1e4d3c75a208",
+  "status": "closed",
+  "description": "Adds prerelease support (SemVer 2.0.0 §9 and §11).\n\n- parse() now returns `prerelease: string[]`.\n- compare() orders a prerelease below the release with the same major.minor.patch; numeric identifiers compare numerically.\n- satisfies(): prerelease versions are excluded from ranges unless the range names the same major.minor.patch with a prerelease of its own (npm semver behaviour), e.g. satisfies('1.3.0-beta.1', '^1.2.0') === false.\n\nNo behaviour change intended for release versions.",
+  "patch": "diff --git a/src/parse.js b/src/parse.js\nindex 3c1a9e2..8d04b7f 100644\n--- a/src/parse.js\n+++ b/src/parse.js\n@@ -1,10 +1,11 @@\n-const SEMVER = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-[0-9A-Za-z.-]+)?$/;\n+const SEMVER = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-([0-9A-Za-z.-]+))?$/;\n \n export function parse(version) {\n   const m = SEMVER.exec(String(version).trim());\n   if (!m) throw new TypeError(`Invalid version: ${version}`);\n   return {\n     major: Number(m[1]),\n     minor: Number(m[2]),\n     patch: Number(m[3]),\n+    prerelease: m[4] ? m[4].split('.') : [],\n   };\ndiff --git a/src/compare.js b/src/compare.js\nindex 51be0c4..e7a93d1 100644\n--- a/src/compare.js\n+++ b/src/compare.js\n@@ -1,10 +1,33 @@\n import { parse } from './parse.js';\n \n+const MAIN = ['major', 'minor', 'patch'];\n+\n+function compareIdentifiers(a, b) {\n+  const an = /^\\d+$/.test(a);\n+  const bn = /^\\d+$/.test(b);\n+  if (an && bn) return Math.sign(Number(a) - Number(b));\n+  if (an !== bn) return an ? -1 : 1;\n+  return a < b ? -1 : a > b ? 1 : 0;\n+}\n+\n+// A version without a prerelease tag ranks above any prerelease of the same core.\n+export function comparePrerelease(a, b) {\n+  if (!a.length || !b.length) return a.length === b.length ? 0 : a.length ? -1 : 1;\n+  for (let i = 0; i < Math.max(a.length, b.length); i++) {\n+    if (a[i] === undefined) return -1;\n+    if (b[i] === undefined) return 1;\n+    const c = compareIdentifiers(a[i], b[i]);\n+    if (c !== 0) return c;\n+  }\n+  return 0;\n+}\n+\n export function compare(a, b) {\n   const x = parse(a);\n   const y = parse(b);\n-  for (const key of ['major', 'minor', 'patch']) {\n+  for (let i = 0; i < MAIN.length - 1; i++) {\n+    const key = MAIN[i];\n     if (x[key] !== y[key]) return x[key] < y[key] ? -1 : 1;\n   }\n-  return 0;\n+  return comparePrerelease(x.prerelease, y.prerelease);\n }\ndiff --git a/src/range.js b/src/range.js\nindex 9a0f2b6..41c7d58 100644\n--- a/src/range.js\n+++ b/src/range.js\n@@ -4,6 +4,9 @@ import { parse } from './parse.js';\n export function satisfies(version, range) {\n   const r = range.trim();\n   const v = parse(version);\n+  // Like npm semver: a prerelease only matches a range that names the same\n+  // major.minor.patch with a prerelease of its own (e.g. ^1.2.0-beta.1).\n+  if (v.prerelease.length > 0 && !optsIntoPrerelease(r, v)) return false;\n   if (r.startsWith('^')) {\n     const lo = parse(r.slice(1));\n     return compare(version, r.slice(1)) >= 0 && v.major === lo.major;\n@@ -15,4 +18,9 @@ export function satisfies(version, range) {\n   if (r.startsWith('>=')) return compare(version, r.slice(2)) >= 0;\n   if (r.startsWith('<')) return compare(version, r.slice(1)) < 0;\n   return compare(version, r) === 0;\n }\n+\n+function optsIntoPrerelease(range, v) {\n+  const m = /(\\d+)\\.(\\d+)\\.(\\d+)-/.exec(range);\n+  return m !== null && Number(m[1]) === v.major && Number(m[2]) === v.minor && Number(m[3]) === v.patch;\n+}\n",
+  "charges": [
+    {
+      "id": "c1",
+      "claim": "compare() no longer orders versions that differ only in the patch component: the loop stops at MAIN.length - 1, so compare('1.2.3', '1.2.4') returns 0.",
+      "file": "src/compare.js",
+      "line": 28,
+      "severity": "major",
+      "witnessPath": "__kacheri__/c1.test.mjs",
+      "witnessCode": "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { compare } from '../src/compare.js';\n\ntest('patch versions are still ordered after the prerelease refactor', () => {\n  assert.equal(compare('1.2.3', '1.2.4'), -1);\n  assert.equal(compare('1.2.10', '1.2.9'), 1);\n  assert.equal(compare('2.0.1', '2.0.1'), 0);\n});\n"
+    },
+    {
+      "id": "c2",
+      "claim": "satisfies() now rejects prerelease versions that the range covers: satisfies('1.3.0-beta.1', '^1.2.0') went from true to false.",
+      "file": "src/range.js",
+      "line": 9,
+      "severity": "major",
+      "witnessPath": "__kacheri__/c2.test.mjs",
+      "witnessCode": "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { satisfies } from '../src/range.js';\n\ntest('a prerelease of a newer minor still satisfies a caret range', () => {\n  assert.equal(satisfies('1.3.0-beta.1', '^1.2.0'), true);\n  assert.equal(satisfies('2.0.0-rc.1', '^1.2.0'), false);\n});\n"
+    },
+    {
+      "id": "c3",
+      "claim": "The rewritten SEMVER regex drops support for a leading 'v', so parse('v1.2.3') now throws.",
+      "file": "src/parse.js",
+      "line": 1,
+      "severity": "minor",
+      "witnessPath": "__kacheri__/c3.test.mjs",
+      "witnessCode": "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parse } from '../src/parse.js';\n\ntest('parse() accepts a leading v', () => {\n  const v = parse('v1.2.3');\n  assert.equal(v.major, 1);\n  assert.equal(v.minor, 2);\n  assert.equal(v.patch, 3);\n});\n"
+    },
+    {
+      "id": "c4",
+      "claim": "comparePrerelease() accepts numeric identifiers with leading zeros ('01'), which SemVer 2.0.0 §9 forbids; it should throw.",
+      "file": "src/compare.js",
+      "line": 14,
+      "severity": "minor",
+      "witnessPath": "__kacheri__/c4.test.mjs",
+      "witnessCode": "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { comparePrerelease } from '../src/compare.js';\n\ntest('prerelease identifiers with leading zeros are rejected', () => {\n  assert.throws(() => comparePrerelease(['alpha', '01'], ['alpha', '1']), TypeError);\n});\n"
+    },
+    {
+      "id": "c5",
+      "claim": "satisfies() now parses the version twice per call, a measurable slowdown on hot range checks.",
+      "file": "src/range.js",
+      "line": 6,
+      "severity": "minor",
+      "witnessPath": "__kacheri__/c5.test.mjs",
+      "witnessCode": "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { satisfies } from '../src/range.js';\n\ntest('satisfies() handles 20k caret checks in under 25ms', () => {\n  const t0 = performance.now();\n  for (let i = 0; i < 20000; i++) satisfies(`1.${i % 50}.0`, '^1.0.0');\n  const ms = performance.now() - t0;\n  assert.ok(ms < 25, `satisfies() is too slow: ${ms.toFixed(1)}ms`);\n});\n"
+    }
+  ],
+  "evidence": [
+    {
+      "chargeId": "c1",
+      "base": ["pass", "pass", "pass"],
+      "head": ["fail", "fail", "fail"],
+      "admissible": true,
+      "reason": "fails on head 3/3, passes on base 3/3",
+      "headLog": "✖ patch versions are still ordered after the prerelease refactor (1.084209ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n  0 !== -1\n\n      at TestContext.<anonymous> (file:///tmp/kacheri-court-q7Zp1c/head/__kacheri__/c1.test.mjs:6:10)\n      at Test.runInAsyncScope (node:async_hooks:211:14)\n      at Test.run (node:internal/test_runner/test:979:25)\n      at Test.start (node:internal/test_runner/test:877:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 0,\n    expected: -1,\n    operator: 'strictEqual'\n  }\n\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 52.318\n"
+    },
+    {
+      "chargeId": "c2",
+      "base": ["pass", "pass", "pass"],
+      "head": ["fail", "fail", "fail"],
+      "admissible": true,
+      "reason": "fails on head 3/3, passes on base 3/3",
+      "headLog": "✖ a prerelease of a newer minor still satisfies a caret range (0.873542ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n  false !== true\n\n      at TestContext.<anonymous> (file:///tmp/kacheri-court-q7Zp1c/head/__kacheri__/c2.test.mjs:6:10)\n      at Test.runInAsyncScope (node:async_hooks:211:14)\n      at Test.run (node:internal/test_runner/test:979:25)\n      at Test.start (node:internal/test_runner/test:877:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: 'strictEqual'\n  }\n\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 49.907\n"
+    },
+    {
+      "chargeId": "c3",
+      "base": ["pass", "pass", "pass"],
+      "head": ["pass", "pass", "pass"],
+      "admissible": false,
+      "reason": "passes on head 3/3: the claimed bug does not reproduce",
+      "headLog": "✔ parse() accepts a leading v (0.412917ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 47.120\n"
+    },
+    {
+      "chargeId": "c4",
+      "base": ["error", "error", "error"],
+      "head": ["fail", "fail", "fail"],
+      "admissible": false,
+      "reason": "errors on base 3/3 (SyntaxError: The requested module '../src/compare.js' does not provide an export named 'comparePrerelease'); a witness must pass on base",
+      "headLog": "✖ prerelease identifiers with leading zeros are rejected (0.655083ms)\n  AssertionError [ERR_ASSERTION]: Missing expected exception (TypeError).\n      at TestContext.<anonymous> (file:///tmp/kacheri-court-q7Zp1c/head/__kacheri__/c4.test.mjs:6:10)\n      at Test.runInAsyncScope (node:async_hooks:211:14)\n      at Test.run (node:internal/test_runner/test:979:25) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: [Function: TypeError],\n    operator: 'throws'\n  }\n\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ duration_ms 50.044\n"
+    },
+    {
+      "chargeId": "c5",
+      "base": ["pass", "pass", "pass"],
+      "head": ["fail", "pass", "fail"],
+      "admissible": false,
+      "reason": "flaky on head: failed 2/3, passed 1/3",
+      "headLog": "✖ satisfies() handles 20k caret checks in under 25ms (31.902ms)\n  AssertionError [ERR_ASSERTION]: satisfies() is too slow: 31.4ms\n      at TestContext.<anonymous> (file:///tmp/kacheri-court-q7Zp1c/head/__kacheri__/c5.test.mjs:9:10)\n      at Test.runInAsyncScope (node:async_hooks:211:14)\n      at Test.run (node:internal/test_runner/test:979:25) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: '=='\n  }\n\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ duration_ms 83.611\n"
+    }
+  ],
+  "rebuttals": [
+    {
+      "chargeId": "c1",
+      "argument": "Conceded. The witness uses only release versions, which the PR description says should be unaffected. Base returns -1 for compare('1.2.3', '1.2.4'); head returns 0 because the loop bound MAIN.length - 1 stops before 'patch'. Nothing in the PR suggests this is intended.",
+      "concedes": true
+    },
+    {
+      "chargeId": "c2",
+      "argument": "Not a bug. The PR description says prerelease versions are excluded from ranges unless the range names the same major.minor.patch with a prerelease, and gives this exact example: satisfies('1.3.0-beta.1', '^1.2.0') === false. The comment at src/range.js:7-8 says the same, and it matches npm semver, where semver.satisfies('1.3.0-beta.1', '^1.2.0') is false. The witness asserts the pre-PR contract that this PR deliberately replaces.",
+      "concedes": false
+    }
+  ],
+  "rulings": [
+    {
+      "chargeId": "c1",
+      "decision": "convicted",
+      "reason": "Admissible evidence on release-only inputs, and the defense concedes. compare() skips the patch component (src/compare.js:28), so 1.2.3 and 1.2.4 compare as equal; sorting and every range check that depends on patch order are affected. Regression introduced by this PR."
+    },
+    {
+      "chargeId": "c2",
+      "decision": "dismissed",
+      "reason": "The witness reproduces a real behaviour change, but it is the change the PR announces and it matches npm semver's prerelease rule. The witness encodes the superseded contract; intentional, documented behaviour is not a defect."
+    },
+    {
+      "chargeId": "c3",
+      "decision": "dismissed",
+      "reason": "Inadmissible: the witness passes on head 3/3. Dismissed without a hearing."
+    },
+    {
+      "chargeId": "c4",
+      "decision": "dismissed",
+      "reason": "Inadmissible: the witness errors on base 3/3, so it cannot demonstrate a regression. Dismissed without a hearing."
+    },
+    {
+      "chargeId": "c5",
+      "decision": "dismissed",
+      "reason": "Inadmissible: the witness is flaky on head (2 of 3 runs failed); a timing threshold is not evidence. Dismissed without a hearing."
+    }
+  ],
+  "usage": [
+    {
+      "tier": "nano",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "role": "prosecutor",
+      "promptTokens": 7412,
+      "completionTokens": 3188,
+      "costUsd": 0.00120984,
+      "latencyMs": 9840
+    },
+    {
+      "tier": "nano",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "role": "prosecutor",
+      "promptTokens": 7412,
+      "completionTokens": 2764,
+      "costUsd": 0.00110808,
+      "latencyMs": 8712
+    },
+    {
+      "tier": "nano",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "role": "prosecutor",
+      "promptTokens": 7412,
+      "completionTokens": 3530,
+      "costUsd": 0.00129192,
+      "latencyMs": 11205
+    },
+    {
+      "tier": "super",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "role": "defense",
+      "promptTokens": 4206,
+      "completionTokens": 912,
+      "costUsd": 0.0020826,
+      "latencyMs": 14380
+    },
+    {
+      "tier": "super",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "role": "defense",
+      "promptTokens": 4388,
+      "completionTokens": 1347,
+      "costUsd": 0.0025287,
+      "latencyMs": 18911
+    },
+    {
+      "tier": "ultra",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "judge",
+      "promptTokens": 6904,
+      "completionTokens": 2215,
+      "costUsd": 0.013549,
+      "latencyMs": 41270
+    }
+  ],
+  "error": null,
+  "startedAt": "2026-10-29T18:42:07.311Z",
+  "endedAt": "2026-10-29T18:44:48.902Z"
+}

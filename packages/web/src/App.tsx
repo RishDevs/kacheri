@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react';
 import type { CreateTaskInput, Task } from '@kacheri/shared';
 import type { KacheriApi } from './api';
 import { initialState, reducer } from './state';
@@ -14,7 +14,7 @@ function readHash(): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-export function App({ api }: { api: KacheriApi }) {
+export function App({ api, nav }: { api: KacheriApi; nav?: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [selectedId, setSelectedId] = useState<string | null>(readHash);
   const [connection, setConnection] = useState<Connection>('connecting');
@@ -98,6 +98,7 @@ export function App({ api }: { api: KacheriApi }) {
     <div className="app">
       <header className="app-head">
         <h1>Kacheri</h1>
+        {nav}
         <span className={`conn conn-${connection}`} role="status">
           {connection === 'live' ? 'Live' : connection === 'offline' ? 'Disconnected — retrying' : 'Connecting…'}
         </span>
