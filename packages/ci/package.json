@@ -1,0 +1,9 @@
+{
+  "name": "@kacheri/ci",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/comment.ts",
+  "scripts": { "comment": "tsx src/comment.ts" },
+  "dependencies": { "@kacheri/shared": "*" }
+}
