@@ -1,3 +1,5 @@
+import { withBudget } from './budget';
+export { BudgetExceededError, DEFAULT_CAP_USD, withBudget, worstCaseUsd } from './budget';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -77,6 +79,8 @@ export function createReplayClient({ dir, live, mode }: { dir: string; live?: Ll
 export function createClientFromEnv(): LlmClient {
   const mode = process.env.KACHERI_LLM ?? (process.env.NEBIUS_API_KEY ? 'live' : 'replay');
   if (!['live', 'record', 'replay'].includes(mode)) throw new Error(`Invalid KACHERI_LLM mode: ${mode}`);
-  if (mode === 'live') return createTokenFactoryClient();
-  return createReplayClient({ dir: process.env.KACHERI_FIXTURES ?? './fixtures/llm', mode: mode as 'record' | 'replay', ...(mode === 'record' ? { live: createTokenFactoryClient() } : {}) });
+  // Every paid client is wrapped in the spending cap; replay mode never calls the API.
+  const budget = { capUsd: process.env.KACHERI_BUDGET_USD ? Number(process.env.KACHERI_BUDGET_USD) : undefined };
+  if (mode === 'live') return withBudget(createTokenFactoryClient(), budget);
+  return createReplayClient({ dir: process.env.KACHERI_FIXTURES ?? './fixtures/llm', mode: mode as 'record' | 'replay', ...(mode === 'record' ? { live: withBudget(createTokenFactoryClient(), budget) } : {}) });
 }
