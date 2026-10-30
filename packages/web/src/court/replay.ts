@@ -13,10 +13,11 @@ export const REPLAY_DELAYS = {
   evidence: 650,
   rebuttal: 900,
   ruling: 600,
+  remedy: 900,
   close: 600,
 } as const;
 
-// Rebuilds the order in which the court produced a finished record: filing, trial, defense, ruling.
+// Rebuilds the order in which the court produced a finished record: filing, trial, defense, ruling, remedy.
 // Intermediate `case` snapshots restart the clock at `startedAt`; the final step is the original record.
 export function caseToReplay(record: CaseRecord, startedAt: string): ReplayStep[] {
   const steps: ReplayStep[] = [];
@@ -28,6 +29,7 @@ export function caseToReplay(record: CaseRecord, startedAt: string): ReplayStep[
     rebuttals: [],
     rulings: [],
     usage: [],
+    remedy: null,
     error: null,
     startedAt,
     endedAt: null,
@@ -61,6 +63,8 @@ export function caseToReplay(record: CaseRecord, startedAt: string): ReplayStep[
   }
   usage('judge');
   for (const ruling of record.rulings) emit(REPLAY_DELAYS.ruling, { type: 'ruling', caseId: record.id, ruling });
+  usage('remedy');
+  if (record.remedy) emit(REPLAY_DELAYS.remedy, { type: 'remedy', caseId: record.id, remedy: record.remedy });
   steps.push({ delayMs: REPLAY_DELAYS.close, event: { type: 'case', record } });
   return steps;
 }

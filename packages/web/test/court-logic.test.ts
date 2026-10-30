@@ -11,16 +11,20 @@ import {
   caseTally,
   caseTotals,
   chargeOutcome,
+  convictedChargeIds,
   elapsedMs,
   formatDuration,
   formatTokens,
   formatUsd,
   hasRunFault,
+  isFixVerified,
   isoDate,
+  modelLineage,
   runSummary,
   shortSha,
+  SUITE_LABEL,
 } from '../src/court/summary';
-import { makeCase, makeCharge, makeEvidence, makeUsage, readDemo } from './court-fixtures';
+import { makeCase, makeCharge, makeEvidence, makeRemedy, makeUsage, readDemo } from './court-fixtures';
 
 describe('courtReducer', () => {
   it('loads cases and applies streamed events by id', () => {
@@ -34,7 +38,10 @@ describe('courtReducer', () => {
     ev({ type: 'ruling', caseId: 'case1', ruling: { chargeId: 'c1', decision: 'convicted', reason: 'r' } });
     ev({ type: 'usage', caseId: 'case1', usage: makeUsage() });
     ev({ type: 'usage', caseId: 'case1', usage: makeUsage() });
+    const remedy = makeRemedy();
+    ev({ type: 'remedy', caseId: 'case1', remedy });
     const rec = s.cases.case1;
+    expect(rec.remedy).toBe(remedy);
     expect(rec.charges.map((c) => c.claim)).toEqual(['updated', 'claim c2']);
     expect(rec.evidence).toHaveLength(1);
     expect(rec.rebuttals).toHaveLength(1);
@@ -124,6 +131,45 @@ describe('case summary', () => {
     expect(isoDate(null)).toBe('');
   });
 
+  it('derives the model lineage from usage and adds the remedy tier when present', () => {
+    const labels = (rec: Pick<CaseRecord, 'usage' | 'remedy'>) => modelLineage(rec).map((s) => s.label);
+    expect(labels(makeCase())).toEqual(['Nano', 'Super', 'Ultra']);
+    const nano = [makeUsage(), makeUsage(), makeUsage()];
+    expect(labels(makeCase({ usage: nano }))).toEqual(['Nano ×3', 'Super', 'Ultra']);
+    expect(labels(makeCase({ usage: nano.slice(0, 1) }))).toEqual(['Nano ×1', 'Super', 'Ultra']);
+    const fix = modelLineage(makeCase({ usage: nano.slice(0, 2), remedy: makeRemedy() }));
+    expect(fix.map((s) => s.label)).toEqual(['Nano ×2', 'Super', 'Ultra', 'Super (fix)']);
+    expect(fix[3]).toEqual({ key: 'remedy', tier: 'super', label: 'Super (fix)' });
+    expect(new Set(fix.map((s) => s.key)).size).toBe(fix.length);
+    // remedy usage alone (the fix is still being verified) already shows the tier
+    expect(labels(makeCase({ usage: [makeUsage({ tier: 'super', role: 'remedy' })], remedy: null }))).toEqual([
+      'Nano',
+      'Super',
+      'Ultra',
+      'Super (fix)',
+    ]);
+  });
+
+  it('marks a fix verified only on convicted charges the verified remedy addresses', () => {
+    const rec = makeCase({
+      status: 'closed',
+      charges: [makeCharge('c1'), makeCharge('c2')],
+      evidence: [makeEvidence('c1', true), makeEvidence('c2', true)],
+      rulings: [
+        { chargeId: 'c1', decision: 'convicted', reason: 'r1' },
+        { chargeId: 'c2', decision: 'dismissed', reason: 'r2' },
+      ],
+      remedy: makeRemedy({ chargeIds: ['c1', 'c2'] }),
+    });
+    expect(convictedChargeIds(rec)).toEqual(['c1']);
+    expect(isFixVerified(rec, 'c1')).toBe(true);
+    expect(isFixVerified(rec, 'c2')).toBe(false);
+    expect(isFixVerified({ ...rec, remedy: makeRemedy({ verified: false }) }, 'c1')).toBe(false);
+    expect(isFixVerified({ ...rec, remedy: makeRemedy({ chargeIds: ['c9'] }) }, 'c1')).toBe(false);
+    expect(isFixVerified({ ...rec, remedy: null }, 'c1')).toBe(false);
+    expect(SUITE_LABEL).toEqual({ pass: 'PASS', fail: 'FAIL', not_run: 'NOT RUN' });
+  });
+
   it('reads optional patch/description extras defensively', () => {
     expect(caseExtras(makeCase())).toEqual({ patch: undefined, description: undefined });
     const rec = { ...makeCase(), patch: 'diff', description: 7 } as unknown as CaseRecord;
@@ -188,6 +234,19 @@ describe('caseToReplay', () => {
     expect(last.type === 'case' && last.record).toBe(record);
     expect(steps[0].delayMs).toBe(0);
     expect(steps.slice(1).every((s) => s.delayMs > 0)).toBe(true);
+  });
+
+  it('holds back the remedy and its usage until after the rulings', () => {
+    const remedy = makeRemedy();
+    const withRemedy = { ...record, remedy, usage: [...record.usage, makeUsage({ tier: 'super', role: 'remedy' })] };
+    const steps = caseToReplay(withRemedy, '2026-11-01T00:00:00.000Z');
+    const first = steps[0].event;
+    expect(first.type === 'case' && first.record.remedy).toBeNull();
+    expect(steps.slice(-4).map((s) => s.event.type)).toEqual(['ruling', 'usage', 'remedy', 'case']);
+    const ev = steps[steps.length - 2].event;
+    expect(ev.type === 'remedy' && ev.remedy).toBe(remedy);
+    const deliberation = steps.filter((s) => s.event.type === 'case' && s.event.record.status !== 'closed');
+    expect(deliberation.every((s) => s.event.type === 'case' && s.event.record.remedy === null)).toBe(true);
   });
 
   it('intermediate snapshots accumulate what was streamed so far', () => {
@@ -278,12 +337,14 @@ describe('patchToDiff', () => {
 });
 
 describe('demo data', () => {
-  const demo = readDemo<CaseRecord & { patch: string; description: string }>('cases/demo-1.json');
+  const demo = readDemo<CaseRecord & { patch: string }>('cases/demo-1.json');
 
-  it('is a complete closed CaseRecord with five charges', () => {
-    expect(demo.id).toBe('demo-1');
+  it('is a complete closed normalize-url CaseRecord, marked as a replay, with four charges', () => {
+    expect(demo.id).toBe('KC-2026-0014');
+    expect(demo.mode).toBe('replay');
     expect(demo.status).toBe('closed');
-    expect(demo.charges).toHaveLength(5);
+    expect(demo.repoPath).toBe('sindresorhus/normalize-url');
+    expect(demo.charges).toHaveLength(4);
     const ids = demo.charges.map((c) => c.id).sort();
     expect(demo.evidence.map((x) => x.chargeId).sort()).toEqual(ids);
     expect(demo.rulings.map((x) => x.chargeId).sort()).toEqual(ids);
@@ -292,50 +353,77 @@ describe('demo data', () => {
       const cost = (u.promptTokens * MODELS[u.tier].inPerM + u.completionTokens * MODELS[u.tier].outPerM) / 1e6;
       expect(u.costUsd).toBeCloseTo(cost, 8);
     }
-    expect(formatUsd(caseTotals(demo.usage).costUsd)).toBe('$0.0218');
+    expect(formatUsd(caseTotals(demo.usage).costUsd)).toBe('$0.0179');
+    expect(formatDuration(elapsedMs(demo, Date.now()))).toBe('2m 47s');
   });
 
-  it('obeys the admissibility rule and has the intended mix of outcomes', () => {
-    for (const e of demo.evidence) {
-      const rule = e.head.every((o) => o === 'fail') && e.base.every((o) => o === 'pass');
-      expect(e.admissible).toBe(rule);
-      expect(e.base).toHaveLength(3);
-      expect(e.head).toHaveLength(3);
+  it('carries a verified remedy for its convicted charge that restores the removed line on head', () => {
+    const remedy = demo.remedy!;
+    expect(remedy).toBeTruthy();
+    expect(remedy.chargeIds).toEqual(convictedChargeIds(demo));
+    expect(remedy.verified).toBe(true);
+    expect(remedy.suite).toBe('pass');
+    expect(remedy.attempts).toBe(1);
+    expect(remedy.witnesses).toEqual([{ chargeId: 'c1', outcomes: ['pass', 'pass', 'pass'] }]);
+    expect(demo.usage.filter((u) => u.role === 'remedy')).toHaveLength(remedy.attempts);
+    expect(demo.usage.filter((u) => u.role === 'remedy').every((u) => u.tier === 'super')).toBe(true);
+
+    const index = parsePatch(demo.patch).find((f) => f.path === 'index.js')!;
+    const head = new Map<number, string>();
+    for (const l of index.hunks.flatMap((h) => h.lines)) if (l.kind !== 'del' && l.newNo !== null) head.set(l.newNo, l.text);
+    const removed = index.hunks.flatMap((h) => h.lines).find((l) => l.kind === 'del')!;
+    const fix = parsePatch(remedy.patch);
+    expect(fix.map((f) => f.path)).toEqual(['index.js']);
+    const lines = fix[0].hunks.flatMap((h) => h.lines);
+    for (const l of lines) {
+      if (l.kind === 'context' && l.oldNo !== null) expect(l.text).toBe(head.get(l.oldNo));
     }
-    const outcome = (id: string) => chargeOutcome(demo, id).state;
+    expect(lines.filter((l) => l.kind === 'del')).toHaveLength(0);
+    expect(lines.find((l) => l.kind === 'add')?.text).toBe(removed.text);
+    expect(removed.text).toBe("\t\t\t&& !protocol.includes('.')");
+  });
+
+  it('obeys the admissibility rule and dismisses the other counts for want of evidence', () => {
+    for (const e of demo.evidence) {
+      const rule = e.head.length > 0 && e.head.every((o) => o === 'fail') && e.base.every((o) => o === 'pass');
+      expect(e.admissible).toBe(rule);
+    }
     const admissible = demo.evidence.filter((e) => e.admissible).map((e) => e.chargeId);
-    expect(admissible).toHaveLength(2);
-    expect(admissible.map(outcome).sort()).toEqual(['convicted', 'dismissed']);
+    expect(admissible).toEqual(['c1']);
+    expect(chargeOutcome(demo, 'c1').state).toBe('convicted');
+    expect(demo.rebuttals.map((r) => r.chargeId)).toEqual(admissible);
     const inadmissible = demo.evidence.filter((e) => !e.admissible);
     expect(inadmissible.some((e) => e.head.every((o) => o === 'pass'))).toBe(true);
+    expect(inadmissible.some((e) => e.base.every((o) => o === 'fail'))).toBe(true);
     expect(inadmissible.some((e) => e.base.every((o) => o === 'error'))).toBe(true);
-    expect(inadmissible.some((e) => e.head.includes('pass') && e.head.includes('fail'))).toBe(true);
-    expect(demo.rebuttals.map((r) => r.chargeId).sort()).toEqual(admissible.sort());
-    expect(caseTally(demo)).toEqual({ convicted: 1, dismissed: 4, inadmissible: 3, pending: 0 });
+    expect(caseTally(demo)).toEqual({ convicted: 1, dismissed: 3, inadmissible: 3, pending: 0 });
   });
 
-  it('carries a patch whose hunk counts parse cleanly and cover every charged file', () => {
+  it('carries a patch whose hunks parse cleanly, with the convicted line next to the removed check', () => {
     const files = parsePatch(demo.patch);
-    expect(files.map((f) => f.path)).toEqual(['src/parse.js', 'src/compare.js', 'src/range.js']);
+    expect(files.map((f) => f.path)).toEqual(['index.js']);
+    expect(files[0].hunks.map((h) => h.header.slice(0, h.header.indexOf(' @@') + 3))).toEqual([
+      '@@ -13,11 +13,10 @@',
+      '@@ -201,9 +200,9 @@',
+      '@@ -240,10 +239,10 @@',
+    ]);
+    const lines = files[0].hunks.flatMap((h) => h.lines);
+    expect(lines.every((l) => l.kind !== 'meta')).toBe(true);
     const convicted = demo.charges.find((c) => chargeOutcome(demo, c.id).state === 'convicted')!;
-    const file = files.find((f) => f.path === convicted.file)!;
-    const line = file.hunks.flatMap((h) => h.lines).find((l) => l.newNo === convicted.line);
-    expect(line?.kind).toBe('add');
-    expect(line?.text).toContain('MAIN.length - 1');
-    for (const f of files) {
-      for (const h of f.hunks) expect(h.lines.every((l) => l.kind !== 'meta')).toBe(true);
-    }
+    const line = lines.find((l) => l.newNo === convicted.line);
+    expect(line?.kind).toBe('context');
+    expect(line?.text).toBe("\t\treturn protocol.endsWith(':')");
   });
 
-  it('locates every charge on a diff line for the workbench anchors', () => {
+  it('locates every charge on a diff line', () => {
     const files = parsePatch(demo.patch);
     for (const c of demo.charges) {
       expect(locateLine(files, c.file, c.line)).toEqual({ path: c.file, line: c.line });
     }
-    expect(locateLine(files, './src/compare.js', 999)).toEqual({ path: 'src/compare.js', line: null });
+    expect(locateLine(files, './index.js', 999)).toEqual({ path: 'index.js', line: null });
     expect(locateLine(files, 'src/nope.js', 1)).toBeNull();
-    expect(anchorKey('src/compare.js', 28)).toBe('src/compare.js#28');
-    expect(anchorKey('src/compare.js', null)).toBe('src/compare.js#file');
+    expect(anchorKey('index.js', 17)).toBe('index.js#17');
+    expect(anchorKey('index.js', null)).toBe('index.js#file');
   });
 
   it('bench sample is flagged and has 25 items x 2 systems with consistent counts', () => {

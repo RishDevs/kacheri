@@ -26,3 +26,9 @@ export function reproCommand(record: Pick<CaseRecord, 'headRef'>, charge: Pick<C
     `node --test ${shellQuote(path)} # expected: FAIL on head`,
   ].join('\n');
 }
+
+// A shell command that applies the remedy patch to the current checkout.
+export function applyCommand(patch: string): string {
+  const body = patch.endsWith('\n') ? patch : `${patch}\n`;
+  return `git apply <<'KACHERI_FIX'\n${body}KACHERI_FIX`;
+}

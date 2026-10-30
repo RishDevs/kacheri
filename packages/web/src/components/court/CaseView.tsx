@@ -1,28 +1,38 @@
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MODELS } from '@kacheri/shared';
-import type { CaseRecord, CaseStatus, Charge, Evidence, Rebuttal, Verdict } from '@kacheri/shared';
-import { anchorKey, locateLine, parsePatch, patchToDiff } from '../../diff';
-import { reproCommand } from '../../court/repro';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import type { CaseRecord, Charge } from '@kacheri/shared';
 import {
-  MODEL_LINEAGE,
-  STATUS_TEXT,
-  TIERS,
-  TIER_LABEL,
-  caseExtras,
-  caseTally,
+  afterColon,
+  caseNumber,
+  countList,
+  defendant,
+  dismissal,
+  heardChargeIds,
+  judgment,
+  longDate,
+  orderText,
+  patchExcerpt,
+  plaintiff,
+  planExhibits,
+  possessive,
+  repoLabel,
+  timesWord,
+  type CountExhibits,
+  type ExcerptLine,
+} from '../../court/judgment';
+import { applyCommand, reproCommand } from '../../court/repro';
+import {
   caseTotals,
   chargeOutcome,
+  convictedChargeIds,
   elapsedMs,
   formatDuration,
-  formatTokens,
   formatUsd,
   isActive,
-  isoDate,
   shortSha,
-  type ChargeOutcome,
 } from '../../court/summary';
-import { DiffViewer, type DiffMarker } from '../DiffViewer';
-import { EvidenceRegister, LogDrawer, ReproStrip, type LogTarget } from './Evidence';
+import { caseHref, followInApp } from '../links';
+import { CopyButton } from './CopyButton';
+import { CodeExhibit, ExcerptLines, ExhibitLabel, RunsExhibit, type RunRow } from './Exhibits';
 
 export function useNow(ticking: boolean, intervalMs = 1000): number {
   const [now, setNow] = useState(() => Date.now());
@@ -35,201 +45,304 @@ export function useNow(ticking: boolean, intervalMs = 1000): number {
   return now;
 }
 
-export function CaseStatusBadge({ status }: { status: CaseStatus }) {
-  return <span className={`case-status case-status-${status}`}>{STATUS_TEXT[status]}</span>;
+const LINE_NUMBERS = Array.from({ length: 28 }, (_, i) => String(i + 1)).join('\n');
+const PARENS = Array.from({ length: 40 }, () => ')').join('\n');
+
+function location(charge: Pick<Charge, 'file' | 'line'>): string {
+  return charge.line === null ? charge.file : `${charge.file}:${charge.line}`;
 }
 
-const PHASES: readonly CaseStatus[] = ['filing', 'trial', 'deliberation', 'closed'];
-
-function PhaseTrack({ status }: { status: CaseStatus }) {
-  const at = PHASES.indexOf(status);
+function Caption({ record }: { record: CaseRecord }) {
   return (
-    <ol className="phases" aria-label="Phase">
-      {PHASES.map((p, i) => (
-        <li
-          key={p}
-          className={`phase${i < at ? ' phase-done' : ''}${i === at ? ' phase-current' : ''}`}
-          aria-current={i === at ? 'step' : undefined}
-        >
-          {STATUS_TEXT[p]}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function Pending({ active, text }: { active: boolean; text: string }) {
-  return active ? <p className="pending">{text}</p> : <p className="muted cell-empty">—</p>;
-}
-
-// Captures `animate` at mount: the stamp animates only when a conviction arrives while the case is on screen.
-function Stamp({ animate }: { animate: boolean }) {
-  const [arrive] = useState(animate);
-  return <strong className={`stamp${arrive ? ' stamp-arrive' : ''}`}>Convicted</strong>;
-}
-
-function VerdictMark({ outcome, animate }: { outcome: ChargeOutcome; animate: boolean }) {
-  if (outcome.state === 'convicted') return <Stamp animate={animate} />;
-  if (outcome.state === 'dismissed') return <span className="verdict-mark">Dismissed</span>;
-  return null;
-}
-
-function DefenseBody({
-  rebuttal,
-  evidence,
-  active,
-}: {
-  rebuttal: Rebuttal | undefined;
-  evidence: Evidence | undefined;
-  active: boolean;
-}) {
-  if (rebuttal) {
-    return (
-      <>
-        <span className={`defense-mark ${rebuttal.concedes ? 'defense-concedes' : 'defense-contests'}`}>
-          {rebuttal.concedes ? 'Concedes' : 'Contests'}
-        </span>
-        <p className="argument">{rebuttal.argument}</p>
-      </>
-    );
-  }
-  if (evidence && !evidence.admissible) return <p className="muted">Not heard: evidence inadmissible.</p>;
-  return <Pending active={active} text={evidence ? 'Defense is preparing…' : 'Awaiting evidence'} />;
-}
-
-function RulingBody({ outcome, active }: { outcome: ChargeOutcome; active: boolean }) {
-  if (outcome.state === 'pending') return <Pending active={active} text="Awaiting ruling" />;
-  return <blockquote className="ruling-reason">{outcome.reason}</blockquote>;
-}
-
-function Part({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="charge-part">
-      <h4 className="part-label">{label}</h4>
-      <div className="part-body">{children}</div>
+    <div className="caption" role="group" aria-label="Caption">
+      <div className="caption-parties">
+        <p>{`${plaintiff(record)},`}</p>
+        <p className="party-role">Plaintiff,</p>
+        <p className="versus">v.</p>
+        <p>{defendant(record)}</p>
+        <p className="party-role">Defendant.</p>
+      </div>
+      <div className="caption-parens" aria-hidden="true">
+        <span>{PARENS}</span>
+      </div>
+      <div className="caption-matter">
+        <p>
+          Case No. <span className="tt">{caseNumber(record)}</span>
+        </p>
+        <p className="caption-title">JUDGMENT</p>
+        <p className="caption-refs">
+          Base{' '}
+          <span className="tt" title={record.baseRef}>
+            {shortSha(record.baseRef)}
+          </span>{' '}
+          · Head{' '}
+          <span className="tt" title={record.headRef}>
+            {shortSha(record.headRef)}
+          </span>
+        </p>
+      </div>
     </div>
   );
 }
 
-interface ChargeSectionProps {
-  record: CaseRecord;
-  charge: Charge;
-  focused: boolean;
-  anchored: boolean;
-  live: boolean;
-  animateStamp: boolean;
-  onLocate(chargeId: string): void;
-  onOpenLog(target: LogTarget): void;
-}
-
-function ChargeSection({ record, charge, focused, anchored, live, animateStamp, onLocate, onOpenLog }: ChargeSectionProps) {
-  const evidence = record.evidence.find((e) => e.chargeId === charge.id);
-  const rebuttal = record.rebuttals.find((r) => r.chargeId === charge.id);
-  const outcome = chargeOutcome(record, charge.id);
-  const inadmissible = evidence !== undefined && !evidence.admissible;
-  const location = charge.line === null ? charge.file : `${charge.file}:${charge.line}`;
-
-  const witness = (
-    <div className="witness-block">
-      <details className="witness">
-        <summary>
-          Witness <code>{charge.witnessPath}</code>
-        </summary>
-        <pre className="code-block">{charge.witnessCode}</pre>
-      </details>
-      <ReproStrip
-        command={reproCommand(record, charge)}
-        preview={`git checkout --detach ${shortSha(record.headRef)} && node --test ${charge.witnessPath}`}
-      />
-    </div>
-  );
-  const defense = (
-    <Part label="Defense">
-      <DefenseBody rebuttal={rebuttal} evidence={evidence} active={live} />
-    </Part>
-  );
-  const ruling = (
-    <Part label="Ruling">
-      <RulingBody outcome={outcome} active={live} />
-    </Part>
-  );
-
+function JudgmentBox({ record }: { record: CaseRecord }) {
+  const j = judgment(record);
+  const live = j.standing === 'in-session';
+  const remedy = record.remedy;
+  const canApply = !live && Boolean(remedy && remedy.verified);
+  const repro = live
+    ? ''
+    : convictedChargeIds(record)
+        .map((id) => record.charges.find((c) => c.id === id))
+        .filter((c): c is Charge => c !== undefined)
+        .map((c) => reproCommand(record, c))
+        .join('\n\n');
   return (
-    <section
-      role="group"
-      aria-label={`Charge ${charge.id}`}
-      data-charge-anchor={charge.id}
-      className={`charge outcome-${outcome.state}${inadmissible ? ' charge-inadmissible' : ''}${focused ? ' charge-active' : ''}`}
-    >
-      <header className="charge-head">
-        <span className="charge-id">{charge.id}</span>
-        <span className={`sev sev-${charge.severity}`}>{charge.severity}</span>
-        {anchored ? (
-          <button
-            type="button"
-            className="loc-link"
-            title="Show in diff"
-            aria-pressed={focused}
-            onClick={() => onLocate(charge.id)}
-          >
-            {location}
-          </button>
-        ) : (
-          <code className="loc">{location}</code>
-        )}
-        <span className="charge-verdict">
-          <VerdictMark outcome={outcome} animate={animateStamp} />
-        </span>
-      </header>
-      <h3 className="claim">{charge.claim}</h3>
-
-      {inadmissible && evidence ? (
-        <details className="inadmissible-line">
-          <summary>
-            <span className="adm-label">Inadmissible</span> <span className="adm-reason">{evidence.reason}</span>
-          </summary>
-          <div className="inadmissible-body">
-            <EvidenceRegister evidence={evidence} showVerdict={false} onOpenLog={onOpenLog} />
-            {witness}
-            {defense}
-            {ruling}
-          </div>
-        </details>
-      ) : (
-        <>
-          <Part label="Evidence">
-            {evidence ? (
-              <EvidenceRegister evidence={evidence} onOpenLog={onOpenLog} />
-            ) : (
-              <Pending active={live} text="Running witness on base and head…" />
-            )}
-          </Part>
-          {witness}
-          {defense}
-          {ruling}
-        </>
+    <section className={`judgment judgment-${j.standing}`} aria-label="Judgment">
+      <p className="judgment-label">Judgment</p>
+      <p className="judgment-headline" aria-live={live ? 'polite' : undefined}>
+        {j.headline}
+      </p>
+      <p className="plain">
+        <strong>In plain words:</strong> {j.plain}
+      </p>
+      {(canApply || repro.length > 0) && (
+        <div className="actions">
+          {canApply && remedy && (
+            <CopyButton
+              text={applyCommand(remedy.patch)}
+              label="Apply the ordered fix"
+              copiedLabel="Copied: paste it in a terminal"
+              className="btn btn-dark"
+              copiedNote="A git apply command for the ordered fix was copied. Paste it in a terminal at the head commit."
+              failedNote="Could not copy the fix command"
+            />
+          )}
+          {repro.length > 0 && (
+            <CopyButton
+              text={repro}
+              label="Copy repro command"
+              className="btn"
+              copiedNote="Repro command copied"
+              failedNote="Could not copy the repro command"
+            />
+          )}
+        </div>
       )}
     </section>
   );
 }
 
-type FocusSource = 'docket' | 'diff';
-
-interface Focus {
-  chargeId: string;
-  from: FocusSource;
-  anchor: string | null;
+function Part({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="part">
+      <h2 className="sec">{title}</h2>
+      {children}
+    </section>
+  );
 }
 
-const NO_VERDICTS: Verdict[] = [];
-
-function findByData(root: HTMLElement | null, key: 'anchor' | 'chargeAnchor', value: string): HTMLElement | null {
-  if (!root) return null;
-  const selector = key === 'anchor' ? '[data-anchor]' : '[data-charge-anchor]';
-  for (const el of Array.from(root.querySelectorAll<HTMLElement>(selector))) {
-    if (el.dataset[key] === value) return el;
+function Charges({ record }: { record: CaseRecord }) {
+  if (record.charges.length === 0) {
+    return (
+      <Part title="I. The Charges">
+        <p className="p dim">{isActive(record.status) ? 'No charges have been filed yet.' : 'No charges were filed.'}</p>
+      </Part>
+    );
   }
-  return null;
+  return (
+    <Part title="I. The Charges">
+      <ol className="counts">
+        {record.charges.map((c, i) => {
+          const state = chargeOutcome(record, c.id).state;
+          const status = state === 'convicted' ? 'PROVEN' : state === 'dismissed' ? 'DISMISSED' : 'PENDING';
+          const tone = state === 'convicted' ? 'proven' : state === 'dismissed' ? 'dismissed' : 'pending';
+          return (
+            <li key={c.id} className={`count count-${tone}`}>
+              <strong>{`Count ${i + 1}.`}</strong> {c.claim}{' '}
+              {state !== 'dismissed' && (
+                <>
+                  <span className="loc">{location(c)}</span>{' '}
+                </>
+              )}
+              <span className="count-status">{status}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </Part>
+  );
+}
+
+function CountEvidence({ record, plan, titled }: { record: CaseRecord; plan: CountExhibits; titled: boolean }) {
+  const charge = record.charges.find((c) => c.id === plan.chargeId);
+  const evidence = record.evidence.find((e) => e.chargeId === plan.chargeId);
+  if (!charge || !evidence) return null;
+  const fix = record.remedy ? (record.remedy.witnesses.find((w) => w.chargeId === charge.id)?.outcomes ?? []) : null;
+  const rows: RunRow[] = [
+    { label: 'Before the change', outcomes: evidence.base },
+    { label: 'After the change', outcomes: evidence.head },
+  ];
+  if (fix) rows.push({ label: 'With the fix', outcomes: fix });
+  const before = `${timesWord(evidence.base.length)} on the code before the change`;
+  const ran =
+    fix && fix.length > 0
+      ? `The court ran it ${before}, ${timesWord(evidence.head.length)} after, and ${timesWord(fix.length)} with the fix.`
+      : `The court ran it ${before} and ${timesWord(evidence.head.length)} after.`;
+  return (
+    <div className="count-evidence">
+      {titled && <h3 className="sub">{`Count ${plan.count}`}</h3>}
+      <p className="p">The prosecution (Nemotron Nano) filed a test as its proof. {ran}</p>
+      <RunsExhibit n={plan.runs} rows={rows} />
+      <CodeExhibit n={plan.code} title="The proof test, as filed" code={charge.witnessCode} />
+      {plan.lines !== null && plan.excerpt && (
+        <figure className="exhibit-block">
+          <ExhibitLabel n={plan.lines} title={`The line at issue, ${plan.excerpt.path}`} />
+          <ExcerptLines lines={plan.excerpt.lines} mode="issue" />
+        </figure>
+      )}
+    </div>
+  );
+}
+
+function EvidenceSection({ record, plan }: { record: CaseRecord; plan: readonly CountExhibits[] }) {
+  const title = `II. The Evidence${plan.length > 0 ? ` on ${countList(plan.map((p) => p.count))}` : ''}`;
+  return (
+    <Part title={title}>
+      {plan.length === 0 && (
+        <p className="p dim">
+          {isActive(record.status)
+            ? 'No count has been proven yet.'
+            : 'No count was proven, so the court sets out no evidence.'}
+        </p>
+      )}
+      {plan.map((p) => (
+        <CountEvidence key={p.chargeId} record={record} plan={p} titled={plan.length > 1} />
+      ))}
+    </Part>
+  );
+}
+
+function DefenseSection({ record, plan }: { record: CaseRecord; plan: readonly CountExhibits[] }) {
+  const active = isActive(record.status);
+  return (
+    <Part title="III. The Defense">
+      {plan.length === 0 && (
+        <p className="p dim">
+          {active ? 'The defense has not been called yet.' : 'No count was proven, so the defense had nothing to answer.'}
+        </p>
+      )}
+      {plan.map((p) => {
+        const rebuttal = record.rebuttals.find((r) => r.chargeId === p.chargeId);
+        if (!rebuttal) {
+          return (
+            <p key={p.chargeId} className="p dim">
+              {active
+                ? `The defense has not answered Count ${p.count} yet.`
+                : `Counsel for the change made no answer on Count ${p.count}.`}
+            </p>
+          );
+        }
+        return (
+          <p key={p.chargeId} className="p">
+            Counsel for the change (Nemotron Super) <em>{rebuttal.concedes ? 'conceded' : 'argued'}</em>{' '}
+            {rebuttal.concedes ? `Count ${p.count}` : `on Count ${p.count}`}: {afterColon(rebuttal.argument)}
+          </p>
+        );
+      })}
+    </Part>
+  );
+}
+
+function FindingsSection({ record, plan }: { record: CaseRecord; plan: readonly CountExhibits[] }) {
+  const paragraphs: ReactNode[] = [];
+  for (const p of plan) {
+    const outcome = chargeOutcome(record, p.chargeId);
+    paragraphs.push(
+      outcome.state === 'convicted' ? (
+        <p key={p.chargeId} className="p">
+          <strong>{`On Count ${p.count}:`}</strong> {afterColon(outcome.reason)}
+        </p>
+      ) : (
+        <p key={p.chargeId} className="p dim">
+          <strong>{`On Count ${p.count}:`}</strong> the judge has not ruled yet.
+        </p>
+      ),
+    );
+  }
+  const withoutTrial: { count: number; text: string }[] = [];
+  record.charges.forEach((c, i) => {
+    const d = dismissal(record, c.id);
+    if (!d) return;
+    if (d.kind === 'judge') {
+      paragraphs.push(
+        <p key={c.id} className="p dim">
+          <strong>{`On Count ${i + 1}:`}</strong> dismissed after hearing. {d.text}
+        </p>,
+      );
+    } else {
+      withoutTrial.push({ count: i + 1, text: possessive(i + 1, d.text) });
+    }
+  });
+  if (withoutTrial.length > 0) {
+    paragraphs.push(
+      <p key="without-trial" className="p dim">
+        <strong>{`On ${countList(withoutTrial.map((w) => w.count))}:`}</strong> dismissed without trial.{' '}
+        {withoutTrial.map((w) => w.text).join(' ')}
+      </p>,
+    );
+  }
+  if (paragraphs.length === 0) {
+    paragraphs.push(
+      <p key="none" className="p dim">
+        {record.charges.length === 0 && !isActive(record.status)
+          ? 'No charges were filed, so the court makes no findings.'
+          : 'The court has made no findings yet.'}
+      </p>,
+    );
+  }
+  return <Part title="IV. Findings of the Court">{paragraphs}</Part>;
+}
+
+function OrderSection({ record, plan }: { record: CaseRecord; plan: readonly CountExhibits[] }) {
+  const order = orderText(record, plan);
+  const remedy = record.remedy;
+  const files = order.ordered && remedy ? patchExcerpt(remedy.patch) : [];
+  const lines: ExcerptLine[] =
+    files.length > 1
+      ? files.flatMap((f): ExcerptLine[] => [{ kind: 'file', text: f.path }, ...f.lines])
+      : files.flatMap((f) => f.lines);
+  return (
+    <Part title="V. Order">
+      <p className="p">{order.text}</p>
+      {lines.length > 0 && <ExcerptLines lines={lines} mode="fix" />}
+      {!isActive(record.status) && <p className="p so-ordered">So ordered.</p>}
+    </Part>
+  );
+}
+
+function Signature({ record, now }: { record: CaseRecord; now: number }) {
+  const entered = record.status === 'closed' ? longDate(record.endedAt) : '';
+  const note = entered
+    ? `Entered ${entered}`
+    : record.status === 'error'
+      ? 'Not entered: the case did not finish'
+      : 'Not yet entered';
+  return (
+    <div className="signature">
+      <div className="signed">
+        <div className="sig-line" aria-hidden="true" />
+        <p className="sig-name">Nemotron 3 Ultra, presiding</p>
+        <p className="sig-date">{note}</p>
+      </div>
+      <dl className="costs">
+        <dt>Court costs</dt>
+        <dd>{formatUsd(caseTotals(record.usage).costUsd)}</dd>
+        <dt>Time in court</dt>
+        <dd>{formatDuration(elapsedMs(record, now))}</dd>
+      </dl>
+    </div>
+  );
 }
 
 export interface CaseViewProps {
@@ -239,245 +352,70 @@ export interface CaseViewProps {
   recordedAt?: string | null;
   onReplay?(): void;
   onSkip?(): void;
+  onBack?(): void;
 }
 
-export function CaseView({ record, replay = false, recordedAt = null, onReplay, onSkip }: CaseViewProps) {
+export function CaseView({ record, replay = false, recordedAt = null, onReplay, onSkip, onBack }: CaseViewProps) {
   const active = isActive(record.status);
   const now = useNow(active);
-  const totals = useMemo(() => caseTotals(record.usage), [record.usage]);
-  const tally = caseTally(record);
-  const { patch, description } = caseExtras(record);
-  const diff = useMemo(
-    () => (patch ? patchToDiff(patch, record.baseRef, record.headRef) : null),
-    [patch, record.baseRef, record.headRef],
-  );
-  const files = useMemo(() => (patch ? parsePatch(patch) : []), [patch]);
-
-  const anchors = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const c of record.charges) {
-      const loc = locateLine(files, c.file, c.line);
-      if (loc) map.set(c.id, anchorKey(loc.path, loc.line));
-    }
-    return map;
-  }, [files, record.charges]);
-
-  const markers = useMemo<DiffMarker[]>(
-    () =>
-      record.charges
-        .filter((c) => anchors.has(c.id))
-        .map((c) => {
-          const state = chargeOutcome(record, c.id).state;
-          return { id: c.id, file: c.file, line: c.line, label: c.id, tone: state, title: `${c.id} · ${state} · ${c.claim}` };
-        }),
-    [record, anchors],
-  );
-
-  // A fresh object per click, so repeated clicks on the same charge scroll again.
-  const [focus, setFocus] = useState<Focus | null>(null);
-  const locate = useCallback(
-    (chargeId: string, from: FocusSource) => setFocus({ chargeId, from, anchor: anchors.get(chargeId) ?? null }),
-    [anchors],
-  );
-  const locateFromDocket = useCallback((id: string) => locate(id, 'docket'), [locate]);
-  const locateFromDiff = useCallback((id: string) => locate(id, 'diff'), [locate]);
-
-  const docketRef = useRef<HTMLElement>(null);
-  const diffRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!focus) return;
-    const target =
-      focus.from === 'docket'
-        ? focus.anchor === null
-          ? null
-          : findByData(diffRef.current, 'anchor', focus.anchor)
-        : findByData(docketRef.current, 'chargeAnchor', focus.chargeId);
-    if (target && typeof target.scrollIntoView === 'function') target.scrollIntoView({ block: 'center' });
-  }, [focus]);
-
-  const [log, setLog] = useState<LogTarget | null>(null);
-  const closeLog = useCallback(() => setLog(null), []);
-
-  const [settled, setSettled] = useState(false);
-  useEffect(() => setSettled(true), []);
-
-  const articleRef = useRef<HTMLElement>(null);
-  const teleRef = useRef<HTMLElement>(null);
-  useLayoutEffect(() => {
-    const root = articleRef.current;
-    const head = teleRef.current;
-    if (!root || !head) return;
-    const apply = () => root.style.setProperty('--tele-h', `${head.offsetHeight}px`);
-    apply();
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(apply);
-    ro.observe(head);
-    return () => ro.disconnect();
-  }, []);
-
+  const plan = useMemo(() => planExhibits(record, heardChargeIds(record)), [record]);
   const isReplay = replay || record.mode === 'replay';
-  const recorded = recordedAt ?? record.endedAt ?? record.startedAt;
-  const recordedDate = isoDate(recorded);
+  const recorded = longDate(recordedAt ?? record.endedAt ?? record.startedAt);
+  const showSkip = Boolean(onSkip) && active;
+  const showBar = Boolean(onBack) || isReplay || showSkip || Boolean(onReplay);
 
   return (
-    <article ref={articleRef} className="case-view" aria-label={`Case ${record.title}`}>
-      <header ref={teleRef} className="telemetry">
-        <div className="tele-main">
-          <div className="tele-title">
-            <p className="label tele-kicker">
-              Case <code>{record.id}</code> · <CaseStatusBadge status={record.status} />
+    <div className="case">
+      {showBar && (
+        <div className="case-bar">
+          {onBack && (
+            <a className="back-link" href={caseHref(null)} onClick={(e) => followInApp(e, onBack)}>
+              ← Back to the docket
+            </a>
+          )}
+          {isReplay && (
+            <p className="replay-note">
+              {recorded
+                ? `Replay. This case was recorded on ${recorded} and is played back here, not run live.`
+                : 'Replay. This case is played back from a record, not run live.'}
             </p>
-            <h2 className="case-title">{record.title}</h2>
-            <p className="tele-refs">
-              <code className="muted">{record.repoPath}</code>{' '}
-              <span className="shas">
-                <code title={`base ${record.baseRef}`}>{shortSha(record.baseRef)}</code>
-                <span className="muted">..</span>
-                <code title={`head ${record.headRef}`}>{shortSha(record.headRef)}</code>
-              </span>
-            </p>
-            {isReplay && (
-              <p className="replay-label">
-                Replay of recorded Token Factory run
-                {recordedDate && (
-                  <>
-                    {' '}
-                    · recorded on <time dateTime={recorded}>{recordedDate}</time>
-                  </>
-                )}
-              </p>
-            )}
-          </div>
-          <dl className="ledger" aria-label="Case meters">
-            <div className="ledger-item ledger-lineage">
-              <dt>Models</dt>
-              <dd>
-                <span aria-label="Model lineage">
-                  {MODEL_LINEAGE.map((m, i) => (
-                    <Fragment key={m.tier}>
-                      {i > 0 && ' → '}
-                      <abbr title={MODELS[m.tier].id}>{m.label}</abbr>
-                    </Fragment>
-                  ))}
-                </span>
-              </dd>
-            </div>
-            {TIERS.map((t) => {
-              const tk = totals.tokens[t];
-              return (
-                <div
-                  key={t}
-                  className="ledger-item"
-                  title={`${MODELS[t].id} · ${tk.calls} call(s) · ${tk.prompt} prompt / ${tk.completion} completion tokens`}
-                >
-                  <dt>{TIER_LABEL[t]}</dt>
-                  <dd>{formatTokens(tk.prompt + tk.completion)} tok</dd>
-                </div>
-              );
-            })}
-            <div className="ledger-item">
-              <dt>Cost</dt>
-              <dd>{formatUsd(totals.costUsd)}</dd>
-            </div>
-            <div className="ledger-item">
-              <dt>Elapsed</dt>
-              <dd>{formatDuration(elapsedMs(record, now))}</dd>
-            </div>
-          </dl>
-        </div>
-        <div className="tele-bar">
-          <PhaseTrack status={record.status} />
-          <p className="tally" aria-label="Tally">
-            <span className="tally-convicted">{tally.convicted} convicted</span> ·{' '}
-            <span className="tally-dismissed">{tally.dismissed} dismissed</span>
-            {tally.inadmissible > 0 && <> ({tally.inadmissible} inadmissible)</>}
-            {tally.pending > 0 && <> · {tally.pending} pending</>}
-          </p>
-          {(onReplay || onSkip) && (
-            <div className="actions">
-              {onSkip && active && (
-                <button type="button" onClick={onSkip}>
-                  Skip to verdict
+          )}
+          {(showSkip || onReplay) && (
+            <span className="case-bar-actions">
+              {showSkip && onSkip && (
+                <button type="button" className="btn" onClick={onSkip}>
+                  Skip to the judgment
                 </button>
               )}
               {onReplay && (
-                <button type="button" onClick={onReplay}>
-                  Replay
+                <button type="button" className="btn" onClick={onReplay}>
+                  Replay from the start
                 </button>
               )}
-            </div>
+            </span>
           )}
         </div>
-      </header>
-
-      {record.error && (
-        <p className="error case-error" role="alert">
-          {record.error}
-        </p>
       )}
-
-      <div className="workbench">
-        <section ref={docketRef} className="docket" aria-label="Docket">
-          {description && (
-            <details className="pr-description">
-              <summary>PR description</summary>
-              <p>{description}</p>
-            </details>
-          )}
-          <h3 className="pane-label">
-            Charges <span className="count">{record.charges.length}</span>
-          </h3>
-          {record.charges.length === 0 &&
-            (active ? (
-              <Pending active text="The prosecutor is reading the diff…" />
-            ) : (
-              <p className="muted">No charges filed.</p>
-            ))}
-          <ol className="charges">
-            {record.charges.map((charge) => (
-              <li key={charge.id}>
-                <ChargeSection
-                  record={record}
-                  charge={charge}
-                  focused={focus?.chargeId === charge.id}
-                  anchored={anchors.has(charge.id)}
-                  live={active}
-                  animateStamp={settled}
-                  onLocate={locateFromDocket}
-                  onOpenLog={setLog}
-                />
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section ref={diffRef} className="diff-pane" aria-label="Diff">
-          <h3 className="pane-label">
-            Diff
-            {diff && (
-              <span className="muted">
-                {' '}
-                · {diff.files.length} file{diff.files.length === 1 ? '' : 's'}
-              </span>
-            )}
-          </h3>
-          {diff ? (
-            <DiffViewer
-              diff={diff}
-              verdicts={NO_VERDICTS}
-              markers={markers}
-              activeMarkerId={focus?.chargeId ?? null}
-              onMarkerClick={locateFromDiff}
-            />
-          ) : (
-            <p className="muted">This case record carries no patch, so the diff is unavailable.</p>
-          )}
-        </section>
-      </div>
-
-      {log && (
-        <LogDrawer target={log} evidence={record.evidence.find((e) => e.chargeId === log.chargeId)} onClose={closeLog} />
-      )}
-    </article>
+      <article className="filing pleading" aria-label={`Case ${record.title}`}>
+        <div className="line-numbers" aria-hidden="true">
+          {LINE_NUMBERS}
+        </div>
+        <h1 className="court-name">The Kacheri Court of Code Review</h1>
+        <p className="court-sitting">sitting in review of {repoLabel(record.repoPath)}</p>
+        <Caption record={record} />
+        {record.error && (
+          <p className="case-error" role="alert">
+            The court reports an error: {record.error}
+          </p>
+        )}
+        <JudgmentBox record={record} />
+        <Charges record={record} />
+        <EvidenceSection record={record} plan={plan} />
+        <DefenseSection record={record} plan={plan} />
+        <FindingsSection record={record} plan={plan} />
+        <OrderSection record={record} plan={plan} />
+        <Signature record={record} now={now} />
+      </article>
+    </div>
   );
 }

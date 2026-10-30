@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { CaseRecord, Charge, Evidence, LlmUsage } from '@kacheri/shared';
+import type { CaseRecord, Charge, Evidence, LlmUsage, Remedy } from '@kacheri/shared';
 
 const DEMO_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'demo');
 
@@ -43,6 +43,28 @@ export function makeUsage(overrides: Partial<LlmUsage> = {}): LlmUsage {
     completionTokens: 500,
     costUsd: 0.00018,
     latencyMs: 1200,
+    ...overrides,
+  };
+}
+
+export function makeRemedy(overrides: Partial<Remedy> = {}): Remedy {
+  return {
+    chargeIds: ['c1'],
+    explanation: 'Restore the original bound.',
+    patch: [
+      'diff --git a/src/a.js b/src/a.js',
+      '--- a/src/a.js',
+      '+++ b/src/a.js',
+      '@@ -3,1 +3,1 @@',
+      '-const end = n - 1;',
+      '+const end = n;',
+      '',
+    ].join('\n'),
+    attempts: 1,
+    witnesses: [{ chargeId: 'c1', outcomes: ['pass', 'pass', 'pass'] }],
+    suite: 'pass',
+    suiteLog: 'ℹ tests 4\nℹ pass 4\nℹ fail 0\n',
+    verified: true,
     ...overrides,
   };
 }
