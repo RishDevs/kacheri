@@ -134,6 +134,7 @@ export async function runCase(opts: CaseOptions): Promise<CaseRecord> {
     if (!record.title) record.title = (await git(['log', '-1', '--format=%s', head], repo)).trim();
     setStatus('filing');
     const ctx = await buildContext(repo, base, head, record.title);
+    record.patch = ctx.diff.slice(0, 200_000);
 
     // 1. Filing: independent Nano prosecutors, merged and de-duplicated.
     const n = Math.max(1, Math.min(opts.prosecutors ?? 2, PROSECUTOR_TEMPS.length));
