@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('hasCustomProtocol dot regression', () => {\\n  it('should treat a URL with a dot in the scheme as non-custom (throw on invalid URL)', () => {\\n    const input = 'foo.bar:baz';\\n    assert.throws(() => {\\n      normalizeUrl(input, {});\\n    }, Error);\\n  });\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3262,
+    "completionTokens": 3189,
+    "costUsd": 0.0038486999999999996,
+    "latencyMs": 23768
+  }
+}

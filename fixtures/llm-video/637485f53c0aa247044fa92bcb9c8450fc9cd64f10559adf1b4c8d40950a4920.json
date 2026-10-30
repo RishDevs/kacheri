@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Removing the dot check in hasCustomProtocol incorrectly treats dotted protocols as custom, causing normalizeUrl to skip normalization and return the original URL unchanged.\",\n      \"file\": \"__kacheri__/charge1.test.mjs\",\n      \"line\": 1,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import x from '../index.js';\\nimport { strict as assert } from 'node:assert';\\n\\nconst url = 'foo.bar://';\\nconst result = x(url);\\nassert.strictEqual(result, 'foo.bar:');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2890,
+    "completionTokens": 12280,
+    "costUsd": 0.0031206,
+    "latencyMs": 78286
+  }
+}

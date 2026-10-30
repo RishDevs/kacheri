@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The removal of the dot check in hasCustomProtocol unintentionally treats dotted protocols as custom, causing them to be returned unchanged instead of normalized; the original code explicitly excluded dotted protocols from custom handling.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The same change causes 'foo.bar://' to be incorrectly treated as a custom protocol and returned unchanged instead of being normalized to 'http://foo.bar', which the defense concedes is a regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3856,
+    "completionTokens": 1391,
+    "costUsd": 0.008029,
+    "latencyMs": 8525
+  }
+}

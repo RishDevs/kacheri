@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The removed condition `!protocol.includes('.')` was overly restrictive and not aligned with URL specification, which allows dots in scheme names (e.g., 'custom.scheme:'). The change correctly treats such schemes as custom protocols, returning them unchanged per design. The test's expectation that 'foo.bar:baz' should throw is incorrect—it is a valid custom protocol and should not trigger an error.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3247,
+    "completionTokens": 92,
+    "costUsd": 0.0010569,
+    "latencyMs": 1359
+  }
+}

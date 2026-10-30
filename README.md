@@ -48,9 +48,11 @@ We ran all 49 changes against `sindresorhus/normalize-url` live on Token Factory
 
 | Reviewer | Bugs caught (of 37) | False accusations | Precision | Clean changes accused | Cost per change | Median time |
 |---|---|---|---|---|---|---|
-| Kacheri Court (proof required) | 21 (56.8%) | 4 | 88.2% | 0 of 12 | $0.0114 | 32 s |
+| Kacheri Court (proof required) | 21 (56.8%) | 4 | 84% | 0 of 12 | $0.0114 | 32 s |
 | Nemotron Super, single pass | 14 (37.8%) | 0 | 100% | 0 of 12 | $0.0022 | 14 s |
 | Nemotron Ultra, single pass | 29 (78.4%) | 3 | 90.6% | 1 of 12 | $0.0078 | 3.9 s |
+
+Precision here is changes caught divided by changes caught plus false accusations. (The raw runner reports in `research/` count duplicate reports and give slightly higher numbers.)
 
 What this does and doesn't show:
 
@@ -59,7 +61,7 @@ What this does and doesn't show:
 - **It's slower.** Running tests on both versions takes time: a median of 32 seconds per change, against 4 seconds for Ultra alone.
 - **The scoring favours the single reviewers.** Any of their comments within three lines of the bug counts as a hit; the court only gets credit for a conviction.
 - On the 5 real upstream regressions the court convicted 4, Ultra 3 and Super 0.
-- We tried one improvement afterwards: Ultra reads the change first and names suspects, and the prosecutors still have to prove each one ([run 2](research/bench-run2.md), exploratory). Precision went up to 93.5% and false accusations halved to 0.04 per change, but the overall catch rate stayed at 56.8%, real-regression catches dropped from 4 of 5 to 3 of 5, and cost and median time went up (about $0.019 and 67 s per change). One rerun isn't enough to say which way it really cuts, so run 1 is the headline.
+- We tried one improvement afterwards: Ultra reads the change first and names suspects, and the prosecutors still have to prove each one ([run 2](research/bench-run2.md), exploratory). Precision went up from 84% to 91% and false accusations halved to 0.04 per change, but the overall catch rate stayed at 56.8%, real-regression catches dropped from 4 of 5 to 3 of 5, and cost and median time went up (about $0.019 and 67 s per change). One rerun isn't enough to say which way it really cuts, so run 1 is the headline.
 - One small library, one language. Planted mutants are a stand-in for real bugs, not the same thing.
 
 ## NVIDIA Nemotron and Nebius Token Factory

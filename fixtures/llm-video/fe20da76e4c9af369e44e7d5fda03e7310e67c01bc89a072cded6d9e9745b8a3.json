@@ -1,0 +1,12 @@
+{
+  "content": "{\"explanation\": \"The removal of the dot check in hasCustomProtocol caused URLs with dots in the scheme to be incorrectly treated as custom protocols. Restoring the check ensures such URLs are not considered custom and are normalized (or throw an error for invalid URLs).\", \"edits\": [{\"path\": \"index.js\", \"old\": \"\\treturn protocol.endsWith(':')\\n\\t\\t&& !supportedProtocols.has(protocol);\", \"new\": \"\\treturn protocol.endsWith(':')\\n\\t\\t&& !protocol.includes('.')\\n\\t\\t&& !supportedProtocols.has(protocol);\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "remedy",
+    "promptTokens": 3672,
+    "completionTokens": 3352,
+    "costUsd": 0.0041183999999999995,
+    "latencyMs": 17832
+  }
+}

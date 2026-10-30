@@ -63,13 +63,13 @@ It passed 3/3 on the old code and failed 3/3 on the new code, which returned `fo
 
 | Reviewer | Bugs caught (of 37) | Precision | Clean changes falsely accused | Cost per change | Median time |
 |---|---|---|---|---|---|
-| Kacheri Court | 21 (56.8%) | 88.2% | 0 of 12 | $0.011 | 32 s |
+| Kacheri Court | 21 (56.8%) | 84% | 0 of 12 | $0.011 | 32 s |
 | Super, single pass | 14 (37.8%) | 100% | 0 of 12 | $0.002 | 14 s |
 | Ultra, single pass | 29 (78.4%) | 90.6% | 1 of 12 | $0.008 | 3.9 s |
 
 Ultra on its own catches more bugs, and we're not going to pretend otherwise. What the court gives you is different: every conviction comes with a test you can run, and it never accused a clean change. It isn't perfect either. It filed 34 convictions across the 21 changes it caught, and 4 of them pointed away from the planted bug, so we count those as false accusations. It's also slower, because it actually runs tests on both versions. The scoring also leans toward the single reviewers, since any comment within three lines of the bug counts for them, while the court only gets credit for a proven conviction. On the five real regressions the court convicted four, Ultra three, Super none.
 
-In a second, exploratory run we added the Ultra suspect step. Precision rose to 93.5% and false accusations halved, but the overall catch rate didn't move, real-regression catches dropped from four to three, and it cost more and took about twice as long. It's one rerun, so we're treating it as a lead, not a result. What it did tell us is that the prosecutors were rarely missing the right spot. They were failing to write a test that proved it.
+In a second, exploratory run we added the Ultra suspect step. Precision rose from 84% to 91% and false accusations halved, but the overall catch rate didn't move, real-regression catches dropped from four to three, and it cost more and took about twice as long. It's one rerun, so we're treating it as a lead, not a result. What it did tell us is that the prosecutors were rarely missing the right spot. They were failing to write a test that proved it.
 
 ## What we learned
 Writing a convincing accusation is easy. Writing a test that proves it against a public API is much harder, and that gap is exactly the noise developers have learned to ignore in AI review.

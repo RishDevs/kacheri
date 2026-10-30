@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import x from '../index.js';\\nimport { strict as assert } from 'node:assert';\\n\\nconst url = 'foo.bar://';\\nconst result = x(url);\\nassert.strictEqual(result, 'http://foo.bar');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2965,
+    "completionTokens": 5863,
+    "costUsd": 0.00158502,
+    "latencyMs": 45558
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The removed condition `!protocol.includes('.')` was intended to exclude dotted protocols like 'foo.bar:' from being considered custom, ensuring they get normalized. However, the current behavior after the change treats such protocols as custom and returns them unchanged, which contradicts the expected normalization to 'http://foo.bar'. This indicates the removal unintentionally altered the logic for detecting custom protocols, leading to a regression.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 2969,
+    "completionTokens": 93,
+    "costUsd": 0.0009743999999999999,
+    "latencyMs": 1388
+  }
+}

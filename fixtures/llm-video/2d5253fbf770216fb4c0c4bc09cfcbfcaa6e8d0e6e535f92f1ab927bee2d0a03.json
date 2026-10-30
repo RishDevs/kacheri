@@ -1,0 +1,12 @@
+{
+  "content": "{\"explanation\": \"Restoring the dot check in hasCustomProtocol ensures that URLs with a dot in the scheme (like 'foo.bar:baz') are not treated as custom protocols, allowing them to be processed through normalization (which throws an error for invalid URLs) or normalized correctly (like 'foo.bar://' becoming 'http://foo.bar'). This fixes both reported regressions.\", \"edits\": [{\"path\": \"index.js\", \"old\": \"\\treturn protocol.endsWith(':')\\n\\t\\t&& !supportedProtocols.has(protocol);\", \"new\": \"\\treturn protocol.endsWith(':')\\n\\t\\t&& !protocol.includes('.')\\n\\t\\t&& !supportedProtocols.has(protocol);\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "remedy",
+    "promptTokens": 3624,
+    "completionTokens": 9725,
+    "costUsd": 0.009839700000000002,
+    "latencyMs": 61232
+  }
+}

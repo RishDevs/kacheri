@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removing the dot check in hasCustomProtocol causes URLs with a dot in the scheme (e.g., 'foo.bar:baz') to be incorrectly treated as custom protocols and returned unchanged, whereas they should be normalized by prepending the default protocol.\", \"file\": \"index.js\", \"line\": 16, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('hasCustomProtocol dot regression', () => {\\n  it('should normalize a URL with a dot in the scheme', () => {\\n    const input = 'foo.bar:baz';\\n    const expectedBase = 'http:/foo.bar:baz';\\n    const actual = normalizeUrl(input, {});\\n    assert.strictEqual(actual, expectedBase);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2890,
+    "completionTokens": 2110,
+    "costUsd": 0.002766,
+    "latencyMs": 11859
+  }
+}
