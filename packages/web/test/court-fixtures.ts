@@ -1,0 +1,68 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { CaseRecord, Charge, Evidence, LlmUsage } from '@kacheri/shared';
+
+const DEMO_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'demo');
+
+export function readDemo<T>(relPath: string): T {
+  return JSON.parse(readFileSync(join(DEMO_DIR, relPath), 'utf8')) as T;
+}
+
+export function makeCharge(id: string, overrides: Partial<Charge> = {}): Charge {
+  return {
+    id,
+    claim: `claim ${id}`,
+    file: 'src/a.js',
+    line: 3,
+    severity: 'major',
+    witnessCode: `import { test } from 'node:test';\ntest('${id}', () => {});\n`,
+    witnessPath: `__kacheri__/${id}.test.mjs`,
+    ...overrides,
+  };
+}
+
+export function makeEvidence(chargeId: string, admissible: boolean, overrides: Partial<Evidence> = {}): Evidence {
+  return {
+    chargeId,
+    base: ['pass', 'pass', 'pass'],
+    head: admissible ? ['fail', 'fail', 'fail'] : ['pass', 'pass', 'pass'],
+    admissible,
+    reason: admissible ? 'fails on head 3/3, passes on base 3/3' : 'passes on head 3/3',
+    headLog: 'not ok 1',
+    ...overrides,
+  };
+}
+
+export function makeUsage(overrides: Partial<LlmUsage> = {}): LlmUsage {
+  return {
+    tier: 'nano',
+    model: 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B',
+    role: 'prosecutor',
+    promptTokens: 1000,
+    completionTokens: 500,
+    costUsd: 0.00018,
+    latencyMs: 1200,
+    ...overrides,
+  };
+}
+
+export function makeCase(overrides: Partial<CaseRecord> = {}): CaseRecord {
+  return {
+    id: 'case1',
+    title: 'Add range support',
+    repoPath: '/repo',
+    baseRef: 'a'.repeat(40),
+    headRef: 'b'.repeat(40),
+    status: 'filing',
+    charges: [],
+    evidence: [],
+    rebuttals: [],
+    rulings: [],
+    usage: [],
+    error: null,
+    startedAt: '2026-10-30T07:00:00.000Z',
+    endedAt: null,
+    ...overrides,
+  };
+}

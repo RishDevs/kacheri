@@ -64,40 +64,51 @@ export function parseServerEvent(data: string): ServerEvent | null {
   }
 }
 
+export function defaultFetch(): typeof fetch {
+  return (input, init) => globalThis.fetch(input, init);
+}
+
+export async function requestJson<T>(
+  doFetch: typeof fetch,
+  method: 'GET' | 'POST',
+  url: string,
+  body?: unknown,
+): Promise<T> {
+  const init: RequestInit = { method, headers: { accept: 'application/json' } };
+  if (body !== undefined) {
+    init.headers = { ...init.headers, 'content-type': 'application/json' };
+    init.body = JSON.stringify(body);
+  }
+  let res: Response;
+  try {
+    res = await doFetch(url, init);
+  } catch (err) {
+    throw new ApiRequestError(`daemon unreachable: ${(err as Error).message}`, 0);
+  }
+  const text = await res.text();
+  let parsed: unknown = undefined;
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = undefined;
+    }
+  }
+  if (!res.ok) {
+    const message = isApiError(parsed) ? parsed.error : text || `HTTP ${res.status}`;
+    throw new ApiRequestError(message, res.status);
+  }
+  if (parsed === undefined) {
+    throw new ApiRequestError(`invalid JSON response from ${method} ${url}`, res.status);
+  }
+  return parsed as T;
+}
+
 export function createApi(opts: ApiOptions = {}): KacheriApi {
   const base = `${opts.baseUrl ?? ''}/api`;
-  const doFetch: typeof fetch = opts.fetch ?? ((input, init) => globalThis.fetch(input, init));
-
-  async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
-    const init: RequestInit = { method, headers: { accept: 'application/json' } };
-    if (body !== undefined) {
-      init.headers = { ...init.headers, 'content-type': 'application/json' };
-      init.body = JSON.stringify(body);
-    }
-    let res: Response;
-    try {
-      res = await doFetch(`${base}${path}`, init);
-    } catch (err) {
-      throw new ApiRequestError(`daemon unreachable: ${(err as Error).message}`, 0);
-    }
-    const text = await res.text();
-    let parsed: unknown = undefined;
-    if (text) {
-      try {
-        parsed = JSON.parse(text);
-      } catch {
-        parsed = undefined;
-      }
-    }
-    if (!res.ok) {
-      const message = isApiError(parsed) ? parsed.error : text || `HTTP ${res.status}`;
-      throw new ApiRequestError(message, res.status);
-    }
-    if (parsed === undefined) {
-      throw new ApiRequestError(`invalid JSON response from ${method} ${path}`, res.status);
-    }
-    return parsed as T;
-  }
+  const doFetch: typeof fetch = opts.fetch ?? defaultFetch();
+  const request = <T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> =>
+    requestJson<T>(doFetch, method, `${base}${path}`, body);
 
   const enc = encodeURIComponent;
 
