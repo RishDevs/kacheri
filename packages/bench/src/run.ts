@@ -10,7 +10,7 @@ async function main() {
   const items = JSON.parse(readFileSync(join(benchRoot, 'fixtures/survivors.json'), 'utf8')) as FixtureItem[];
   const llm = createClientFromEnv();
   const results = await runBenchmark(items.filter(item=>kinds.includes(item.kind)).sort((a,b)=>kinds.indexOf(a.kind)-kinds.indexOf(b.kind)).slice(0,n), systems, {
-    court: input => runCase({ ...input, llm }),
+    court: input => runCase({ ...input, llm, remedy: false }),
     baseline: async input => {
       const r = await runBaseline({ ...input, llm, tier: 'super' });
       return { usage: r.usage, findings: r.findings.map(f => ({ ...f, suggestion: null })) };
