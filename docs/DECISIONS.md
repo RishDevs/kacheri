@@ -9,3 +9,4 @@
 - 2026-10-30 User rule: never spend beyond the free hackathon credits. Hard cap enforced in packages/llm (persistent ledger, worst-case pre-check).
 - 2026-10-30 Design council (research/council/*-design-direction.md): adopted docs/DESIGN.md (engineering case docket, Plex Sans/Mono + Newsreader, seal-amber accent, evidence register table, one stamp animation, banned AI-slop list).
 - 2026-10-30 Council keep-or-restart (research/council/*-keep-or-restart.md, research/round3/winners_*.md): both chose KEEP + Remedy loop (find -> prove -> fix -> re-verify, the pattern of LA Hacks 2025/2026 1st places). Restart rated 2-10%. Must-dos: real popular-repo headline case, show restraint (a dismissed plausible charge) + equal-budget baseline, freeze features early for replay/video.
+- 2026-10-30 User rejected the docket look as AI slop; approved minimal Claude Design mockups (docs/design/*.dc.html). DESIGN.md rewritten to match.
