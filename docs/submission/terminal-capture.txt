@@ -1,0 +1,52 @@
+# Captured output of a live run, October 30 2026, on Nebius Token Factory:
+# $ scripts/live.sh case ef06f10e06ad
+# (Same historical normalize-url case as KC-2026-0014. In this run both charges were proven and
+#  convicted; the remedy did not verify in 2 attempts, so no fix was ordered. Exit code 1 = conviction.)
+
+charge c1: Removing the dot check in hasCustomProtocol causes URLs with a dot in the scheme (e.g., 'foo.bar:baz') to be incorrectly treated as custom protocols and returned unchanged, whereas they should be normalized by prepending the default protocol.
+charge c2: Removing the dot check in hasCustomProtocol incorrectly treats dotted protocols as custom, causing normalizeUrl to skip normalization and return the original URL unchanged.
+charge c2: Removing the dot check in hasCustomProtocol incorrectly treats dotted protocols as custom, causing normalizeUrl to skip normalization and return the original URL unchanged.
+evidence c2: fails on head 3/3, passes on base 3/3
+charge c1: Removing the dot check in hasCustomProtocol causes URLs with a dot in the scheme (e.g., 'foo.bar:baz') to be incorrectly treated as custom protocols and returned unchanged, whereas they should be normalized by prepending the default protocol.
+evidence c1: fails on head 3/3, passes on base 3/3
+ruling c1: convicted
+ruling c2: convicted
+remedy: not verified
+# Kacheri Court: Refactor URL normalization edge handling
+
+**GUILTY on 2 charges**: 2 filed, 2 with admissible evidence. Cost $0.0548.
+
+| Charge | Location | Evidence | Ruling |
+|---|---|---|---|
+| c1: Removing the dot check in hasCustomProtocol causes URLs with a dot in the scheme (e.g., 'foo.bar:baz') to be incorrectly treated as custom protocols and returned unchanged, whereas they should be normalized by prepending the default protocol. | `index.js:16` | fails on head 3/3, passes on base 3/3 | **convicted**: The removal of the dot check in hasCustomProtocol unintentionally treats dotted protocols as custom, causing them to be returned unchanged instead of normalized; the original code explicitly excluded dotted protocols from custom handling. |
+| c2: Removing the dot check in hasCustomProtocol incorrectly treats dotted protocols as custom, causing normalizeUrl to skip normalization and return the original URL unchanged. | `__kacheri__/charge1.test.mjs:1` | fails on head 3/3, passes on base 3/3 | **convicted**: The same change causes 'foo.bar://' to be incorrectly treated as a custom protocol and returned unchanged instead of being normalized to 'http://foo.bar', which the defense concedes is a regression. |
+
+## c1 witness (fails on head, passes on base)
+
+```js
+import { describe, it } from 'node:test';
+import { strict as assert } from 'node:assert/strict';
+import normalizeUrl from '../index.js';
+
+describe('hasCustomProtocol dot regression', () => {
+  it('should treat a URL with a dot in the scheme as non-custom (throw on invalid URL)', () => {
+    const input = 'foo.bar:baz';
+    assert.throws(() => {
+      normalizeUrl(input, {});
+    }, Error);
+  });
+});
+```
+
+## c2 witness (fails on head, passes on base)
+
+```js
+import x from '../index.js';
+import { strict as assert } from 'node:assert';
+
+const url = 'foo.bar://';
+const result = x(url);
+assert.strictEqual(result, 'http://foo.bar');
+```
+
+## Remedy: NOT VERIFIED (2 attempts)

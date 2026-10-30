@@ -22,7 +22,7 @@ Optional: if you make a /brag teaser clip, put it before 0:00 and trim the cold 
 - Record at 1920×1080, browser zoom around 110–125%. Check that the witness code and run table are readable.
 - Hide bookmarks, notifications and other tabs. Do a ten-second mic test and listen back.
 - Pre-open these tabs in order: the case page, the upstream commit (https://github.com/sindresorhus/normalize-url/commit/dec5dc6b40e664194db97cd74ea5cb977f23d219), the Court record page, the README model section (https://github.com/RishDevs/kacheri#nvidia-nemotron-and-nebius-token-factory), and the workflow file (https://github.com/RishDevs/kacheri/blob/main/.github/workflows/kacheri-court.yml).
-- Terminal: open `docs/submission/terminal-capture.txt` with `cat` in a terminal, or just show the file. It's real output from a live run of the CLI on this case, captured ahead of time because a live case takes a couple of minutes. Don't call it a fresh run. Keep `~/.kacheri.env` off screen.
+- Terminal: open `docs/submission/terminal-capture.txt` with `cat` in a terminal, or just show the file. It is real output from a live CLI run on this case (it took about five minutes, so it was captured ahead of time). In that run the court convicted but the fix did not verify, which is fine to show: it is the court refusing to order an unproven fix. Do not call it a fresh run. Keep `~/.kacheri.env` off screen.
 - Click **Replay from the start** once before recording so you know when each section appears.
 - Make sure the final cut is under 3:00. Upload to YouTube as public or unlisted, then put the link in place of `[VIDEO_URL]` in the README and the Devpost form.
 
