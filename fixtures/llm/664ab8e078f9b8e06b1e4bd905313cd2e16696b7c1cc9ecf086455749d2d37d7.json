@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The witness test demonstrates that removing the decodeURIComponent call causes double-encoding of already-percent-encoded query parameters (e.g., %2520 becomes %252520 instead of staying %2520). The original comment explicitly states this decode was needed because .sort() triggers re-encoding. The defense acknowledges the decode was a workaround but offers no alternative fix; the regression is unintended and a maintainer would want it resolved before merge.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3368,
+    "completionTokens": 1537,
+    "costUsd": 0.007979,
+    "latencyMs": 5816
+  }
+}

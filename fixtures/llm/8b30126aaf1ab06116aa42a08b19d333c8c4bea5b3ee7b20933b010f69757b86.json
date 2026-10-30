@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"stripWWW regex change incorrectly requires at least 2 characters in the first label, breaking stripping for hostnames like www.a.com\",\n      \"file\": \"index.js\",\n      \"line\": 208,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import {strict as assert} from 'node:assert';\\nimport {test} from 'node:test';\\nimport x from '../index.js';\\n\\ntest('stripWWW removes www. for single-label hostnames', () => {\\n  const result = x('www.a.com');\\n  assert.strictEqual(result, 'http://a.com/');\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3203,
+    "completionTokens": 2281,
+    "costUsd": 0.0007396199999999999,
+    "latencyMs": 25488
+  }
+}

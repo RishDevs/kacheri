@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"stripWWW incorrectly fails to strip www for two-letter TLDs (e.g., .co)\", \"file\": \"index.js\", \"line\": 206, \"severity\": \"major\", \"witnessCode\": \"import x from '../index.js';\\nconst url = 'http://www.example.co/';\\nconst opts = { stripWWW: true };\\nconst expected = 'http://example.co';\\nconst actual = x(url, opts);\\nassert.strictEqual(actual, expected);\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3040,
+    "completionTokens": 4161,
+    "costUsd": 0.004656899999999999,
+    "latencyMs": 15823
+  }
+}

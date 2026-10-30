@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Directory index is not removed when removeDirectoryIndex is true, causing a regression\",\n      \"file\": \"index.js\",\n      \"line\": 196,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst result = normalizeUrl('http://example.com/dir/index.html', { removeDirectoryIndex: true });\\nassert.strictEqual(result, 'http://example.com/dir/');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2929,
+    "completionTokens": 2619,
+    "costUsd": 0.0008043,
+    "latencyMs": 19693
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {2,63} breaks stripping 'www.' for valid single-character second-level domains like 'www.a.com', contrary to the RFC-cited comment stating minimum label length is 1. The PR title 'Refactor' implies no behavioral change, and the witness confirms regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same regression as c1: the stricter regex no longer strips 'www.' from hostnames with single-character second-level domains (e.g., 'www.a.com'), which are valid per RFC and the code's own comment. The witness demonstrates the behavioral change.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4135,
+    "completionTokens": 950,
+    "costUsd": 0.006985,
+    "latencyMs": 4638
+  }
+}

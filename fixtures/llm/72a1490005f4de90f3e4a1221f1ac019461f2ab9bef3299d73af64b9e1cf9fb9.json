@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The +1 offset in the slice operation drops the first character of each intermediate segment between protocol-like patterns, turning 'bb' into 'b' in the witness test. This breaks a previously working case without evidence that the prior behavior was incorrect.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3383,
+    "completionTokens": 834,
+    "costUsd": 0.005885,
+    "latencyMs": 6625
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test'\\nimport assert from 'node:assert/strict'\\nimport normalizeUrl from '../index.js'\\n\\ndescribe('normalizeUrl removeDirectoryIndex bug', () => {\\n  it('should not remove directory index when options.removeDirectoryIndex is array-like object', () => {\\n    const input = 'http://example.com/index.html'\\n    const opts = {\\n      removeDirectoryIndex: {\\n        '0': /^index\\\\.[a-z]+$/,\\n        length: 1\\n      }\\n    }\\n    const expected = 'http://example.com/index.html'\\n    assert.strictEqual(normalizeUrl(input, opts), expected)\\n  })\\n})\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3579,
+    "completionTokens": 1222,
+    "costUsd": 0.0021735,
+    "latencyMs": 6441
+  }
+}

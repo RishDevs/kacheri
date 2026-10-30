@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripping 'www.' was changed from {1,63} to {0,62}, which introduces two bugs: (1) It now incorrectly rejects valid hostnames with a 63-character domain label (e.g., 'www.' + 63 chars + '.com'), and (2) It now incorrectly accepts invalid hostnames with an empty label (e.g., 'www..com'). Hostname labels must be 1-63 characters per RFC standards.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2668,
+    "completionTokens": 1837,
+    "costUsd": 0.008179,
+    "latencyMs": 5459
+  }
+}

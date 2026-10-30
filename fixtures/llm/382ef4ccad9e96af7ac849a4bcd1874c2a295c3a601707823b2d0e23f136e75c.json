@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"removeDirectoryIndex condition incorrectly triggers on non-array truthy values causing directory index removal\",\n      \"file\": \"index.js\",\n      \"line\": 190,\n      \"severity\": \"critical\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport x from '../index.js';\\n\\ntest('normalizeUrl does not remove directory index when removeDirectoryIndex is a non‑array truthy value', () => {\\n  const url = 'http://example.com/path/index.html';\\n  const options = { removeDirectoryIndex: 'index.html' };\\n  const result = x(url, options);\\n  assert.strictEqual(result, url);\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2950,
+    "completionTokens": 2471,
+    "costUsd": 0.0007700399999999999,
+    "latencyMs": 11347
+  }
+}

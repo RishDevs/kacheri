@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change incorrectly omits the leading slash before the first protocol-like pattern in the pathname, causing URLs like http://example.com/foo://bar/baz to lose the slash between host and path.\", \"file\": \"index.js\", \"line\": 168, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('URL normalization edge handling regression', () => {\\n  it('should preserve leading slash before protocol-like pattern in pathname', () => {\\n    const input = 'http://example.com/foo://bar/baz';\\n    const expected = 'http://example.com/foo://bar/baz';\\n    const actual = normalizeUrl(input, {});\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2927,
+    "completionTokens": 1914,
+    "costUsd": 0.0026007,
+    "latencyMs": 9296
+  }
+}

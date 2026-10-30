@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The regular expression was changed from requiring a TLD of 2–63 characters ({2,63}) to requiring a minimum of 3 characters ({3,63}). This causes the WWW-stripping logic to skip domains with two-character TLDs like .co, .io, etc., because they no longer satisfy the pattern. However, the comment above the regex states that each TLD should be up to 63 characters long with a minimum of 2, indicating that the intended behavior includes two-character TLDs. Therefore, the change in the regex contradicts the documented intent and introduces a regression.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3316,
+    "completionTokens": 139,
+    "costUsd": 0.0011198999999999998,
+    "latencyMs": 1926
+  }
+}

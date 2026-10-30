@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Normalization of pathnames containing multiple protocol-like sequences is incorrect due to a change in substring extraction\", \"file\": \"index.js\", \"line\": 165, \"severity\": \"major\", \"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl handles multiple protocol-like patterns in pathname correctly', async (t) => {\\n  const input = 'http://example.com/ax://by://cz/d';\\n  const expected = 'http://example.com/ax://byby://cz/d';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2928,
+    "completionTokens": 8543,
+    "costUsd": 0.008567100000000001,
+    "latencyMs": 33852
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c3\",\"decision\":\"convicted\",\"reason\":\"The change from `lastIndex` to `0` in the slice start causes each loop iteration to reprocess the entire pathname from the beginning, duplicating earlier protocol segments and breaking slash collapsing between multiple protocol-like patterns. The witness demonstrates a clear regression from the original behavior.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3402,
+    "completionTokens": 664,
+    "costUsd": 0.005394,
+    "latencyMs": 2444
+  }
+}

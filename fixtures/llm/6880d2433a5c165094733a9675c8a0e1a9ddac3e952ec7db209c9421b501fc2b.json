@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": []}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2960,
+    "completionTokens": 15350,
+    "costUsd": 0.014703,
+    "latencyMs": 72553
+  }
+}

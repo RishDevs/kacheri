@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripping 'www.' was changed from {1,63} to {0,62} for the middle domain label. This breaks hostname validation: it now allows empty labels (e.g., 'www..com' would match) and rejects valid 63-character labels. The comment states each label must be 1-63 characters, so {1,63} was correct.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2698,
+    "completionTokens": 948,
+    "costUsd": 0.005542,
+    "latencyMs": 3786
+  }
+}

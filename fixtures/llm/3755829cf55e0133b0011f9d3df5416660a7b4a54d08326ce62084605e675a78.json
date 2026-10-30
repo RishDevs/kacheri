@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":155,\"severity\":\"major\",\"message\":\"Changed `lastIndex` from 0 to 1 breaks duplicate slash removal in pathnames. When no protocol-like pattern (e.g., 'http://') is found in the pathname, the loop never executes and the remnant slice starts at index 1, dropping the first character of the pathname (typically the leading '/'). Even when matches exist, the substring before the first match loses its first character. This corrupts normalized URLs.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2559,
+    "completionTokens": 1151,
+    "costUsd": 0.006012,
+    "latencyMs": 4018
+  }
+}

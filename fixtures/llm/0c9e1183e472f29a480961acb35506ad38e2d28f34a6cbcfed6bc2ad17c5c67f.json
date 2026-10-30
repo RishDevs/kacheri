@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"stripWWW incorrectly strips hostnames with a single-character label, causing false negatives such as www.a.com\",\n      \"file\": \"index.js\",\n      \"line\": 205,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('stripWWW regression: www.a.com should be stripped', () => {\\n  const result = normalizeUrl('www.a.com', { stripWWW: true });\\n  assert.strictEqual(result, 'http://a.com');\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3374,
+    "completionTokens": 4181,
+    "costUsd": 0.0012058799999999999,
+    "latencyMs": 20966
+  }
+}

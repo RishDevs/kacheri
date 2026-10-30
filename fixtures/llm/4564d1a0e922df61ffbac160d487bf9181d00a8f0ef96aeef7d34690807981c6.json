@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The change from slice(lastIndex, protocolAtIndex) to slice(0, protocolAtIndex) causes duplicate-slash normalization to incorrectly reprocess earlier pathname segments when multiple protocol-like patterns exist, producing malformed URLs as shown by the witness test.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3464,
+    "completionTokens": 228,
+    "costUsd": 0.004148,
+    "latencyMs": 1892
+  }
+}

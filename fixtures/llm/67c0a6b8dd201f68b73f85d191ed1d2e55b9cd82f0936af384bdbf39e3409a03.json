@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Changing the condition from `length > 0` to `length > -1` causes the keep-query-parameters block to run for empty arrays, deleting all query parameters.\", \"file\": \"index.js\", \"line\": 229, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters empty array regression', () => {\\n  it('should keep query parameters when keepQueryParameters is an empty array', () => {\\n    const url = 'https://example.com/path?foo=bar&baz=qux';\\n    const options = { keepQueryParameters: [] };\\n    const expected = 'https://example.com/path?foo=bar&baz=qux';\\n    const actual = normalizeUrl(url, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3126,
+    "completionTokens": 731,
+    "costUsd": 0.0015956999999999998,
+    "latencyMs": 5696
+  }
+}

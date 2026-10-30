@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport { test } from 'node:test';\\nimport normalizeUrl from '../index.js';\\n\\ntest('keepQueryParameters empty array should preserve query parameters', () => {\\n  const url = 'http://example.com?a=1&b=2';\\n  const options = { keepQueryParameters: [] };\\n  const result = normalizeUrl(url, options);\\n  // In the base version, query parameters must be present\\n  assert.includes(result, 'a=1');\\n  assert.includes(result, 'b=2');\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3083,
+    "completionTokens": 2055,
+    "costUsd": 0.0006781799999999999,
+    "latencyMs": 26158
+  }
+}

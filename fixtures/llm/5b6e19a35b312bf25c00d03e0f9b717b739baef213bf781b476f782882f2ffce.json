@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {1,62} incorrectly rejects valid 63-character DNS labels. DNS allows each label up to 63 characters; the second-level domain label of 63 chars followed by a dot and TLD is valid. The witness shows www-stripping fails for such hostnames on head but passes on base, confirming a regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3607,
+    "completionTokens": 813,
+    "costUsd": 0.006046,
+    "latencyMs": 3167
+  }
+}

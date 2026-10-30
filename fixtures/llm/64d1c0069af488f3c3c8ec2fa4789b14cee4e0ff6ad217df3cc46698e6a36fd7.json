@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripWWW was changed from {1,63} to {1,62}, causing it to fail to strip 'www.' from hostnames where the first label is exactly 63 characters long.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('stripWWW regression', () => {\\n  it('should strip www. from hostname with 63-character label', () => {\\n    const label = 'a'.repeat(63);\\n    const url = `http://www.${label}.com`;\\n    const expected = `http://${label}.com`;\\n    const actual = normalizeUrl(url);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3186,
+    "completionTokens": 1185,
+    "costUsd": 0.0020223,
+    "latencyMs": 7364
+  }
+}

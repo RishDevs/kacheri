@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test';import assert from 'node:assert/strict';import normalizeUrl from '../index.js';\\n\\ndescribe('query parameter double-encoding regression', () => {\\n  it('should not double-encode percent-encoded spaces when sortQueryParameters is true', () => {\\n    const input = 'http://example.com/path/?q=hello%2520world';\\n    const expected = 'http://example.com/path/?q=hello%20world';\\n    const actual = normalizeUrl(input, { removeTrailingSlash: false });\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3285,
+    "completionTokens": 10839,
+    "costUsd": 0.010740600000000001,
+    "latencyMs": 58769
+  }
+}

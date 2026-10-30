@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex change introduces an off-by-one error: the maximum length for the hostname portion after the first label is reduced from 63 to 62 characters ({2,63} -> {1,62}), which can incorrectly reject valid hostnames where that portion is exactly 63 characters long. Additionally, the minimum is reduced from 2 to 1, contradicting the comment stating TLDs should be at least 2 characters (though the comment also notes single-character TLDs are technically possible). The regex structure itself only validates the first label's length (1-63) and the aggregate length of the remainder, not per-label limits.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2700,
+    "completionTokens": 2173,
+    "costUsd": 0.009219,
+    "latencyMs": 6940
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The change `(length + 1) > 0` causes an empty keepQueryParameters array to enter the filtering loop and delete all query parameters, whereas the original code skipped the loop for empty arrays and preserved parameters. The witness passes on base, confirming the original behavior.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same regression: the off-by-one condition makes empty keepQueryParameters remove all query parameters, contradicting the base behavior which preserves them when the keep list is empty.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4068,
+    "completionTokens": 817,
+    "costUsd": 0.006519,
+    "latencyMs": 4138
+  }
+}

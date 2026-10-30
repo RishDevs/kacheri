@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Regex change unintentionally strips 'www.' from hostnames with a single-character TLD, altering normalization\",\n      \"file\": \"index.js\",\n      \"line\": 205,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport x from '../index.js';\\n\\n// Base should NOT strip 'www.' from a hostname with a 1‑char TLD\\nassert.strictEqual(x('www.a.b', { stripWWW: true }), 'www.a.b');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 3927,
+    "costUsd": 0.00112494,
+    "latencyMs": 17907
+  }
+}

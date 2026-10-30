@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":245,\"severity\":\"major\",\"message\":\"Removing the decodeURIComponent after searchParams.sort() may cause double-encoding of query parameters. The comment indicates that sort() encodes the search parameters, and the try-catch block was decoding them to prevent double-encoding (e.g., %20 becoming %2520). Without this, URLs with special characters in query parameters may be incorrectly serialized.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2552,
+    "completionTokens": 1847,
+    "costUsd": 0.008093,
+    "latencyMs": 7640
+  }
+}

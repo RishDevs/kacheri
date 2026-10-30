@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"message\": \"The regular expression for stripping 'www.' was changed to require a TLD of at least 3 characters, which incorrectly excludes valid two-letter TLDs (like .uk, .fr). This will prevent stripping 'www.' from hostnames with two-letter TLDs.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2669,
+    "completionTokens": 678,
+    "costUsd": 0.0014109,
+    "latencyMs": 3256
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'data:text/plain;charset=us-ascii;base64,hello';\\nconst result = normalizeUrl(input);\\nassert.strictEqual(result.includes('charset'), false);\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3008,
+    "completionTokens": 6189,
+    "costUsd": 0.0016658399999999998,
+    "latencyMs": 36390
+  }
+}

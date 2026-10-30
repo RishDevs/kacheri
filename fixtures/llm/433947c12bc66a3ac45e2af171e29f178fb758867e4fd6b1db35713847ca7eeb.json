@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {2,63} to {3,63} for TLD length breaks www stripping for valid two-letter TLDs, contradicting the comment stating minimum 2 characters and causing a regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The same regex change prevents www removal for domains with two-character TLDs like .co, .io, etc., which is an unintended regression as the documented intent allows TLDs of minimum 2 characters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4257,
+    "completionTokens": 495,
+    "costUsd": 0.005742,
+    "latencyMs": 2880
+  }
+}

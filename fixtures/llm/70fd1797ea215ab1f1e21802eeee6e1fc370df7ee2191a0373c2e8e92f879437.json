@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Incorrect duplicate slash handling when pathname contains multiple protocol patterns causes missing path segment\",\n      \"file\": \"index.js\",\n      \"line\": 165,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import {strict as assert} from 'node:assert';\\nimport {normalizeUrl} from '../index.js';\\n\\ntest('protocol segment between matches preserved', () => {\\n  const url = 'http://example.com/http://test.com/http://again.com';\\n  const result = normalizeUrl(url);\\n  assert.match(result, /test\\\\\\\\.com\\\\\\\\//);\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2927,
+    "completionTokens": 8292,
+    "costUsd": 0.0021657,
+    "latencyMs": 43759
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport x from '../index.js' // default export: function(urlString, options)\\n\\ntest('normalizeUrl preserves invalid percent encoding', () => {\\n  const url = 'http://example.com/%ZZ';\\n  const expected = url;\\n  const result = x(url);\\n  assert.strictEqual(result, expected);\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3215,
+    "completionTokens": 1667,
+    "costUsd": 0.00059298,
+    "latencyMs": 7919
+  }
+}

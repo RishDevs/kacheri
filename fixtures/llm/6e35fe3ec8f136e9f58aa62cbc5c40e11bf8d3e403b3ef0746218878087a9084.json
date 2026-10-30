@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {0,63} contradicts the documented minimum label length of 1 and causes incorrect stripping of 'www.' from hostnames with empty labels, producing invalid hostnames like '.example.com'.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same root cause: the relaxed regex allows zero-length labels, making the function strip 'www.' from 'www..com' and yield '.com', violating hostname specifications that require each label to be 1–63 characters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4123,
+    "completionTokens": 559,
+    "costUsd": 0.0058,
+    "latencyMs": 3575
+  }
+}

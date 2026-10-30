@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The removal of the try/catch around decodeURI causes a URIError to be thrown on invalid percent-encoded pathnames (like '%GG'), whereas the base behavior preserved the original URL unchanged. This is an unintended behavioral regression breaking existing functionality.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The witness tests the documented base behavior (invalid percent-encoding left unchanged), which passes on base but fails on head with URIError. The defense's claim of intentional stricter validation is unsupported; the PR title indicates a refactor, not a breaking change.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3920,
+    "completionTokens": 587,
+    "costUsd": 0.005681,
+    "latencyMs": 2800
+  }
+}

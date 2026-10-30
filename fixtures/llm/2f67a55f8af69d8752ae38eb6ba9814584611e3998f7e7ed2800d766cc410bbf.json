@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex change causes incorrect handling of duplicate slashes in the pathname when the pathname contains a string that looks like a protocol of exactly 50 characters in the set (so total 54 including the first letter and '://').\", \"file\": \"index.js\", \"line\": 156, \"severity\": \"major\", \"witnessCode\": \"import x from '../index.js';\\nimport { strict as assert } from 'node:assert';\\n\\nconst urlString = 'http://example.com/' + 'a'.repeat(51) + '://bb//cc';\\nconst baseExpected = 'http://example.com/' + 'a'.repeat(51) + '://bb/cc';\\nconst result = x(urlString);\\nassert.strictEqual(result, baseExpected);\\n\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2960,
+    "completionTokens": 7405,
+    "costUsd": 0.0075525,
+    "latencyMs": 35499
+  }
+}

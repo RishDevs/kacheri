@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"WWW stripping now requires second-level domain label length >=2, causing valid hostnames like www.a.com to not be stripped.\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('WWW stripping regression', () => {\\n  it('should strip www from single-character second-level domain', () => {\\n    const input = 'http://www.a.com/';\\\\n    const expected = 'http://a.com';\\\\n    assert.strictEqual(normalizeUrl(input, {}), expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 1371,
+    "costUsd": 0.0021462,
+    "latencyMs": 8384
+  }
+}

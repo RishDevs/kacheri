@@ -26,18 +26,23 @@ function hitRate(s: SystemSummary | undefined): string {
   return s && s.guilty > 0 ? pct(s.hitRate) : '—';
 }
 
-function Stats({ court, single }: { court: SystemSummary | undefined; single: SystemSummary | undefined }) {
+// Both single reviewers are named so the headline never hides the stronger one.
+function others(single: SystemSummary | undefined, ultra: SystemSummary | undefined, show: (s: SystemSummary | undefined) => string) {
+  return ultra ? `Super alone: ${show(single)} · Ultra alone: ${show(ultra)}` : `Super alone: ${show(single)}`;
+}
+
+function Stats({ court, single, ultra }: { court: SystemSummary | undefined; single: SystemSummary | undefined; ultra: SystemSummary | undefined }) {
   return (
     <div className="stats" role="group" aria-label="Headline results">
       <div className="stat">
         <p className="stat-label">GUILTY CHANGES CONVICTED</p>
         <p className="stat-value">{hitRate(court)}</p>
-        <p className="stat-note">single reviewer: {hitRate(single)}</p>
+        <p className="stat-note">{others(single, ultra, hitRate)}</p>
       </div>
       <div className="stat">
         <p className="stat-label">FALSE ACCUSATIONS PER CASE</p>
         <p className="stat-value">{court ? court.fpPerPr.toFixed(2) : '—'}</p>
-        <p className="stat-note">single reviewer: {single ? single.fpPerPr.toFixed(2) : '—'}</p>
+        <p className="stat-note">{others(single, ultra, (s) => (s ? s.fpPerPr.toFixed(2) : '—'))}</p>
       </div>
       <div className="stat">
         <p className="stat-label">COURT COSTS PER CASE</p>
@@ -139,6 +144,7 @@ export function BenchPage({ source, nav }: BenchPageProps) {
   );
   const court = summaries.find((s) => s.system === 'court');
   const single = summaries.find((s) => s.system === 'baseline');
+  const ultra = summaries.find((s) => s.system === 'baseline-ultra');
   const trials = data ? caseMix(data).total : 0;
   const repos = data ? benchRepos(data) : '';
   const generated = data ? longDate(data.generatedAt) : '';
@@ -174,7 +180,7 @@ export function BenchPage({ source, nav }: BenchPageProps) {
 
           {data && (
             <>
-              <Stats court={court} single={single} />
+              <Stats court={court} single={single} ultra={ultra} />
               <h2 className="sec">I. Results by reviewer</h2>
               <ResultsTable summaries={summaries} />
               <h2 className="sec">II. The cases before the court</h2>
@@ -182,7 +188,9 @@ export function BenchPage({ source, nav }: BenchPageProps) {
               <h2 className="sec">III. Method</h2>
               <p className="p">
                 A conviction counts as correct when it names the planted bug’s file within three lines. The single
-                reviewers read the same change and context, without having to prove anything.{' '}
+                reviewers read the same change and context, without having to prove anything. That makes the comparison
+                lenient toward them: any of their comments near the bug counts, while the court only gets credit for a
+                conviction backed by a test that passed before the change and fails after it.{' '}
                 {data.sample
                   ? 'These sample numbers are placeholders, not recorded runs.'
                   : 'All results come from recorded runs and can be replayed.'}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2570,
+    "completionTokens": 160,
+    "costUsd": 0.00305,
+    "latencyMs": 1320
+  }
+}

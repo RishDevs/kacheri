@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"keepQueryParameters length check off by one causing single parameter to be dropped\",\n      \"file\": \"index.js\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst url = 'http://example.com?foo=bar';\\nconst options = { keepQueryParameters: ['foo'] };\\nconst result = normalizeUrl(url, options);\\nassert.strictEqual(result, 'http://example.com?foo=bar');\\n\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3117,
+    "completionTokens": 2771,
+    "costUsd": 0.00085206,
+    "latencyMs": 24079
+  }
+}

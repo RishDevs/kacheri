@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":173,\"severity\":\"minor\",\"message\":\"The regex quantifier was changed from {2,} to {1,} for duplicate slash collapsing in the remnant processing. This is semantically incorrect (\\\"duplicate\\\" means 2 or more), though functionally equivalent in JavaScript since replacing a single slash with itself is a no-op. The intermediate parts correctly use {2,}. This inconsistency could confuse maintainers and indicates a misunderstanding of the regex intent.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 8605,
+    "completionTokens": 1015,
+    "costUsd": 0.01165,
+    "latencyMs": 4992
+  }
+}

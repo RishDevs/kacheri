@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert/strict';\\nimport test from 'node:test';\\nimport x from '../index.js';\\n\\ntest('stripWWW with 2-char TLD', async (t) => {\\n  const url = 'www.example.co';\\n  const options = { stripWWW: true };\\n  const result = x(url, options);\\n  assert.strictEqual(result, 'http://example.co');\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3304,
+    "completionTokens": 8584,
+    "costUsd": 0.0022584,
+    "latencyMs": 88007
+  }
+}

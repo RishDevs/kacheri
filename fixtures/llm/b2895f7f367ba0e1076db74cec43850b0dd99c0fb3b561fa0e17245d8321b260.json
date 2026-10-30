@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The condition for keepQueryParameters incorrectly requires at least two elements, causing a single query parameter to be ignored.\", \"file\": \"index.js\", \"line\": 229, \"severity\": \"critical\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl keepQueryParameters with single element', () => {\\n  it('should keep the single query parameter and remove others', () => {\\n    const input = 'http://example.com/?param=value&foo=bar';\\n    const options = { keepQueryParameters: ['param'], sortQueryParameters: false };\\n    const expected = 'http://example.com/?param=value';\\n    const actual = normalizeUrl(input, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3117,
+    "completionTokens": 3741,
+    "costUsd": 0.004302,
+    "latencyMs": 14644
+  }
+}

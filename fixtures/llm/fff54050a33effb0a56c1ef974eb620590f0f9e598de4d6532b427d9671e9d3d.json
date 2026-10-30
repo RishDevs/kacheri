@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"stripWWW incorrectly removes www from hostname with empty first label (e.g., 'www..example.com')\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import { test } from 'node:test';\\\\nimport assert from 'node:assert/strict';\\\\nimport normalizeUrl from '../index.js';\\\\n\\\\ntest('stripWWW should not remove www from hostname with empty label', t => {\\\\n  const input = 'http://www..example.com';\\\\n  const options = { stripWWW: true };\\\\n  const expected = 'http://www..example.com';\\\\n  const actual = normalizeUrl(input, options);\\\\n  assert.strictEqual(actual, expected);\\\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3039,
+    "completionTokens": 7606,
+    "costUsd": 0.0077571,
+    "latencyMs": 32798
+  }
+}

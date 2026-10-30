@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"StripWWW regex incorrectly requires 3‑character TLD, causing regression for 2‑character TLDs\",\n      \"file\": \"index.js\",\n      \"line\": 205,\n      \"severity\": \"minor\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'www.google.co';\\nconst options = { stripWWW: true };\\nconst expected = 'http://google.co';\\n\\nconst result = normalizeUrl(input, options);\\nassert.strictEqual(result, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3040,
+    "completionTokens": 3385,
+    "costUsd": 0.0009948,
+    "latencyMs": 14597
+  }
+}

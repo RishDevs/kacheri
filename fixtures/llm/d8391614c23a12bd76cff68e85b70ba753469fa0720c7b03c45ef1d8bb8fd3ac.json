@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import {strict as assert} from 'node:assert';\\nimport {test as describe, it} from 'node:test';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('stripWWW regression', () => {\\n  it('should not strip www. from hostnames with 1‑char TLD on base', () => {\\n    const result = normalizeUrl('www.example.a', {stripWWW: true});\\n    assert.match(result, /www\\\\.example\\\\.a/);\\n  });\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3503,
+    "completionTokens": 3752,
+    "costUsd": 0.00111066,
+    "latencyMs": 21160
+  }
+}

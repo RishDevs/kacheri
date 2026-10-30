@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import {strict as assert} from 'node:assert/strict';\\nimport {test} from 'node:test';\\nimport x from '../index.js';\\n\\ntest('protocol segment between matches preserved', () => {\\n  const url = 'http://example.com/http://test.com/http://again.com';\\n  const result = x(url);\\n  assert.match(result, /test\\\\\\\\.com/);\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2993,
+    "completionTokens": 3449,
+    "costUsd": 0.00100734,
+    "latencyMs": 14285
+  }
+}

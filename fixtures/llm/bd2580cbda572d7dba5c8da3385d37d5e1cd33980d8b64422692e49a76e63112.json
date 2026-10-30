@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Regex quantifier change allows empty label, causing www. stripping on hostnames with consecutive dots\",\n      \"file\": \"index.js\",\n      \"line\": 205,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\n test('normalizeUrl strips www. incorrectly', () => {\\n   const url = 'www..example.com';\\n   const result = x(url);\\n   assert.match(result, /www\\\\.\\\\.example\\\\.com/);\\n });\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3039,
+    "completionTokens": 11815,
+    "costUsd": 0.00301794,
+    "latencyMs": 48909
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport { test } from 'node:test';\\nimport x from '../index.js' // default export: function(urlString, options);\\n\\ntest('normalizeUrl preserves full path when duplicate protocol present', () => {\\n  const input = 'http://example.com/http://example.com';\\n  const result = x(input);\\n  assert.strictEqual(result, input);\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3253,
+    "completionTokens": 1896,
+    "costUsd": 0.0006502200000000001,
+    "latencyMs": 14679
+  }
+}

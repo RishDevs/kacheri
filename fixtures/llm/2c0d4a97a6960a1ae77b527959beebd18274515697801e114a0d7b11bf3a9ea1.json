@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"When keepQueryParameters is an array with exactly one element, the function no longer filters query parameters to keep only that element, causing extra query parameters to be incorrectly retained.\", \"file\": \"index.js\", \"line\": 229, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters single item', () => {\\n  it('should keep only the specified query parameter', () => {\\n    const url = 'http://example.com?foo=1&bar=2&baz=3';\\n    const options = {\\n      keepQueryParameters: ['foo'],\\n      removeQueryParameters: [],\\n      stripHash: false,\\n      sortQueryParameters: true,\\n    };\\n    const expected = 'http://example.com?foo=1';\\n    const actual = normalizeUrl(url, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2968,
+    "completionTokens": 1318,
+    "costUsd": 0.0020766,
+    "latencyMs": 8214
+  }
+}

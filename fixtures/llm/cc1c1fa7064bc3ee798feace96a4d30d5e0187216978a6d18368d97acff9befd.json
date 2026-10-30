@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The condition was changed from checking `length > 0` to `length > -1`, which evaluates to true for an empty array (since its length is 0, and 0 > -1). This causes the loop over query parameters to run even when no parameters should be kept, leading to deletion of all parameters. Previously, an empty array correctly skipped the loop, preserving all query parameters. This is an unintended behavioral change.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3332,
+    "completionTokens": 100,
+    "costUsd": 0.0010895999999999998,
+    "latencyMs": 1478
+  }
+}

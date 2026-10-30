@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The test expects preservation of protocol-like substrings within the pathname, but such behavior is neither specified nor required by the function's purpose as a URL normalizer. The change fixes incorrect slice bounds by replacing `lastIndex` with the correct start offset (`1`) after the leading slash, ensuring proper duplicate-slash removal between protocol markers. The resulting output reflects correct normalization where embedded 'http://' sequences are treated as path segments, not protocols.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3329,
+    "completionTokens": 100,
+    "costUsd": 0.0010886999999999997,
+    "latencyMs": 2367
+  }
+}

@@ -1,12 +1,12 @@
 {
-  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Password not stripped when stripAuthentication is true\",\n      \"file\": \"index.js\",\n      \"line\": 133,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\nconst url = 'http://user:pass@example.com/path';\\nconst result = x(url, { stripAuthentication: true });\\n\\n// Expected result after stripping both username and password\\nassert.strictEqual(result, 'http://example.com/path');\"\n    }\n  ]\n}",
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Authentication not fully stripped when stripAuthentication is true\",\n      \"file\": \"index.js\",\n      \"line\": 135,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strictEqual } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst url = 'http://user:pass@example.com/path';\\nconst options = { stripAuthentication: true };\\n\\nconst result = normalizeUrl(url, options);\\n\\nconst hasAuth = result.includes('@');\\nstrictEqual(hasAuth, false, 'Authentication should be stripped');\"\n    }\n  ]\n}",
   "usage": {
     "tier": "nano",
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
     "role": "prosecutor",
     "promptTokens": 2900,
-    "completionTokens": 2014,
-    "costUsd": 0.00065736,
-    "latencyMs": 7725
+    "completionTokens": 4200,
+    "costUsd": 0.001182,
+    "latencyMs": 17825
   }
 }

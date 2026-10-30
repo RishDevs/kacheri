@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change breaks the collapsing of multiple slashes in the pathname when there are two or more protocol-like patterns in the pathname.\", \"file\": \"index.js\", \"line\": 165, \"severity\": \"critical\", \"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl collapses multiple slashes in pathname between two protocol-like patterns', t => {\\n  const input = 'http://example.com/foo:////bar://baz';\\n  const expected = 'http://example.com/foo:///bar://baz';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2928,
+    "completionTokens": 11771,
+    "costUsd": 0.0114723,
+    "latencyMs": 55869
+  }
+}

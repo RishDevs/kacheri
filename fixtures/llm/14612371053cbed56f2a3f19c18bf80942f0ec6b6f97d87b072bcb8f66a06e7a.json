@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change to the WWW-stripping regex breaks stripping for hostnames with single-character labels (e.g., www.a.com) because it now requires at least two characters in the domain label.\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"critical\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl', () => {\\n  it('should strip www. from single character subdomain', () => {\\n    const input = 'www.a.com';\\n    const expected = 'http://a.com';\\n    const actual = normalizeUrl(input, { stripWWW: true });\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3203,
+    "completionTokens": 4613,
+    "costUsd": 0.005112599999999999,
+    "latencyMs": 19568
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":232,\"severity\":\"critical\",\"message\":\"The condition `options.keepQueryParameters.length > 1` incorrectly prevents the keep-query-parameters logic from running when only a single parameter is specified to keep. It should be `> 0` (or `>= 1`). With this change, if a user passes `keepQueryParameters: ['id']`, the whitelist filtering is skipped and all query parameters are retained instead of keeping only 'id'.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2597,
+    "completionTokens": 399,
+    "costUsd": 0.003794,
+    "latencyMs": 1798
+  }
+}

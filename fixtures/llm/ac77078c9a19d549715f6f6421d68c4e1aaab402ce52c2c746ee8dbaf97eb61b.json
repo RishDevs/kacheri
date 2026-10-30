@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"keepQueryParameters length check incorrectly requires more than one parameter, causing single-parameter keep to be ignored\",\n      \"file\": \"index.js\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import x from '../index.js';\\nimport { strict as assert } from 'node:assert';\\n\\nconst url = 'http://example.com?test=1';\\nconst result = x(url, { keepQueryParameters: ['test'] });\\nassert.match(result, /test=1/);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2968,
+    "completionTokens": 3187,
+    "costUsd": 0.0009429600000000001,
+    "latencyMs": 13558
+  }
+}

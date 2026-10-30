@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test expects stripping 'www.' from hostnames with 2-character TLDs like '.co', but the changed regex now requires a minimum of 3 characters for the TLD portion ([a-z.\\\\-\\\\d]{3,63}), which excludes valid 2-character TLDs. This change was made without updating the associated comment that still claims TLDs must be at least 2 characters long, creating an inconsistency. Since the PR title indicates a refactor of URL normalization edge handling, and this change alters behavior for legitimate inputs, it constitutes an unintended regression unless the new restriction was explicitly intended and documented.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3136,
+    "completionTokens": 141,
+    "costUsd": 0.0010677,
+    "latencyMs": 1272
+  }
+}

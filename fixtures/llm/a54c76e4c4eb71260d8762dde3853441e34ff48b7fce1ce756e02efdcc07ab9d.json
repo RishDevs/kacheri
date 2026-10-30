@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Condition changed from >0 to >1 breaks keepQueryParameters for single-element arrays\",\n      \"file\": \"index.js\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport { test } from 'node:test';\\nimport x from '../index.js';\\n\\n test('keepQueryParameters single element', () => {\\n   const url = 'http://example.com?keep=this&drop=that';\\n   const options = { keepQueryParameters: ['keep'] };\\n   const result = x(url, options);\\n   // Expected result when keepQueryParameters length is 1: only that parameter remains\\n   assert.strictEqual(result, 'http://example.com?keep=this');\\n });\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3090,
+    "completionTokens": 4913,
+    "costUsd": 0.00136452,
+    "latencyMs": 48595
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"When keepQueryParameters is an empty array, the function incorrectly removes all query parameters due to off-by-one condition.\", \"file\": \"index.js\", \"line\": 229, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters empty array regression', () => {\\n  it('should keep query parameters when keepQueryParameters is empty array', () => {\\n    const url = 'https://example.com/path?foo=1&bar=2';\\n    const options = {\\n      keepQueryParameters: [],\\n      removeQueryParameters: [],\\n    };\\n    const expected = 'https://example.com/path?foo=1&bar=2';\\n    const actual = normalizeUrl(url, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3107,
+    "completionTokens": 1470,
+    "costUsd": 0.0022551,
+    "latencyMs": 6714
+  }
+}

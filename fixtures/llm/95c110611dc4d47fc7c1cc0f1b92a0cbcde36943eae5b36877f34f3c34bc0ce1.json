@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl removes directory index', () => {\\n  const url = 'http://example.com/foo/bar/index.html';\\n  const opts = { removeDirectoryIndex: true };\\n  const result = normalizeUrl(url, opts);\\n  assert.strictEqual(result, 'http://example.com/foo');\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3185,
+    "completionTokens": 5962,
+    "costUsd": 0.0016219799999999999,
+    "latencyMs": 71186
+  }
+}

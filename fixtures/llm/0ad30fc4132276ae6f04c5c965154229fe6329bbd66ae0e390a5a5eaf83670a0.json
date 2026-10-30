@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":229,\"severity\":\"major\",\"message\":\"The condition changed from `length > 0` to `length >= 0`. Since array length is always >= 0, this now executes the block for empty arrays. When `keepQueryParameters` is an empty array `[]`, `testParameter(key, [])` returns false (since `Array.some()` on empty array returns false), causing ALL query parameters to be deleted instead of being preserved. The original code correctly skipped the block for empty arrays.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2597,
+    "completionTokens": 591,
+    "costUsd": 0.00437,
+    "latencyMs": 2276
+  }
+}

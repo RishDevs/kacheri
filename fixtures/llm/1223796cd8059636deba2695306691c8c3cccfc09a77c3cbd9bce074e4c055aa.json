@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripping WWW now allows labels of length 64, causing WWW to be stripped from hostnames with a 64‑character second label, whereas previously it was not stripped.\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import { test } from 'node:test'\\nimport assert from 'node:assert/strict'\\nimport x from '../index.js'\\n\\ntest('WWW strip length edge case', () => {\\n  const label64 = 'a'.repeat(64)\\n  const url = `http://www.${label64}.com`\\n  const expected = url\\n  const actual = x(url)\\n  assert.strictEqual(actual, expected)\\n})\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 2077,
+    "costUsd": 0.0027816,
+    "latencyMs": 13706
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Setting lastIndex to 1 causes the leading slash of a pathname to be omitted, which for a URL with pathname exactly \\\"/\\\" results in loss of the trailing slash when trailing-slash and single-slash removal options are disabled.\", \"file\": \"index.js\", \"line\": 158, \"severity\": \"critical\", \"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('URL normalization retains trailing slash when options disable removal', async t => {\\n  const input = 'http://example.com/';\\n  const options = { removeTrailingSlash: false, removeSingleSlash: false };\\n  const expected = 'http://example.com/';\\n  const actual = normalizeUrl(input, options);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2930,
+    "completionTokens": 4989,
+    "costUsd": 0.005369100000000001,
+    "latencyMs": 25939
+  }
+}

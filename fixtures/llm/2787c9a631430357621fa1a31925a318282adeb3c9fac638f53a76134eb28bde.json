@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"decodeURI crash on invalid percent encoding\",\n      \"file\": \"index.js\",\n      \"line\": 183,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from './index.js';\\n\\ntest('normalizeUrl preserves invalid percent encoding', () => {\\n  const url = 'http://example.com/%ZZ';\\n  const expected = url;\\n  const result = normalizeUrl(url);\\n  assert.strictEqual(result, expected);\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3026,
+    "completionTokens": 4076,
+    "costUsd": 0.0011598,
+    "latencyMs": 17186
+  }
+}

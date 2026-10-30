@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":205,\"severity\":\"critical\",\"message\":\"The new regex for stripping 'www.' introduces a false positive: it matches 'www.www.example.com' (which should NOT have www stripped, as 'www' is a subdomain under 'www.example.com'). The old regex had a negative lookahead `(?!www\\\\.)` to prevent this. The new regex lacks this protection and would incorrectly strip 'www.' from 'www.www.example.com', changing the hostname to 'www.example.com'.\"},{\"file\":\"index.js\",\"line\":205,\"severity\":\"major\",\"message\":\"The new regex introduces false negatives for valid hostnames: (1) Requires domain label (part between www. and TLD) to be 2-63 chars, but RFC allows 1-63 chars. Hostnames like 'www.a.com' will no longer have www stripped. (2) Limits TLD to 2-5 chars of only [a-z.], but valid TLDs can be up to 63 chars and include hyphens/digits (e.g., '.museum' 6 chars, '.travel' 6 chars, '.photography' 11 chars, IDN TLDs like '.xn--mgbaam7a8h'). (3) TLD pattern `[a-z.]{2,5}` allows dots but max 5 chars total, so 'co.uk' (5) works but 'com.au' (6) fails.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2691,
+    "completionTokens": 1894,
+    "costUsd": 0.008373,
+    "latencyMs": 6241
+  }
+}

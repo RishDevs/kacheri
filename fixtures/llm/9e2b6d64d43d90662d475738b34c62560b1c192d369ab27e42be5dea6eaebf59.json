@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 208, \"severity\": \"minor\", \"message\": \"Regex for stripping WWW now allows TLD length 1 (changed from {2,63} to {1,63}), which may incorrectly strip www from hostnames with single-character TLDs. Comment still states min length 2.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 820,
+    "costUsd": 0.001539,
+    "latencyMs": 4094
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The condition change from length > 0 to length > 1 causes the keepQueryParameters filtering logic to be skipped when exactly one parameter is provided, leaving all query parameters instead of keeping only the specified one. This is an unintended regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The same condition change breaks single-element keepQueryParameters arrays by skipping the filtering block entirely, contradicting the intended behavior of keeping only specified parameters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4159,
+    "completionTokens": 436,
+    "costUsd": 0.005467,
+    "latencyMs": 2616
+  }
+}

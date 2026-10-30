@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change increases the minimum length of the subdomain label after 'www.' from 1 to 2, causing single-character subdomains like 'www.a.com' to not have 'www.' stripped when stripWWW is true.\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'http://www.a.com';\\nconst options = { stripWWW: true };\\nconst expected = 'http://a.com';\\nconst actual = normalizeUrl(input, options);\\nassert.strictEqual(actual, expected);\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 1171,
+    "costUsd": 0.0019662,
+    "latencyMs": 5514
+  }
+}

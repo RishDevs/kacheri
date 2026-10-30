@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The OR condition incorrectly treats a truthy string as an array, causing testParameter to crash when calling .some() on a string. The original AND condition correctly rejected non-arrays.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The OR condition incorrectly treats an array-like object with a length property as an array, causing testParameter to crash when calling .some() on a non-array. The original AND condition correctly rejected non-arrays.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4206,
+    "completionTokens": 649,
+    "costUsd": 0.006153,
+    "latencyMs": 3669
+  }
+}

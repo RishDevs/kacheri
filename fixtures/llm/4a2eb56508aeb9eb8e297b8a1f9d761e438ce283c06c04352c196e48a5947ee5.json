@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test'; import assert from 'node:assert/strict'; import normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters empty array', () => {\\n  it('should keep query parameters when keepQueryParameters is empty array (base behavior)', () => {\\n    const url = 'https://example.com?foo=1&bar=2';\\n    const opts = { keepQueryParameters: [] };\\n    const result = normalizeUrl(url, opts);\\n    assert.ok(result.includes('foo=1'), 'foo parameter missing');\\n    assert.ok(result.includes('bar=2'), 'bar parameter missing');\\n    assert.ok(result.includes('?'), 'query string missing');\\n  });\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3383,
+    "completionTokens": 2577,
+    "costUsd": 0.0033342000000000003,
+    "latencyMs": 17764
+  }
+}

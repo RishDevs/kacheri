@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change from && to || in the condition for removeDirectoryIndex causes a TypeError when the option is a non-empty string (or any non-array with a length property) because the code enters the block and passes a non-array to testParameter which expects an array.\", \"file\": \"index.js\", \"line\": 197, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\ndescribe('normalizeUrl', () => {\\n  it('should not throw when removeDirectoryIndex is a non-empty string', () => {\\n    const result = x('http://example.com/somepath', { removeDirectoryIndex: 'index.html' });\\n    assert.strictEqual(typeof result, 'string');\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3129,
+    "completionTokens": 3665,
+    "costUsd": 0.0042372,
+    "latencyMs": 22336
+  }
+}

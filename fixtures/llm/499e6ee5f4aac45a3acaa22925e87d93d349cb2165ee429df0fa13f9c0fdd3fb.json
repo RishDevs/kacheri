@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The behavior change is intentional: removing the try/catch around decodeURI allows URIError to propagate for invalid percent-encoded sequences like '%ZZ'. Previously, such errors were silently swallowed, leaving the pathname unchanged. Now, invalid encoding throws as expected per the decodeURI specification, making the function's behavior correct and transparent.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3116,
+    "completionTokens": 75,
+    "costUsd": 0.0010023,
+    "latencyMs": 1682
+  }
+}

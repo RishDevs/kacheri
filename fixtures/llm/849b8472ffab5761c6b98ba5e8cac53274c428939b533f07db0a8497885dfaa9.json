@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"dismissed\",\"reason\":\"The PR title 'Refactor URL normalization edge handling' and defense indicate the try-catch removal was deliberate to propagate decodeURI errors for invalid percent-encoding, making this intentionally changed behavior.\"},{\"chargeId\":\"c2\",\"decision\":\"dismissed\",\"reason\":\"Same behavioral change as c1; defense shows the error propagation is intentional per the refactor's stricter normalization semantics, not an unintended regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3906,
+    "completionTokens": 1934,
+    "costUsd": 0.009708,
+    "latencyMs": 7950
+  }
+}

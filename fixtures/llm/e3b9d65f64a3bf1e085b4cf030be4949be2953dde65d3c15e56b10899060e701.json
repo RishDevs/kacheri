@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst result = normalizeUrl('http://example.com/dir/index.html', { removeDirectoryIndex: true });\\nassert.strictEqual(result, 'http://example.com/dir');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3011,
+    "completionTokens": 4801,
+    "costUsd": 0.0013329000000000001,
+    "latencyMs": 39307
+  }
+}

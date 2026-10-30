@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {0,62} allows matching empty labels, contradicting the code's own comment that 'Each label should be max 63 at length (min: 1)'. The witness shows the new code strips 'www.' from the invalid hostname 'www..example.com' (empty middle label), while the base correctly left it unchanged. This is an unintended behavioral regression on invalid input.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3484,
+    "completionTokens": 623,
+    "costUsd": 0.005353,
+    "latencyMs": 2822
+  }
+}

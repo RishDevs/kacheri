@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The change modifies the condition for keeping query parameters from requiring at least one item (`length > 0`) to requiring more than one (`length > 1`). When exactly one parameter is provided, the condition fails and the keepQueryParameters block is skipped, causing all query parameters to remain instead of filtering to only the specified one. This is a behavioral change that affects the intended functionality when a single keepQueryParameter is used.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3379,
+    "completionTokens": 96,
+    "costUsd": 0.0011001,
+    "latencyMs": 1641
+  }
+}

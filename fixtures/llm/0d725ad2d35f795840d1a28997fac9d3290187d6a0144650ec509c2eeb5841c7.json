@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex change reduces the maximum allowed length of the hostname part after the first dot from 63 to 62, causing valid hostnames with a 63‑character suffix to not have www. stripped when stripWWW is true.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('stripWWW should remove www. when suffix length 63', async t => {\\n  const input = 'http://www.example.' + 'a'.repeat(63);\\n  const expected = 'http://example.' + 'a'.repeat(63);\\n  const actual = normalizeUrl(input, { stripWWW: true });\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3227,
+    "completionTokens": 1928,
+    "costUsd": 0.0027033,
+    "latencyMs": 13566
+  }
+}

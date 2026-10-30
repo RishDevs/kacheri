@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness expects stripping 'www.' from hostnames where the second-level domain (SLD) is a single character, such as 'www.a.com'. However, RFC standards require hostname labels to be at least 1 character, but the original regular expression already required a minimum of 1 via [a-z\\\\-\\\\d]{1,63}. The change increased the minimum to 2 ({2,63}), which was likely intended to enforce stricter validation — perhaps based on practical constraints or updated guidelines. Since the PR title indicates a refactoring of URL normalization edge handling, this change appears intentional. The test failure reflects a deliberate shift in behavior, not a regression.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3171,
+    "completionTokens": 150,
+    "costUsd": 0.0010863,
+    "latencyMs": 1891
+  }
+}

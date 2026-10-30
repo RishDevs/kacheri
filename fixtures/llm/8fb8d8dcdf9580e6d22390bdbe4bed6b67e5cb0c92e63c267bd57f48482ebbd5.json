@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The function incorrectly removes a character between consecutive protocol-like patterns in the pathname, causing malformed URLs.\", \"file\": \"index.js\", \"line\": 170, \"severity\": \"major\", \"witnessCode\": \"import { strict as assert } from 'node:assert/strict';\\nimport { test } from 'node:test';\\nimport normalizeUrl from '../index.js';\\n\\ntest('preserve characters between protocol-like patterns', async () => {\\n  const input = 'http://example.com/aa://bb//cc://dd/';\\n  const expected = 'http://example.com/aa://bb/cc://dd';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2937,
+    "completionTokens": 9721,
+    "costUsd": 0.00963,
+    "latencyMs": 51032
+  }
+}

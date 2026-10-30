@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The regex pattern was changed from allowing protocol names of 1–50 lowercase letters/digits/etc after the initial letter to 1–49, reducing the maximum allowed length by one character. However, the witness test uses a protocol-like string of exactly 51 'a' characters followed by '://', making the alphabetic part 51 characters long, which exceeds both the old limit of 50 and the new limit of 49. Therefore, the string does not match the protocol regex in either version, so the duplicate-slash replacement logic runs on the entire pathname, including the false protocol segment. In the base version, despite the regex limit being 50, the 51-character string still didn't match, so the behavior was the same: the slash collapsing occurred incorrectly. But the head output shows the protocol colon is being stripped (resulting in ':/bb/cc' instead of '://bb/cc'), indicating that in the head version, part of the string is being treated as a protocol match when it shouldn't be—specifically, the first 50 'a's plus '://' are matched, leaving the 51st 'a' behind, which then gets incorporated into the output as 'a:/'. This suggests the regex change altered where the match occurs, causing a different (and incorrect) transformation. Since the protocol regex is intended to match actual protocols (which are typically short), matching a 50+ character string is erroneous, and the change to limit it to 49 characters is correct to prevent overmatching. The test's expectation assumes the string should be left alone, but because it resembles a long protocol, the normalization logic attempts to process it, and the regex bound change affects how much is consumed. The fix prevents overmatching of long non-protocol strings, so the behavior change is justified.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3216,
+    "completionTokens": 395,
+    "costUsd": 0.0013203,
+    "latencyMs": 2683
+  }
+}

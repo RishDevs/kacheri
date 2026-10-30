@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Strips 'www.' only when the subdomain label has at least 2 characters, breaking valid hostnames like 'www.a.com'\",\n      \"file\": \"index.js\",\n      \"line\": 208,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict } from 'node:assert';\\nimport x from '../index.js';\\n\\nconst { normalizeUrl } = x;\\n\\nconst input = 'http://www.a.com/path';\\nconst options = { stripWWW: true };\\n\\nconst expected = 'http://a.com/path';\\n\\nstrict.deepStrictEqual(\\\\n  normalizeUrl(input, options),\\\\n  expected,\\\\n  'normalizeUrl should strip www. for single‑character SLD'\\\\n);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3167,
+    "completionTokens": 3115,
+    "costUsd": 0.00093762,
+    "latencyMs": 27287
+  }
+}

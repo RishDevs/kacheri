@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"stripWWW fails to strip the www. prefix when the hostname label after it is a single character, breaking expected hostname normalization\",\n      \"file\": \"index.js\",\n      \"line\": 205,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst expected = 'http://x.com/';\\nconst result = normalizeUrl('http://www.x.com/', { stripWWW: true });\\nassert.strictEqual(result, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 2465,
+    "costUsd": 0.0007740599999999999,
+    "latencyMs": 9997
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 192, \"severity\": \"major\", \"message\": \"The condition for removing directory index incorrectly uses `length > -1` which will always be true for any array (including empty ones). This causes the directory index removal logic to run even when the array is empty, leading to unnecessary processing. It should be `length > 0` to only run when there is at least one pattern.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2577,
+    "completionTokens": 1722,
+    "costUsd": 0.0023229,
+    "latencyMs": 7051
+  }
+}

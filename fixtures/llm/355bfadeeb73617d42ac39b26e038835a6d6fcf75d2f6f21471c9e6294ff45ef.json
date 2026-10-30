@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The condition change from `length > 0` to `length >= 0` causes an empty keepQueryParameters array to trigger the filtering loop, which deletes all query parameters since none match the empty filter list. This contradicts the intended behavior where an empty array should preserve all parameters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3443,
+    "completionTokens": 221,
+    "costUsd": 0.004106,
+    "latencyMs": 1258
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Dropping leading slash in pathname slicing breaks duplicate‑slash removal, causing malformed URLs\",\n      \"file\": \"index.js\",\n      \"line\": 165,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'http://example.com/http://evil.com';\\nconst expected = 'http://example.com/http://evil.com';\\nassert.strictEqual(normalizeUrl(input), expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3142,
+    "completionTokens": 5807,
+    "costUsd": 0.0015821999999999998,
+    "latencyMs": 35450
+  }
+}

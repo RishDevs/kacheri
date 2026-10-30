@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"WWW stripping incorrectly fails for TLD length 63 due to reduced max length in regex\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('WWW stripping for TLD length 63', async (t) => {\\n  const tld = 'a'.repeat(63);\\n  const url = `http://www.example.${tld}`;\\n  const expected = `http://example.${tld}`;\\n  const actual = normalizeUrl(url);\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 1698,
+    "costUsd": 0.0024405,
+    "latencyMs": 9169
+  }
+}

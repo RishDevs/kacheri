@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Changing lastIndex from 0 to 1 drops the first character of the pathname when no protocol matches, causing loss of leading slash and breaking duplicate‑slash removal (e.g., /foo//bar becomes foo//bar).\",\n      \"file\": \"index.js\",\n      \"line\": 155,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { normalizeUrl } from '../index.js';\\nimport { strictEqual } from 'node:assert/strict';\\n\\nconst input = 'http://example.com/foo//bar';\\nconst expected = 'http://example.com/foo/bar';\\n\\nconst actual = normalizeUrl(input, {});\\nstrictEqual(actual, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3068,
+    "completionTokens": 3784,
+    "costUsd": 0.00109224,
+    "latencyMs": 23446
+  }
+}

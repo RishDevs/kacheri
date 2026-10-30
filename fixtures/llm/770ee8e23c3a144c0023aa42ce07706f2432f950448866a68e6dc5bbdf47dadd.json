@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The change from `length > 0` to `length > 1` breaks the documented semantics of `keepQueryParameters`: a single-element array should whitelist that one parameter, not disable the filter entirely. The witness test passes on base and fails on head, confirming an unintended regression a maintainer would want fixed.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3513,
+    "completionTokens": 652,
+    "costUsd": 0.005469,
+    "latencyMs": 2821
+  }
+}

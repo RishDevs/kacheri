@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"message\": \"The regex for stripping 'www.' incorrectly limits the TLD length to 62 characters, but the comment and DNS standards allow up to 63. This will prevent stripping 'www.' from hostnames with a 63-character TLD.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 2346,
+    "costUsd": 0.0029124,
+    "latencyMs": 9134
+  }
+}

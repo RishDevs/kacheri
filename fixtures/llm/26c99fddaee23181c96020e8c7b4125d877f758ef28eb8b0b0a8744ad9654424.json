@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Regex change incorrectly allows empty label and reduces max length, causing valid 63‑character host labels to not be stripped\",\n      \"file\": \"__kacheri__/0.test.mjs\",\n      \"line\": 208,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst label = 'a'.repeat(63);\\nconst url = `www.${label}.com`;\\n\\n// Base behavior should strip www. for a 63‑char label\\nconst baseResult = normalizeUrl(url, { stripWWW: true });\\nassert.ok(!baseResult.startsWith('www.'), 'Base should remove www. for 63‑char label');\\n\\n// Head behavior fails to strip www. due to the bug\\nconst headResult = normalizeUrl(url, { stripWWW: true });\\nassert.ok(headResult.startsWith('www.'), 'Head should still have www. due to regression');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3173,
+    "completionTokens": 2744,
+    "costUsd": 0.00084894,
+    "latencyMs": 22623
+  }
+}

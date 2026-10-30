@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Leading slash is incorrectly removed from pathnames when no protocol-like pattern appears in the pathname.\", \"file\": \"index.js\", \"line\": 158, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl leading slash preservation', () => {\\n  it('should keep leading slash when pathname contains no protocol pattern', () => {\\n    const input = '/foo//bar';\\n    const expected = '/foo/bar'; // base behavior\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2930,
+    "completionTokens": 1487,
+    "costUsd": 0.0022173,
+    "latencyMs": 9632
+  }
+}

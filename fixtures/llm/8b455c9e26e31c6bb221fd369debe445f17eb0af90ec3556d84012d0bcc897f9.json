@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removing the dot check causes URLs with dot-containing protocols to be incorrectly left unnormalized.\", \"file\": \"index.js\", \"line\": 22, \"severity\": \"major\", \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'example.com:8080/path';\\nconst result = normalizeUrl(input);\\nassert.notStrictEqual(result, input);\\n}\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3009,
+    "completionTokens": 3274,
+    "costUsd": 0.0038493,
+    "latencyMs": 21391
+  }
+}

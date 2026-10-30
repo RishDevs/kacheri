@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripping 'www.' was changed from requiring 1-63 characters for the first label to requiring 2-63 characters. This breaks www stripping for valid hostnames with single-character subdomains (e.g., 'www.a.com', 'www.x.io'). The comment above states 'Each label should be max 63 at length (min: 1)', so the original {1,63} was correct.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 732,
+    "costUsd": 0.004866,
+    "latencyMs": 2567
+  }
+}

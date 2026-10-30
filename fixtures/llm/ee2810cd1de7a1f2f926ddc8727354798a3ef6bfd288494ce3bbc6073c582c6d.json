@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test'; import { strict as assert } from 'node:assert'; import normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl leading slash preservation', () => {\\n  it('should keep leading slash when pathname contains no protocol pattern', () => {\\n    const input = 'http://example.com//foo//bar';\\n    const expected = 'http://example.com/foo/bar';\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3264,
+    "completionTokens": 762,
+    "costUsd": 0.001665,
+    "latencyMs": 6759
+  }
+}

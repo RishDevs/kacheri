@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripping 'www.' incorrectly limits TLD length to 62 characters, causing hostnames with a 63-character TLD to retain the 'www.' prefix.\", \"file\": \"index.js\", \"line\": 209, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl WWW stripping edge case', () => {\\n  it('should strip www. for hostname with 63-character TLD', () => {\\n    const tld = 'a'.repeat(63);\\n    const url = `http://www.example.${tld}`;\\n    const expected = `http://example.${tld}`;\\n    const actual = normalizeUrl(url);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3041,
+    "completionTokens": 2955,
+    "costUsd": 0.0035718,
+    "latencyMs": 14457
+  }
+}

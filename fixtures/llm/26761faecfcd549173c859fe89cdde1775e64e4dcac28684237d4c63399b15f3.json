@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":168,\"severity\":\"major\",\"message\":\"The change from `slice(lastIndex, protocolAtIndex)` to `slice(0, protocolAtIndex)` breaks the loop logic for handling multiple protocol-like patterns in the pathname. The `lastIndex` variable tracks the end of the previous protocol match, but the new code always slices from the start of the pathname, causing earlier portions to be re-processed and duplicated in the result on each iteration after the first. The `lastIndex` variable is still updated but no longer used for the slice start position.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2557,
+    "completionTokens": 873,
+    "costUsd": 0.005176,
+    "latencyMs": 3491
+  }
+}

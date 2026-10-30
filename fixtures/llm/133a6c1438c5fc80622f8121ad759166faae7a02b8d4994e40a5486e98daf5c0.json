@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 229, \"severity\": \"major\", \"message\": \"The condition for keeping query parameters was changed from checking if the array length is greater than 0 to checking if the array length minus one is greater than 0. This causes the block to be skipped when there is exactly one query parameter to keep, which is likely a bug.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2605,
+    "completionTokens": 1365,
+    "costUsd": 0.00201,
+    "latencyMs": 6896
+  }
+}

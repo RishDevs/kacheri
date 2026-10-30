@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"message\": \"The regular expression for stripping 'www.' incorrectly requires the second-level domain to be at least 2 characters, violating the hostname label length specification (minimum 1 character). This causes hostnames like 'www.a.com' to not have the 'www.' stripped.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 1657,
+    "costUsd": 0.0022923,
+    "latencyMs": 8052
+  }
+}

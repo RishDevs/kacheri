@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":168,\"severity\":\"major\",\"message\":\"The change from `lastIndex` to `1` in `urlObject.pathname.slice(1, protocolAtIndex)` breaks the duplicate-slash removal logic for pathnames containing protocol-like patterns (e.g., 'http://'). The `lastIndex` variable tracks the end of the previous protocol match so each segment between protocols is processed exactly once. Using `1` causes: (1) the first character (typically '/') to be dropped from the first segment, (2) overlapping/repeated processing of earlier segments on subsequent iterations, and (3) `lastIndex` to be updated but never used, making the loop logic incorrect.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2556,
+    "completionTokens": 740,
+    "costUsd": 0.004776,
+    "latencyMs": 2720
+  }
+}

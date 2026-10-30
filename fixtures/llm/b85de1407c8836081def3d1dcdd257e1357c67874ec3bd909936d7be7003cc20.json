@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripping 'www.' now matches empty middle labels, causing URLs like 'http://www..example.com' to have the www. prefix stripped incorrectly.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('www stripping regression: empty label', async t => {\\n  const input = 'http://www..example.com';\\n  const expected = input; // base behavior: www not stripped\\n  const actual = normalizeUrl(input, { stripWWW: true });\\n  assert.strictEqual(actual, expected);\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3173,
+    "completionTokens": 1366,
+    "costUsd": 0.0021813,
+    "latencyMs": 9311
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The condition change from `length > 0` to `length > -1` causes an empty array to enter the filtering loop, deleting all query parameters instead of preserving them; this is an unintended regression in a refactor PR.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same root cause as c1: the modified condition makes an empty keepQueryParameters array delete all parameters, contradicting the original behavior and the refactor intent.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3982,
+    "completionTokens": 852,
+    "costUsd": 0.006538,
+    "latencyMs": 3092
+  }
+}

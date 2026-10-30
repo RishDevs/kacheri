@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The regex pattern changed from requiring labels of 1-63 characters to 2-63 characters for the second-level domain, which intentionally excludes single-character labels like 'a'. This aligns with hostname restrictions where each label must be at least 1 character, but the test's expectation for www.a.com to be stripped is based on an overly permissive prior regex. The change is intentional and announced in the PR title regarding edge handling refinement.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3266,
+    "completionTokens": 102,
+    "costUsd": 0.0010715999999999998,
+    "latencyMs": 1875
+  }
+}

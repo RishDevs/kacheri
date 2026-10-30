@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Dropping leading slash when normalizing pathname with protocol-like patterns breaks absolute URLs\",\n      \"file\": \"index.js\",\n      \"line\": 168,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport x from '../index.js';\\n\\nconst input = 'http://example.com/http://foo';\\nconst expected = 'http://example.com/http://foo';\\n\\nconst result = x(input, {});\\nassert.strictEqual(result, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3105,
+    "completionTokens": 4691,
+    "costUsd": 0.0013121399999999998,
+    "latencyMs": 26314
+  }
+}

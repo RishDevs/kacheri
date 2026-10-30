@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change replaces slice(startIndex) with a hard‑coded start of 1, causing the leading character of the pathname before an embedded protocol to be dropped.\", \"file\": \"index.js\", \"line\": 165, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('Normalize URL regression', () => {\\n  it('should preserve leading slash before embedded protocol', () => {\\n    const input = 'http://example.com/abc/http://def/ghi';\\n    const expected = 'http://example.com/abc/http://def/ghi';\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2927,
+    "completionTokens": 2241,
+    "costUsd": 0.002895,
+    "latencyMs": 13279
+  }
+}

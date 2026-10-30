@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test uses an invalid input: passing a string to removeDirectoryIndex violates the documented API expectation that this option must be either boolean false or an array of RegExp patterns. The changed condition correctly handles valid inputs while preventing accidental truthy non-array values from triggering the block. The TypeError arises from the test's misuse of the API, not from the refactored logic.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3343,
+    "completionTokens": 89,
+    "costUsd": 0.001083,
+    "latencyMs": 1759
+  }
+}

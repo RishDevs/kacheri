@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripWWW was changed from `[a-z.\\\\-\\\\d]{2,63}` to `[a-z.\\\\-\\\\d]{3,63}`, increasing the minimum TLD length from 2 to 3 characters. This breaks www-stripping for valid domains with 2-character TLDs (e.g., .co, .io, .uk, .de, .jp, .me, .tv, .ai, .gg, .fm, .am). The comment states 'Each TLD should be up to 63 characters long (min: 2)' but the new regex enforces min: 3.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2699,
+    "completionTokens": 1357,
+    "costUsd": 0.00677,
+    "latencyMs": 4055
+  }
+}

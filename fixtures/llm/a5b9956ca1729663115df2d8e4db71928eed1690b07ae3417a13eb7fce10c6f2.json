@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Off‑by‑one error in duplicate slash handling drops leading slash, causing URL normalization to truncate path\",\n      \"file\": \"index.js\",\n      \"line\": 165,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport { test } from 'node:test';\\nimport x from './index.js';\\n\\ntest('normalizeUrl preserves full path when duplicate protocol present', () => {\\n  const input = 'http://example.com/http://example.com';\\n  const result = x(input);\\n  assert.strictEqual(result, input);\\n});\\n\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2937,
+    "completionTokens": 9268,
+    "costUsd": 0.0024005399999999996,
+    "latencyMs": 33248
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 229, \"severity\": \"major\", \"message\": \"The condition for keeping query parameters was changed from requiring at least one element to requiring more than one element. This causes the function to skip filtering when exactly one query parameter is to be kept, leading to incorrect behavior.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2597,
+    "completionTokens": 1091,
+    "costUsd": 0.001761,
+    "latencyMs": 6804
+  }
+}

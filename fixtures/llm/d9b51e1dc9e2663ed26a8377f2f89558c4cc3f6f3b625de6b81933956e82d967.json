@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The regex change corrects an overly restrictive pattern that incorrectly limited TLD lengths to 2–63 characters. One-character TLDs like '.a' are valid per hostname standards (each label up to 63 chars, min 1), and the updated regex now properly allows stripping 'www.' for such cases. The test assertion expects the old, incorrect behavior where 'www.' was not stripped due to the erroneous TLD length constraint.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3380,
+    "completionTokens": 102,
+    "costUsd": 0.0011057999999999999,
+    "latencyMs": 1629
+  }
+}

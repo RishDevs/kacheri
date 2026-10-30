@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex for stripWWW incorrectly reduces the maximum allowed length of the first hostname label from 63 to 62 characters. The comment states 'Each label should be max 63 at length (min: 1)' per RFC specifications, but the change from {1,63} to {1,62} contradicts this and will incorrectly fail to strip 'www.' from valid hostnames where the first label is exactly 63 characters long.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2699,
+    "completionTokens": 1182,
+    "costUsd": 0.006245,
+    "latencyMs": 4144
+  }
+}

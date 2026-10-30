@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Behavior changes when keepQueryParameters is an empty array, causing all query parameters to be removed.\",\n      \"file\": \"index.js\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport { test } from 'node:test';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl keeps query parameters when keepQueryParameters is empty array', () => {\\n  const url = 'http://example.com?a=1&b=2';\\n  const options = { keepQueryParameters: [] };\\n  const result = normalizeUrl(url, options);\\n  // In base, query parameters should be preserved\\n  assert.strictEqual(result, 'http://example.com?a=1&b=2');\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2976,
+    "completionTokens": 4315,
+    "costUsd": 0.00121416,
+    "latencyMs": 21312
+  }
+}

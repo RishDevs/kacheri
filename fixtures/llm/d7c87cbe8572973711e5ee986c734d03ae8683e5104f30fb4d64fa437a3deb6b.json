@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":229,\"severity\":\"major\",\"message\":\"The condition `(options.keepQueryParameters.length - 1) > 0` incorrectly requires at least 2 elements in the keepQueryParameters array. It should be `options.keepQueryParameters.length > 0` to handle the case of a single query parameter to keep. With this change, specifying `keepQueryParameters: ['param']` (length 1) will not work because (1-1)=0 is not >0.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2635,
+    "completionTokens": 525,
+    "costUsd": 0.00421,
+    "latencyMs": 2399
+  }
+}

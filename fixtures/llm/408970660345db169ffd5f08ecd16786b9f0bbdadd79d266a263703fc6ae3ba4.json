@@ -1,12 +1,12 @@
 {
-  "content": "{\n  \"charges\": []\n}",
+  "content": "{\"charges\":[]}",
   "usage": {
     "tier": "nano",
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
     "role": "prosecutor",
     "promptTokens": 3020,
-    "completionTokens": 989,
-    "costUsd": 0.00041855999999999995,
-    "latencyMs": 3374
+    "completionTokens": 566,
+    "costUsd": 0.00031704,
+    "latencyMs": 3399
   }
 }

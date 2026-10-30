@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 231, \"severity\": \"major\", \"message\": \"The condition for keeping query parameters incorrectly uses `length > -1` which is always true for arrays, causing the keepQueryParameters logic to run even for empty arrays, resulting in removal of all query parameters when an empty array is provided.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2597,
+    "completionTokens": 2510,
+    "costUsd": 0.0030380999999999997,
+    "latencyMs": 12354
+  }
+}

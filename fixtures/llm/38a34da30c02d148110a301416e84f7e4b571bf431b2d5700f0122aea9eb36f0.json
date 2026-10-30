@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test expects www stripping for hostname 'www.a.com', where the second-level domain label 'a' is a single character. However, RFC 1123 and DNS standards require each label in a hostname to be at least 1 character and at most 63 characters—so 'a' is valid. The prior regex incorrectly limited the second-level domain to exactly 1–63 characters but used a pattern that failed to match due to an off-by-one error in quantifiers. The updated regex correctly enforces label length of 1–63 by using [a-z\\\\-\\\\d]{2,64} to allow 2–64 characters in the first part (which, combined with the leading 'www.', results in a second-level label of 1–63 after stripping). Wait—this reasoning contains a flaw: the regex change actually increased the minimum length requirement, making it harder to match, not easier. The original regex used {1,63} for the second-level label, while the new one uses {2,64}, which would require the label to be at least 2 characters. Therefore, the change does indeed make www stripping more restrictive, and the test failure reflects a real behavioral change. Since the PR title indicates a refactor of edge handling and no announcement was made about changing www stripping criteria, this constitutes an unintended regression.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3387,
+    "completionTokens": 297,
+    "costUsd": 0.0012833999999999999,
+    "latencyMs": 2450
+  }
+}

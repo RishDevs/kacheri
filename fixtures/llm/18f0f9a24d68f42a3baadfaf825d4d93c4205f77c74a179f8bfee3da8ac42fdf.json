@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex change allows stripping 'www.' from hostnames with 64-character labels, violating the 63-character limit and causing incorrect normalization.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('WWW strip regression', () => {\\n  it('should not strip www when label length is 64 (invalid)', () => {\\n    const label = 'a'.repeat(64);\\n    const url = `http://www.${label}.com`;\\n    const opts = { stripWWW: true };\\n    const result = normalizeUrl(url, opts);\\n    assert.ok(result.includes(`www.${label}.com`), `Expected www to remain, got ${result}`);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3150,
+    "completionTokens": 1610,
+    "costUsd": 0.002394,
+    "latencyMs": 10041
+  }
+}

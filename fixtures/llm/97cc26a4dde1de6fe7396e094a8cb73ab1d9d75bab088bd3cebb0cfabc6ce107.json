@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {2,64} incorrectly requires the second-level domain label to be at least 2 characters, breaking valid hostnames like www.a.com where the label 'a' is a single character. DNS standards allow 1-character labels, so this is an unintended regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same root cause as c1: the updated regex now requires a minimum of 2 characters for the label after www., causing www.a.com to not be stripped despite 'a' being a valid 1-character DNS label. The witness confirms the regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4355,
+    "completionTokens": 491,
+    "costUsd": 0.005828,
+    "latencyMs": 2582
+  }
+}

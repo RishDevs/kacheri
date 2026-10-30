@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":156,\"severity\":\"minor\",\"message\":\"The protocol regex maximum length was changed from {1,50} to {1,49}, reducing the maximum matched protocol scheme length from 51 to 50 characters. This introduces an inconsistency with the TODO comment on line 150 which still references {1,50}. While extremely long protocol names are unlikely in practice, this off-by-one change could cause duplicate slashes within a 51-character protocol-like string in a pathname to be incorrectly collapsed.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2589,
+    "completionTokens": 2290,
+    "costUsd": 0.009459,
+    "latencyMs": 12916
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":229,\"severity\":\"major\",\"message\":\"The condition changed from `options.keepQueryParameters.length > 0` to `options.keepQueryParameters.length > 1`, which breaks the keepQueryParameters functionality when exactly one parameter is specified. With length > 1, the filtering logic is skipped entirely for single-element arrays, causing all query parameters to be retained instead of only the specified one.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2627,
+    "completionTokens": 380,
+    "costUsd": 0.003767,
+    "latencyMs": 1872
+  }
+}

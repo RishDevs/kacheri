@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The change replaces `lastIndex` with hardcoded `1` in the slice operation, breaking the loop's ability to process pathname segments between protocol markers. The witness demonstrates this produces garbled output (`http://example.com/a/http://a/http:/b/http://c`) instead of preserving the input path. The original logic correctly tracked position between matches; the new logic re-processes from the start each iteration, corrupting the pathname.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3402,
+    "completionTokens": 1264,
+    "costUsd": 0.007194,
+    "latencyMs": 5224
+  }
+}

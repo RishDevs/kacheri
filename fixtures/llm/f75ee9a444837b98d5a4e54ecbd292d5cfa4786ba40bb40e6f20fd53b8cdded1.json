@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict } from 'node:assert';\\nimport x from '../index.js';\\n\\nconst normalizeUrl = x;\\n\\nconst input = 'http://www.a.com/path';\\nconst options = { stripWWW: true };\\nconst expected = 'http://a.com/path';\\n\\nstrict.deepStrictEqual(normalizeUrl(input, options), expected, 'normalizeUrl should strip www. for single-character SLD');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3158,
+    "completionTokens": 2986,
+    "costUsd": 0.00090612,
+    "latencyMs": 43335
+  }
+}

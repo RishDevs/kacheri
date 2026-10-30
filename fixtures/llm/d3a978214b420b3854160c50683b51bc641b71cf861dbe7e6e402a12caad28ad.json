@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripping 'www.' was changed from {1,63} to {2,64} for the middle label length. This breaks stripping for valid hostnames with single-character labels (e.g., 'www.a.com') and incorrectly allows labels up to 64 characters (exceeding the 63-char RFC limit documented in the comment). The comment states 'Each label should be max 63 at length (min: 1)' but the regex now enforces min: 2, max: 64.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2700,
+    "completionTokens": 952,
+    "costUsd": 0.005556,
+    "latencyMs": 3913
+  }
+}

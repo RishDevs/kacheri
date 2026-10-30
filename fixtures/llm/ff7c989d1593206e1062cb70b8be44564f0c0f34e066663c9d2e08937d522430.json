@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change increases the label length limit from 63 to 64 characters, contradicting the code's own comment citing the 63-character hostname label maximum. The witness demonstrates that www-stripping now occurs for invalid 64-character labels where it previously did not, a behavioral regression on documented constraints.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3632,
+    "completionTokens": 557,
+    "costUsd": 0.005303,
+    "latencyMs": 3236
+  }
+}

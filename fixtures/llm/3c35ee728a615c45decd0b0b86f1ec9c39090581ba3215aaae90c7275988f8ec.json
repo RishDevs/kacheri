@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":168,\"severity\":\"major\",\"message\":\"The change adds '+ 1' to lastIndex when slicing the intermediate string between protocol matches. This causes the first character of each intermediate section (including the very first character of the pathname) to be dropped. For example, a pathname like '/foo/http://example.com/bar' would become 'foo/http://example.com/bar' (missing leading slash). The correct slice should start at lastIndex, not lastIndex + 1.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2566,
+    "completionTokens": 2549,
+    "costUsd": 0.010213,
+    "latencyMs": 7811
+  }
+}

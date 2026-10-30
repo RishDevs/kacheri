@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test expects behavior that contradicts DNS hostname standards: RFC 1035 limits each label to 1-63 characters, but does not require a minimum of 2. However, the original regex incorrectly allowed zero-length labels via `{1,63}` quantifier on `[a-z\\\\-\\\\d]` while also requiring a non-empty label via the pattern structure—this was inconsistent. The updated regex `{2,64}` correctly enforces a minimum of 2 characters for the second label, aligning with practical domain validation where single-character second-level domains (like 'a.com') are rare but not invalid. The test's expectation that 'www.a.com' should become 'a.com' assumes the function should strip www. regardless of label length validity, but the function's logic is tied to a regex that validates label length. Since the change adjusts the regex to match the stated comment (each label max 63, min 1), and the second label now must be at least 2 characters due to `{2,64}`, the test fails because 'a' is only 1 character. However, the function's intent is to strip www. only when the hostname appears valid per the regex. As 'a' is a valid single-character label, the regex should allow it. Therefore, the regex should be `[a-z\\\\-\\\\d]{1,63}` for the second label, making the current change overly restrictive.\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3400,
+    "completionTokens": 305,
+    "costUsd": 0.0012945,
+    "latencyMs": 3364
+  }
+}

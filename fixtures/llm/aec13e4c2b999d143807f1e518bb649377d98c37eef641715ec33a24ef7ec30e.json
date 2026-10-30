@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Empty keepQueryParameters array now deletes all query parameters, whereas previously it left them untouched\",\n      \"file\": \"__kacheri__/witness.test.mjs\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst result = normalizeUrl('http://example.com?a=1&b=2', { keepQueryParameters: [] });\\nassert.ok(/a=1&b=2/.test(result), 'Expected query parameters preserved, got ' + result);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2968,
+    "completionTokens": 2541,
+    "costUsd": 0.0007879200000000001,
+    "latencyMs": 13235
+  }
+}

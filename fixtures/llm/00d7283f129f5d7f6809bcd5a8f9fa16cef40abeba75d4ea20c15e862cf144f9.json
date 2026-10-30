@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The witness test demonstrates a behavioral regression: the regex change allows stripping 'www.' from hostnames with 1-character TLDs (e.g., 'www.example.c'), which previously was not stripped. The test passes on base and fails on head, indicating the change breaks existing expected behavior. The defense's claim of intentionality relies only on a generic PR title, not on updated tests or explicit documentation of this specific behavior change.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3520,
+    "completionTokens": 1051,
+    "costUsd": 0.006673,
+    "latencyMs": 3954
+  }
+}

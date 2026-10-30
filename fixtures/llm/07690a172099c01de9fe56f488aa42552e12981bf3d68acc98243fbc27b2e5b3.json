@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {2,63} to {3,63} for TLD length breaks stripping www for valid 2-character TLDs like .co, which is an unintended regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same regression as c1: the altered regex incorrectly requires 3-character TLDs, causing stripWWW to fail for legitimate two-letter TLDs.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4046,
+    "completionTokens": 431,
+    "costUsd": 0.005339,
+    "latencyMs": 2424
+  }
+}

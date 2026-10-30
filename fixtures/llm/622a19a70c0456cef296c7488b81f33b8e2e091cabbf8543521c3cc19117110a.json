@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":190,\"severity\":\"major\",\"message\":\"The condition `options.removeDirectoryIndex.length > -1` is always true for any array (since array length is always >= 0). This causes the directory index removal logic to run even when `removeDirectoryIndex` is an empty array `[]`, which should disable the feature. The original condition `length > 0` correctly checked for non-empty arrays. This appears to be a typo where `> 0` was changed to `> -1`.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2607,
+    "completionTokens": 1010,
+    "costUsd": 0.005637,
+    "latencyMs": 4069
+  }
+}

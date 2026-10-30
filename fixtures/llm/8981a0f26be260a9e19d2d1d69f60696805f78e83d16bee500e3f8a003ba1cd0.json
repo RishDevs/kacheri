@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex change causes www. to be stripped from hostnames with a 1‑character TLD, which previously was not stripped.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('WWW strip regression', () => {\\n  it('should not strip www for 1-char TLD in base', () => {\\n    const input = 'www.example.a';\\n    const opts = { stripWWW: true };\\n    const result = normalizeUrl(input, opts);\\n    assert.strictEqual(result, input);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3193,
+    "completionTokens": 697,
+    "costUsd": 0.0015852000000000002,
+    "latencyMs": 5052
+  }
+}

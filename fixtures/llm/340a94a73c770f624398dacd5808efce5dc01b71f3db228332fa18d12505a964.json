@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test expects stripping 'www.' from hostnames with two-letter TLDs like '.co', but the changed regex now requires TLDs to be at least three characters long ({3,63}), which excludes valid two-letter TLDs. This change is overly restrictive and unintentionally breaks functionality for legitimate domains, as the original regex allowed TLDs of length 2 or more ({2,63}). The PR title mentions refactoring edge handling, but this alteration introduces a regression by incorrectly failing to strip 'www.' for two-letter TLDs, which was previously working.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3306,
+    "completionTokens": 137,
+    "costUsd": 0.0011151,
+    "latencyMs": 1792
+  }
+}

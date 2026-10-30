@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":168,\"severity\":\"major\",\"message\":\"The change from `urlObject.pathname.slice(lastIndex, protocolAtIndex)` to `urlObject.pathname.slice(1, protocolAtIndex)` breaks the duplicate-slash removal logic. The `lastIndex` variable tracks the end of the previous protocol match and is still updated each iteration (`lastIndex = protocolAtIndex + protocol.length`), but is no longer used for slicing. This causes two bugs: (1) The first segment incorrectly starts at index 1 instead of 0, dropping the first character of the pathname (typically the leading '/'). (2) For pathnames with multiple protocol-like patterns (e.g., '/path/http://example.com//more'), subsequent segments overlap with previously processed content because they all start from index 1 instead of `lastIndex`, producing duplicated and malformed output.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2586,
+    "completionTokens": 1946,
+    "costUsd": 0.008424,
+    "latencyMs": 6406
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change alters stripWWW behavior for single-character TLDs, causing existing tests to fail. While the defense argues this aligns with RFC hostname standards, the test suite defines the current guaranteed behavior; a maintainer would need to either update the tests or revert the change before merging.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same behavioral change as c1: the updated regex strips www. from hostnames with 1-char TLDs, breaking tests that expect preservation. The PR title indicates intentional edge-case refactoring, but without test updates this constitutes a regression in the test suite that must be resolved pre-merge.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4297,
+    "completionTokens": 2142,
+    "costUsd": 0.010723,
+    "latencyMs": 8417
+  }
+}

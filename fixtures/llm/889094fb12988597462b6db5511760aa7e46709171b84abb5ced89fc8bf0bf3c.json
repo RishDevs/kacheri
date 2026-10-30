@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripping 'www.' now requires at least two characters in the second-level domain, causing valid hostnames like 'www.a.com' to not be stripped.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\\\nimport assert from 'node:assert/strict';\\\\nimport normalizeUrl from '../index.js';\\\\n\\\\ndescribe('WWW strip regression', () => {\\\\n  it('should strip www. from single-character second-level domain', () => {\\\\n    const input = 'http://www.a.com';\\\\n    const expected = 'http://a.com';\\\\n    const actual = normalizeUrl(input, { stripWWW: true });\\\\n    assert.strictEqual(actual, expected);\\\\n  });\\\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3167,
+    "completionTokens": 700,
+    "costUsd": 0.0015800999999999999,
+    "latencyMs": 4948
+  }
+}

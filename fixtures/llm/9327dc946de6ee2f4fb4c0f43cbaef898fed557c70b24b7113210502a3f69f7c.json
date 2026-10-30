@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { test, strict as assert } from 'node:test'\\nimport normalizeUrl from '../index.js'\\n\\ntest('normalizeUrl preserves charset attribute for default charset', () => {\\n  const input = 'data:text/plain;charset=us-ascii,hello'\\n  const expected = 'data:text/plain;charset,hello'\\n  assert.strictEqual(normalizeUrl(input), expected)\\n})\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3067,
+    "completionTokens": 4901,
+    "costUsd": 0.00136026,
+    "latencyMs": 15364
+  }
+}

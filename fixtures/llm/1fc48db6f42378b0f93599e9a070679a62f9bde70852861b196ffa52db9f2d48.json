@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The regular expression was changed from requiring a TLD of 2–63 characters to 3–63 characters, which excludes valid two‑letter TLDs such as .co. This makes the behavior more restrictive than before and causes the test to fail because www.example.co no longer matches the pattern. Since the PR title indicates a refactor of URL normalization edge handling, tightening the TLD length constraint appears to be an intentional change, but it regresses handling of legitimate two‑letter TLDs and should be adjusted to preserve prior compatibility unless explicitly intended to drop support for such TLDs.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3375,
+    "completionTokens": 134,
+    "costUsd": 0.0011331,
+    "latencyMs": 1806
+  }
+}

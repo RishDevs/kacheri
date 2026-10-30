@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 169, \"severity\": \"major\", \"message\": \"Using slice(0, protocolAtIndex) instead of slice(lastIndex, protocolAtIndex) causes incorrect processing of duplicate slashes in the pathname when there are multiple protocol-like strings, leading to duplicate processing and incorrect URL normalization.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2557,
+    "completionTokens": 5379,
+    "costUsd": 0.005608200000000001,
+    "latencyMs": 22064
+  }
+}

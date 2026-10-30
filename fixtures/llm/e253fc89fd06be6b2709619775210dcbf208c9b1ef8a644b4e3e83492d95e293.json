@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":229,\"severity\":\"critical\",\"message\":\"The condition `(options.keepQueryParameters.length + 1) > 0` is always true for any array (since length >= 0, so length + 1 >= 1 > 0). This causes the block to execute even when `keepQueryParameters` is an empty array, which deletes ALL query parameters (since `testParameter(key, [])` returns false for all keys). The original condition `options.keepQueryParameters.length > 0` correctly only executed when there were parameters to keep.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2605,
+    "completionTokens": 563,
+    "costUsd": 0.004294,
+    "latencyMs": 2256
+  }
+}

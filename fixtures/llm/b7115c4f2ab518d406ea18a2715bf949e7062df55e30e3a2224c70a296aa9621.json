@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex for stripping 'www.' was changed from {1,63} to {2,64} for the domain label length. This incorrectly requires the domain label to be at least 2 characters (was 1) and allows up to 64 characters (was 63). According to the comment and hostname RFC, each label must be 1-63 characters. This breaks www-stripping for valid single-label domains like 'www.a.example.com' and incorrectly allows 64-char labels.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 997,
+    "costUsd": 0.005661,
+    "latencyMs": 3506
+  }
+}

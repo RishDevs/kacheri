@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The regex change modifies the first label's minimum length from 1 to 0, allowing empty labels. However, valid hostnames require each label to be 1–63 characters per RFC standards. The input 'www..com' contains an empty label after 'www.', making it invalid. Stripping 'www.' from such malformed input produces '.com', which remains invalid and is not a behavior the function should preserve. The test's expectation assumes the function should not alter invalid hostnames, but the function's responsibility is to normalize URLs, not to preserve syntactic errors.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3137,
+    "completionTokens": 129,
+    "costUsd": 0.0010572,
+    "latencyMs": 1627
+  }
+}

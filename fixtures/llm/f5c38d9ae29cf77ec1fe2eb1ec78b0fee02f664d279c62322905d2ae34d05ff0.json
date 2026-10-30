@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The condition change from `length > 0` to `(length + 1) > 0` causes the filtering loop to execute for empty arrays, deleting all query parameters when none should be filtered.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The modified condition evaluates to true for empty arrays (0 + 1 > 0), triggering the keep-query-parameters loop which removes all parameters since the filter list is empty, contrary to the original behavior of preserving all parameters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4145,
+    "completionTokens": 494,
+    "costUsd": 0.005627,
+    "latencyMs": 2726
+  }
+}

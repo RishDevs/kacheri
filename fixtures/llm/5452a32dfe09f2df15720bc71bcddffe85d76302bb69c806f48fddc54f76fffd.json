@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex for stripping 'www.' was changed to allow 1-character TLDs (from {2,63} to {1,63}), but the comment above states 'Each TLD should be up to 63 characters long (min: 2). It is technically possible to have a single character TLD, but none currently exist.' This inconsistency could cause www. to be stripped from invalid hostnames like 'www.example.a' that wouldn't match the previous stricter validation.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2700,
+    "completionTokens": 1284,
+    "costUsd": 0.006552,
+    "latencyMs": 4314
+  }
+}

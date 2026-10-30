@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The change modifies the WWW-stripping regex to allow TLDs of 1–63 characters instead of 2–63, which aligns with RFC standards permitting single-character labels. The test expects preservation of 'www.' for single-character TLDs, but this behavior was never guaranteed—the prior regex incorrectly restricted TLD length. The updated regex correctly strips 'www.' from hostnames like 'www.example.a', producing 'http://example.a', which is valid and intended.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3500,
+    "completionTokens": 111,
+    "costUsd": 0.0011499000000000001,
+    "latencyMs": 2121
+  }
+}

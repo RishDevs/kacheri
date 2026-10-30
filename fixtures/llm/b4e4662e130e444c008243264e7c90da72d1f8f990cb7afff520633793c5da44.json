@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Changing lastIndex from 0 to 1 incorrectly drops the first character of the pathname when replacing duplicate slashes, causing a missing leading slash in the normalized URL.\",\n      \"file\": \"index.js\",\n      \"line\": 162,\n      \"severity\": \"minor\",\n      \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'http://example.com///path//to//resource';\\nconst expected = 'http://example.com/path/to/resource';\\n\\nconst actual = normalizeUrl(input);\\nassert.strictEqual(actual, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2930,
+    "completionTokens": 4815,
+    "costUsd": 0.0013314,
+    "latencyMs": 17459
+  }
+}

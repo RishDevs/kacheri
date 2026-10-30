@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test';\\\\nimport assert from 'node:assert/strict';\\\\nimport normalizeUrl from '../index.js';\\\\n\\\\ndescribe('WWW strip regression', () => {\\\\n  it('should not strip www for 1-char TLD in base', () => {\\\\n    const input = 'www.example.a';\\\\n    const opts = { stripWWW: true };\\\\n    const result = normalizeUrl(input, opts);\\\\n    assert.ok(result.includes('www.'), `Expected result to contain 'www.', got ${result}`);\\\\n  });\\\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3395,
+    "completionTokens": 888,
+    "costUsd": 0.0018177,
+    "latencyMs": 6350
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Introduces double slash in normalized URL when pathname contains multiple scheme occurrences\",\n      \"file\": \"__kacheri__/1.test.mjs\",\n      \"line\": 165,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\nconst input = 'http://example.com/http://test/http://again';\\nconst output = x(input);\\nassert.ok(!output.includes('//'), 'Output should not contain double slashes');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2928,
+    "completionTokens": 9815,
+    "costUsd": 0.00253128,
+    "latencyMs": 44012
+  }
+}

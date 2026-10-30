@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The condition `(options.keepQueryParameters.length - 1) > 0` incorrectly evaluates to false for single-element arrays, causing the query parameter filtering logic to be skipped entirely. This is an unintended regression that breaks the documented behavior of keeping only specified parameters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3438,
+    "completionTokens": 305,
+    "costUsd": 0.004353,
+    "latencyMs": 1875
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex change allows zero-length hostname labels, causing incorrect stripping of 'www.' from hostnames with empty labels (e.g., 'www..example.com'), violating hostname specifications.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"critical\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl - WWW stripping edge case', () => {\\n  it('should not strip www. when the label after www. is empty (zero-length)', () => {\\n    const input = 'http://www..example.com';\\n    const options = { stripWWW: true };\\n    const expected = 'http://www..example.com';\\n    const actual = normalizeUrl(input, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3161,
+    "completionTokens": 4063,
+    "costUsd": 0.004605,
+    "latencyMs": 20496
+  }
+}

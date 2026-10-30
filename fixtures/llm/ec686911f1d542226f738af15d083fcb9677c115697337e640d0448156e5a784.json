@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The behavior change is intentional as indicated by the PR title 'Refactor URL normalization edge handling'. The removal of the try-catch block was deliberate to allow decodeURI to throw on invalid percent-encoded sequences rather than silently preserving them, aligning with stricter URL normalization semantics.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3203,
+    "completionTokens": 66,
+    "costUsd": 0.0010203,
+    "latencyMs": 1470
+  }
+}

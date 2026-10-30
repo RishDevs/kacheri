@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The new regex requires the domain label between 'www.' and the TLD to be 2-63 characters ({2,63}), but RFC standards and the code's own comment state labels can be 1-63 characters. The witness demonstrates a valid hostname 'www.a.com' (single-character label 'a') that is no longer stripped, constituting an unintended behavioral regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same root cause as c1: the regex change from {1,63} to {2,63} for the second-level domain label incorrectly excludes valid single-character labels like 'a' in 'www.a.com', contrary to RFC hostname rules and the function's documented intent.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4205,
+    "completionTokens": 885,
+    "costUsd": 0.00686,
+    "latencyMs": 4344
+  }
+}

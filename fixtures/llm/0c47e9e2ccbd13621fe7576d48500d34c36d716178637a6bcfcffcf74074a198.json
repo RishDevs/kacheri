@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 192, \"severity\": \"major\", \"message\": \"The condition uses OR (||) instead of AND (&&), which can lead to a TypeError when options.removeDirectoryIndex is a non-array with a length property (e.g., a string).\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2579,
+    "completionTokens": 3706,
+    "costUsd": 0.0041091,
+    "latencyMs": 16247
+  }
+}

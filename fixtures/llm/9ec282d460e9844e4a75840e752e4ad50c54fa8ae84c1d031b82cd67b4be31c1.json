@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex for stripping 'www.' was changed to allow 64 characters for the domain label (from 1-63 to 1-64), but the comment and DNS standards (RFC 1123, RFC 2181) specify a maximum of 63 characters per label. This relaxes validation incorrectly and contradicts the documented constraint.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 1444,
+    "costUsd": 0.007002,
+    "latencyMs": 4430
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst url = 'http://example.com/path?foo=bar';\\nconst options = { keepQueryParameters: ['foo'] };\\nconst result = normalizeUrl(url, options);\\nassert.strictEqual(result, 'http://example.com/path?foo=bar');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3077,
+    "completionTokens": 6262,
+    "costUsd": 0.0016875,
+    "latencyMs": 48226
+  }
+}

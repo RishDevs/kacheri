@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":197,\"severity\":\"critical\",\"message\":\"The condition changed from `&&` to `||`, breaking the logic for `removeDirectoryIndex`. Original: `Array.isArray(options.removeDirectoryIndex) && options.removeDirectoryIndex.length > 0` correctly checks that the option is a non-empty array. New: `Array.isArray(options.removeDirectoryIndex) || options.removeDirectoryIndex.length > 0` incorrectly enters the block for empty arrays (since `Array.isArray([])` is true) and for any non-array value with a `length` property (e.g., strings, objects), causing `testParameter` to crash when it calls `.some()` on a non-array.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2609,
+    "completionTokens": 1482,
+    "costUsd": 0.007055,
+    "latencyMs": 6166
+  }
+}

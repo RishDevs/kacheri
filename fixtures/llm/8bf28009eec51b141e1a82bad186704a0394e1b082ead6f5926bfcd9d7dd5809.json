@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {2,64} incorrectly requires at least two characters for the first label after www., breaking stripping for valid hostnames like www.a.com where the label is a single character.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The updated regex enforces a minimum of 2 characters for the first label after www., contradicting the comment stating min 1 and DNS hostname standards, causing a regression for single-character labels.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4448,
+    "completionTokens": 458,
+    "costUsd": 0.005822,
+    "latencyMs": 2249
+  }
+}

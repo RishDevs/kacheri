@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripping 'www.' has incorrect TLD pattern. The character class [a-z.\\\\-\\\\d] includes a dot (.), which allows matching multi-label TLDs like 'co.uk' as a single unit. Additionally, the quantifier changed from {2,63} to {1,62}, contradicting the comment that states TLD min length is 2 and max is 63. This could cause incorrect www stripping for hostnames like 'www.example.co.uk' (would match and strip, leaving 'example.co.uk') and allows single-character TLDs which don't exist in practice.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 1616,
+    "costUsd": 0.007518,
+    "latencyMs": 4865
+  }
+}

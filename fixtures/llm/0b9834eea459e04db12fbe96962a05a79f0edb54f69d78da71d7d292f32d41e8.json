@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripping WWW now matches hostnames with an empty second‑label, causing URLs like 'http://www..com' to be incorrectly stripped to 'http://.com'.\", \"file\": \"index.js\", \"line\": 205, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';import { strict as assert } from 'node:assert/strict';import normalizeUrl from '../index.js';\\n\\ndescribe('WWW strip regression', () => {\\n  it('should not strip WWW from hostname with empty label', () => {\\n    const input = 'http://www..com';\\n    const expected = 'http://www..com';\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3039,
+    "completionTokens": 1930,
+    "costUsd": 0.0026487,
+    "latencyMs": 10921
+  }
+}

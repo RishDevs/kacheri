@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":156,\"severity\":\"minor\",\"message\":\"The protocolRegex quantifier was changed from {1,50} to {1,49}, reducing the maximum matched protocol name length by 1 character. This is inconsistent with the TODO comment which specifies {1,50} for the equivalent lookbehind pattern, and with the previous version. Protocol names longer than 50 characters are extremely rare, so impact is minimal, but this appears to be an off-by-one error.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2619,
+    "completionTokens": 2955,
+    "costUsd": 0.011484,
+    "latencyMs": 10249
+  }
+}

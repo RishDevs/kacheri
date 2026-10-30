@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The removed condition `!protocol.includes('.')` was intended to exclude protocols containing dots, but such protocols are non-standard and should not be treated as custom protocols requiring preservation. The PR title indicates a refactor of URL normalization edge handling, implying intentional behavior change. The function now correctly treats 'test.protocol:' as a standard-like protocol and applies default protocol normalization, which is a valid improvement in robustness.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 2942,
+    "completionTokens": 92,
+    "costUsd": 0.0009653999999999999,
+    "latencyMs": 1376
+  }
+}

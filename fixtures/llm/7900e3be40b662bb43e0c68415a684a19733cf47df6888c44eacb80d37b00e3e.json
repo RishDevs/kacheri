@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The changed condition `(options.keepQueryParameters.length - 1) > 0` evaluates to false when the array length is 1, because 1 - 1 = 0, and 0 > 0 is false. This causes the loop that filters query parameters to be skipped when exactly one parameter is to be kept, resulting in no filtering occurring. The original condition `options.keepQueryParameters.length > 0` correctly handled arrays of length 1 or more. This is a clear unintended regression introduced by the refactor.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3388,
+    "completionTokens": 122,
+    "costUsd": 0.0011262,
+    "latencyMs": 1614
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters empty array regression', () => {\\n  it('should keep query parameters when keepQueryParameters is empty array', () => {\\n    const url = 'https://example.com/path?foo=1&bar=2';\\n    const options = {\\n      keepQueryParameters: [],\\n      removeQueryParameters: [],\\n      sortQueryParameters: false,\\n    };\\n    const expected = 'https://example.com/path?foo=1&bar=2';\\n    const actual = normalizeUrl(url, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 14081,
+    "completionTokens": 1080,
+    "costUsd": 0.0051963,
+    "latencyMs": 5041
+  }
+}

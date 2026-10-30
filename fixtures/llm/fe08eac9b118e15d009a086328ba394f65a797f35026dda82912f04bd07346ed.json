@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"normalizeUrl mishandles directory index removal, introducing a leading slash in the pathname\",\n      \"file\": \"index.js\",\n      \"line\": 199,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { test } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl removes directory index', () => {\\n  const url = 'http://example.com/foo/bar/index.html';\\n  const opts = { removeDirectoryIndex: true };\\n  const result = normalizeUrl(url, opts);\\n  assert.strictEqual(result, 'http://example.com/foo/bar/');\\n});\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2937,
+    "completionTokens": 4870,
+    "costUsd": 0.00134502,
+    "latencyMs": 39650
+  }
+}

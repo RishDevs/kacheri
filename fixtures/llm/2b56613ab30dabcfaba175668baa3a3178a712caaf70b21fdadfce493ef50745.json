@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change reduced the maximum TLD length from 63 to 62, causing WWW stripping to fail for valid 63-character TLDs. The witness test passes on the original code and fails on the changed code, demonstrating an unintended regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3596,
+    "completionTokens": 310,
+    "costUsd": 0.004526,
+    "latencyMs": 1716
+  }
+}

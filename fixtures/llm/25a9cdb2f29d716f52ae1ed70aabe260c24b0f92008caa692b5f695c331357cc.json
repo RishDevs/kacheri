@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":168,\"severity\":\"major\",\"message\":\"The change `slice((lastIndex) + 1, protocolAtIndex)` introduces a bug where the leading slash of the pathname is dropped when the pathname contains a protocol-like pattern (e.g., `http://`). Since `lastIndex` is initialized to 0, the first iteration skips index 0 (the leading `/`), causing the resulting pathname to not start with `/`, which is invalid for absolute URLs. For example, a URL like `http://example.com/http://foo` would have its pathname incorrectly normalized from `/http://foo` to `http://foo`.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 8622,
+    "completionTokens": 1037,
+    "costUsd": 0.011733,
+    "latencyMs": 4736
+  }
+}

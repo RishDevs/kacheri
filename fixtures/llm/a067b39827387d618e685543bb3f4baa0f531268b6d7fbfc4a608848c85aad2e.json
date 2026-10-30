@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex for stripWWW changed the maximum TLD length from 63 to 62 characters ({2,63} -> {2,62}), contradicting the comment which states 'Each TLD should be up to 63 characters long (min: 2).' This incorrectly rejects valid hostnames with a 63-character TLD.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2700,
+    "completionTokens": 806,
+    "costUsd": 0.005118,
+    "latencyMs": 3731
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change increases the minimum label length from 1 to 2, contradicting the code comment (min: 1) and causing a regression where single-character subdomains like 'www.a.com' no longer have 'www.' stripped, as shown by witness tests that pass on base but fail on head.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The same regex change breaks stripping for single-character labels like 'www.x.com', which is a regression from the original behavior that the witness tests expect and that the code comment (min: 1) supports.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3833,
+    "completionTokens": 833,
+    "costUsd": 0.006332,
+    "latencyMs": 3803
+  }
+}

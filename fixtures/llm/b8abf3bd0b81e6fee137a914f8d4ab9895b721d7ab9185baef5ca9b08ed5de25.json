@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Removing try-catch around decodeURI causes the function to throw on invalid percent-encoded pathname instead of preserving it.\", \"file\": \"index.js\", \"line\": 183, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\ndescribe('decodeURI error handling', () => {\\n  it('should preserve invalid percent-encoded pathname', () => {\\n    const input = 'http://example.com/path%ZZ';\\n    const result = x(input);\\n    assert.strictEqual(result, input);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3026,
+    "completionTokens": 1194,
+    "costUsd": 0.0019824,
+    "latencyMs": 6764
+  }
+}

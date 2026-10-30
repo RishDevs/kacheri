@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport { test } from 'node:test';\\nimport x from '../index.js'  // default export: function(urlString, options)\\n\\ntest('keepQueryParameters: [] should preserve all query parameters', () => {\\n  const url = 'http://example.com?foo=bar&baz=qux';\\n  const options = { keepQueryParameters: [] };\\n  const result = x(url, options);\\n  const expected = 'http://example.com?foo=bar&baz=qux';\\n  assert.strictEqual(result, expected);\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3056,
+    "completionTokens": 919,
+    "costUsd": 0.00040391999999999994,
+    "latencyMs": 8034
+  }
+}

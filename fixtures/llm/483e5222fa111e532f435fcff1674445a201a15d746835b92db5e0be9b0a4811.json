@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"message\": \"The regular expression for stripping 'www.' now allows an empty second-level domain (length 0) which is invalid. The original required at least 1 character. This change could lead to incorrectly stripping 'www.' from hostnames like 'www..example.com' (which is invalid) and might cause other issues.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2668,
+    "completionTokens": 2923,
+    "costUsd": 0.0034311000000000003,
+    "latencyMs": 11940
+  }
+}

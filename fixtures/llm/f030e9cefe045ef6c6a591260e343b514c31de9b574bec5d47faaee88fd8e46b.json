@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Empty keepQueryParameters array causes all query parameters to be removed, whereas base preserves them\",\n      \"file\": \"index.js\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst url = normalizeUrl('http://example.com/path?foo=bar&baz=qux', { keepQueryParameters: [] });\\n\\n// In base, query parameters should be preserved\\nassert.match(url, /[?&]foo=bar(?=&|$)/);\\nassert.match(url, /[?&]baz=qux(?=&|$)/);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3107,
+    "completionTokens": 3689,
+    "costUsd": 0.00107178,
+    "latencyMs": 28880
+  }
+}

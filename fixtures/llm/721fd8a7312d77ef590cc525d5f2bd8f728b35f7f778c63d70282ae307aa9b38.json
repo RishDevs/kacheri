@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change from slicing with lastIndex to hardcoded 1 breaks duplicate-slash removal, causing malformed pathnames when the URL contains protocol-like patterns in the pathname.\", \"file\": \"index.js\", \"line\": 168, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl duplicate slash handling', () => {\\n  it('should preserve path with multiple protocol-like patterns', () => {\\n    const input = 'http://example.com/a/http://b/http://c';\\n    const expected = 'http://example.com/a/http://b/http://c';\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3142,
+    "completionTokens": 6072,
+    "costUsd": 0.0064074,
+    "latencyMs": 52360
+  }
+}

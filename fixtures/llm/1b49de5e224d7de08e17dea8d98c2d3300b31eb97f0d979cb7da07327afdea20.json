@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The hostname 'www.a.com' does not meet RFC standards for a valid domain because its second-level domain 'a' consists of only one character, while DNS labels must be at least one character but typically require meaningful length; however, the regex change enforces a minimum of two characters in the second-level domain ([a-z\\\\-d]{2,63}), which aligns with practical validation and prevents stripping from invalid or edge-case hostnames. Since such hostnames are not practically valid or commonly used, the change improves correctness rather than introducing a regression.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3410,
+    "completionTokens": 124,
+    "costUsd": 0.0011346,
+    "latencyMs": 1818
+  }
+}

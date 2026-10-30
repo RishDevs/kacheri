@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"stripWWW incorrectly fails to remove www. for domains with 2-letter TLD\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('WWW stripping regression', () => {\\n  it('should strip www for 2-letter TLD', () => {\\n    const result = normalizeUrl('http://www.example.co', { stripWWW: true });\\n    assert.strictEqual(result, 'http://example.co');\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3224,
+    "completionTokens": 727,
+    "costUsd": 0.0016215,
+    "latencyMs": 4685
+  }
+}

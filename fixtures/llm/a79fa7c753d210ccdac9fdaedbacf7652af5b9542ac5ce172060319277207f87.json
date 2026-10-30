@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport x from '../index.js';\\n\\nconst label = 'a'.repeat(63);\\nconst url = `www.${label}.com`;\\n\\nconst baseResult = x(url, { stripWWW: true });\\nassert.ok(!baseResult.startsWith('www.'), 'Base should remove www. for 63‑char label');\\n\\nconst headResult = x(url, { stripWWW: true });\\nassert.ok(!headResult.startsWith('www.'), 'Head should also remove www. for 63‑char label');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3191,
+    "completionTokens": 8255,
+    "costUsd": 0.00217266,
+    "latencyMs": 87628
+  }
+}

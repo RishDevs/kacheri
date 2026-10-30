@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 190, \"severity\": \"minor\", \"message\": \"The condition for removing directory index now runs for empty arrays, which is unnecessary. This causes extra work (splitting the pathname and checking against an empty array) when options.removeDirectoryIndex is an empty array. Revert to the original condition: `options.removeDirectoryIndex.length > 0`.\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2589,
+    "completionTokens": 2458,
+    "costUsd": 0.0029889,
+    "latencyMs": 9276
+  }
+}

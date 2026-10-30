@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test expects www.a.com to become a.com after stripping WWW, but the current regex requires the first hostname label after www. to be at least 2 characters ([a-z\\\\-\\\\d]{2,64}). Since 'a' is only one character, the condition fails and www. is not stripped. However, DNS labels must be at least 1 character, so the regex should allow 1-character labels. The change mistakenly increased the minimum from 1 to 2, causing this regression.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3264,
+    "completionTokens": 118,
+    "costUsd": 0.0010853999999999998,
+    "latencyMs": 1791
+  }
+}

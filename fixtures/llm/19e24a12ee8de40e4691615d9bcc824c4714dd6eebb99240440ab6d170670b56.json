@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {0,63} allows empty hostname labels, causing www. to be stripped from invalid hostnames like 'www..com' and producing a leading dot, which contradicts the comment (min:1) and is an unintended regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same regex change causes www. to be stripped from 'www..example.com', resulting in an invalid hostname with a leading dot; the test expects no stripping, and the base version passes, indicating a regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4229,
+    "completionTokens": 951,
+    "costUsd": 0.007082,
+    "latencyMs": 6593
+  }
+}

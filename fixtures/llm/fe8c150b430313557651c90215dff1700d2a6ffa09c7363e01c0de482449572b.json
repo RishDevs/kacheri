@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {1,64} contradicts the code comment stating 'Each label should be max 63 at length' and RFC hostname limits, indicating an unintended off-by-one error that alters WWW-stripping behavior for 64-character labels.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3648,
+    "completionTokens": 2006,
+    "costUsd": 0.009666,
+    "latencyMs": 7170
+  }
+}

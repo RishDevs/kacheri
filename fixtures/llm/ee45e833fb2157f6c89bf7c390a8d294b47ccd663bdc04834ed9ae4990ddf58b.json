@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Changing slice start from lastIndex to 0 causes duplicate-slash normalization to incorrectly process earlier parts of the pathname when multiple protocol-like patterns appear, breaking URLs like 'http://example.com/foo//bar/http://example.com//baz/http://test.com//qux'\", \"file\": \"index.js\", \"line\": 169, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl duplicate slash handling', () => {\\n  it('should correctly normalize path with multiple protocol-like patterns', () => {\\n    const input = 'http://example.com/foo//bar/http://example.com//baz/http://test.com//qux';\\n    const expected = 'http://example.com/foo/bar/http://example.com/baz/http://test.com/qux';\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3068,
+    "completionTokens": 7231,
+    "costUsd": 0.0074283000000000005,
+    "latencyMs": 56451
+  }
+}

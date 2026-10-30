@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex for stripping 'www.' was changed from allowing TLDs up to 63 characters ({2,63}) to only 62 characters ({2,62}). This contradicts the comment stating 'Each TLD should be up to 63 characters long (min: 2)' and the RFC specification for hostname labels. While no current TLD exceeds 62 characters, this reduces the valid input space incorrectly.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2670,
+    "completionTokens": 763,
+    "costUsd": 0.004959,
+    "latencyMs": 2303
+  }
+}

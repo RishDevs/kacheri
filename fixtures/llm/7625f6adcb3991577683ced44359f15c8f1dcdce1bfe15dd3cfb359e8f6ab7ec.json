@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The regex for stripWWW incorrectly limits TLD length to 62 characters, causing valid hostnames with 63-character TLDs to not have www stripped.\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\\\nimport { strict as assert } from 'node:assert/strict';\\\\nimport normalizeUrl from '../index.js';\\\\n\\\\ndescribe('normalizeUrl stripWWW with 63-character TLD', () => {\\\\n  it('should strip www for 63-character TLD in base but not in head', () => {\\\\n    const tld = 'a'.repeat(63);\\\\n    const url = `http://www.a.${tld}/path`;\\\\n    const options = { stripWWW: true };\\\\n\\\\n    const result = normalizeUrl(url, options);\\\\n    assert.strictEqual(result, `http://a.${tld}/path`);\\\\n  });\\\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3166,
+    "completionTokens": 4814,
+    "costUsd": 0.0052824000000000005,
+    "latencyMs": 23924
+  }
+}

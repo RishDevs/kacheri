@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"dismissed\",\"reason\":\"The regex change from {1,50} to {1,49} intentionally prevents overmatching of excessively long protocol-like strings in pathnames; the witness test expects the old buggy behavior where a 51-character string was incorrectly treated as a protocol, so the failure reflects a correction not a regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3673,
+    "completionTokens": 3630,
+    "costUsd": 0.014563,
+    "latencyMs": 11786
+  }
+}

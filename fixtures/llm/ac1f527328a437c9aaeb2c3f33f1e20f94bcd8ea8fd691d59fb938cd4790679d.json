@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test expects the WWW stripping logic to accept a 63-character second-level domain label, but the updated regex correctly enforces the DNS label length limit of 63 characters per label, where the second-level domain must be 1-62 characters when followed by a dot and TLD. The original regex erroneously allowed 63 characters in the second-level domain before the dot, which would make the full label exceed 63 characters when including the dot and TLD. The change aligns the behavior with the DNS specification cited in the comment.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3574,
+    "completionTokens": 127,
+    "costUsd": 0.0011865,
+    "latencyMs": 1297
+  }
+}

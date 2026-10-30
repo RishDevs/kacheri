@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change incorrectly drops the leading slash of the pathname when it contains a protocol-like pattern, causing URLs like `http://example.com/abc/http://def` to be transformed to `http://example.com/abchttp://def`.\", \"file\": \"index.js\", \"line\": 168, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl edge case', () => {\\n  it('should preserve leading slash when pathname contains protocol-like pattern', () => {\\n    const input = 'http://example.com/abc/http://def';\\n    const expected = input;\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3105,
+    "completionTokens": 3663,
+    "costUsd": 0.0042282000000000005,
+    "latencyMs": 19762
+  }
+}

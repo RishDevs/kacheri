@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Returning undefined instead of empty string removes charset attribute, altering data URL normalization\",\n      \"file\": \"index.js\",\n      \"line\": 53,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst input = 'data:text/plain;charset=us-ascii;base64,hello';\\nconst expected = 'data:text/plain;charset;base64,hello';\\n\\nconst result = normalizeUrl(input);\\nassert.strictEqual(result, expected);\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2896,
+    "completionTokens": 4115,
+    "costUsd": 0.00116136,
+    "latencyMs": 17903
+  }
+}

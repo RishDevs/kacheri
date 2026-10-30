@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":229,\"severity\":\"major\",\"message\":\"The condition `(options.keepQueryParameters.length + 1) > 0` evaluates to true for empty arrays (length 0), causing all query parameters to be removed when `keepQueryParameters: []` is passed. The original condition `options.keepQueryParameters.length > 0` correctly skipped the keep-filtering logic for empty arrays. This changes behavior for a valid edge case input.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2635,
+    "completionTokens": 1402,
+    "costUsd": 0.006841,
+    "latencyMs": 4352
+  }
+}

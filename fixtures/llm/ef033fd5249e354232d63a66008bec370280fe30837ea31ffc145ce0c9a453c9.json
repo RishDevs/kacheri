@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"Regex change allows zero-length hostname label, causing incorrect stripping of 'www.' from hostnames like 'www..com'\",\n      \"file\": \"index.js\",\n      \"line\": 208,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\nconst url = 'http://www..com/path';\\nconst options = { stripWWW: true };\\n\\nconst result = normalizeUrl(url, options);\\n\\nassert.strictEqual(result, 'http://www..com/path');\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3161,
+    "completionTokens": 3390,
+    "costUsd": 0.00100326,
+    "latencyMs": 30891
+  }
+}

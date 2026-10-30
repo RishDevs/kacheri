@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":193,\"severity\":\"minor\",\"message\":\"The condition `options.removeDirectoryIndex.length > -1` is always true for any array (since array length is >= 0). This changes the semantics from \\\"only process when there are patterns to match\\\" (length > 0) to \\\"process for any array including empty ones\\\". While functionally equivalent for empty arrays (testParameter returns false), it's inefficient and likely a typo - the original `> 0` was correct.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2577,
+    "completionTokens": 989,
+    "costUsd": 0.005544,
+    "latencyMs": 3349
+  }
+}

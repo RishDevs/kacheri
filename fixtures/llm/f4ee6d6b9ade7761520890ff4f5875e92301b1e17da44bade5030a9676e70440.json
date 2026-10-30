@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The witness test uses an invalid hostname 'www..example.com' containing an empty label (double dot), which violates DNS hostname standards where each label must be 1-63 characters. The changed regex correctly allows zero-length first labels ([a-z\\\\-\\\\d]{0,62}) to match the pattern, but the hostname validation should reject such invalid inputs earlier. However, since the function processes whatever URL constructor produces, and 'http://www..example.com' parses to a hostname of '.example.com' (with leading dot stripped), the behavior change is a side effect of parsing invalid input, not a regression in intended functionality.\", \"concedes\": false}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3304,
+    "completionTokens": 143,
+    "costUsd": 0.0011198999999999998,
+    "latencyMs": 1314
+  }
+}

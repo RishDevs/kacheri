@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":232,\"severity\":\"major\",\"message\":\"The condition `options.keepQueryParameters.length > -1` is always true for any array (since array length >= 0). This changes behavior from the original `length > 0` which skipped the block for empty arrays. With this change, passing `keepQueryParameters: []` (empty array) will now delete ALL query parameters, whereas before it would keep all query parameters (skip the whitelist filter). This is likely a typo - the condition should be `length > 0` or `length >= 0` if empty array should mean 'keep none'.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2597,
+    "completionTokens": 1354,
+    "costUsd": 0.006659,
+    "latencyMs": 4339
+  }
+}

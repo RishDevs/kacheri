@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import test from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ntest('normalizeUrl preserves pathname with adjacent protocol-like patterns', async (t) => {\\n  const input = 'http://example.com/a://b://';\\n  const actual = normalizeUrl(input);\\n  assert.strictEqual(actual, input);\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3204,
+    "completionTokens": 3039,
+    "costUsd": 0.0036962999999999996,
+    "latencyMs": 17971
+  }
+}

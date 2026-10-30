@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert/strict';\\nimport test from '__kacheri__/node:test';\\nimport x from '../index.js';\\n\\ntest('normalizeUrl preserves trailing slash when removeSingleSlash is false', () => {\\n  const result = x('http://example.com%2F', { removeSingleSlash: false, stripHash: false });\\n  assert.strictEqual(result, 'http://example.com/');\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3016,
+    "completionTokens": 2784,
+    "costUsd": 0.0008491199999999999,
+    "latencyMs": 13870
+  }
+}

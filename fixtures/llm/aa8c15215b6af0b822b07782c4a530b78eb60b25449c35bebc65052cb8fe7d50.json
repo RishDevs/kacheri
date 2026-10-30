@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The protocol regex quantifier reduction causes URLs containing a scheme-like sequence longer than 49 characters to incorrectly collapse the slashes after the colon, altering the pathname.\", \"file\": \"index.js\", \"line\": 153, \"severity\": \"major\", \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport x from '../index.js';\\n\\nconst url = 'http://host/' + 'a'.repeat(50) + '://host2/path';\\nconst expected = url;\\nconst actual = x(url);\\nassert.strictEqual(actual, expected);\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3100,
+    "completionTokens": 4371,
+    "costUsd": 0.0048639,
+    "latencyMs": 36718
+  }
+}

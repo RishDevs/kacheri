@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { it } from 'node:test';\\nimport { strictEqual } from 'node:assert/strict';\\nimport x from '../index.js';\\n\\nit('stripWWW should strip www for two-letter TLD .co', () => {\\n  const url = 'http://www.example.co/';\\n  const opts = { stripWWW: true };\\n  const expected = 'http://example.co';\\n  const actual = x(url, opts);\\n  strictEqual(actual, expected);\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3095,
+    "completionTokens": 762,
+    "costUsd": 0.0016143000000000002,
+    "latencyMs": 5857
+  }
+}

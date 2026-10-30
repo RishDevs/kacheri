@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\": [{\"file\": \"index.js\", \"line\": 193, \"severity\": \"minor\", \"message\": \"Changed condition from length > 0 to length >= 0 causes the directory index removal block to run even when options.removeDirectoryIndex is an empty array, leading to unnecessary computation (though no functional change).\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "baseline",
+    "promptTokens": 2578,
+    "completionTokens": 747,
+    "costUsd": 0.0014457,
+    "latencyMs": 4839
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The change from `length > 0` to `length >= 0` causes an empty keepQueryParameters array to trigger the filtering block, which removes all query parameters since no keys match an empty filter list. The original behavior preserved query parameters when the array was empty, and the defense concedes this is a regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"Same regression as c1: the condition change makes an empty keepQueryParameters array remove all query parameters instead of preserving them. The PR title indicates a refactor (no behavior change), and the witness confirms the original behavior was to keep parameters with an empty array.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3953,
+    "completionTokens": 708,
+    "costUsd": 0.006077,
+    "latencyMs": 2702
+  }
+}

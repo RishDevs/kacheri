@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex change from {1,63} to {0,63} allows zero-length domain labels, which would match invalid hostnames like 'www..com' (two consecutive dots). This would strip 'www.' resulting in '.com', an invalid hostname. The comment states 'min: 1' for each label, contradicting the new regex.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2668,
+    "completionTokens": 731,
+    "costUsd": 0.004861,
+    "latencyMs": 2434
+  }
+}

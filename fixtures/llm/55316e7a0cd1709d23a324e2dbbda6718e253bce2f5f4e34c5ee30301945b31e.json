@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":183,\"severity\":\"major\",\"message\":\"Removed try-catch around decodeURI() call. If decodeURI() throws on invalid percent-encoding (e.g., '%ZZ'), the function will now crash instead of gracefully preserving the original pathname. The original try-catch silently ignored decode errors, which was likely intentional for robustness against malformed URLs.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2572,
+    "completionTokens": 877,
+    "costUsd": 0.005203,
+    "latencyMs": 4601
+  }
+}

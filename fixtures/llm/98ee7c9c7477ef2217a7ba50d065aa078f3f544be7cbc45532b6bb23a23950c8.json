@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"Changing lastIndex from 0 to 1 causes the leading slash of a pathname to be stripped when duplicate slashes are present and no protocol-like substring appears in the pathname.\", \"file\": \"index.js\", \"line\": 155, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('normalizeUrl duplicate slash handling', () => {\\n  it('should preserve leading slash when pathname contains duplicate slashes and no protocol-like substring', () => {\\n    const input = 'http://example.com/path//to';\\n    const expected = 'http://example.com/path/to';\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3068,
+    "completionTokens": 2416,
+    "costUsd": 0.0030948,
+    "latencyMs": 22788
+  }
+}

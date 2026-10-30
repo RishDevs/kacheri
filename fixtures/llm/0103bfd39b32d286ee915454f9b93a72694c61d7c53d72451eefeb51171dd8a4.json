@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The condition was changed from checking if the array length is greater than 0 to greater than 1, meaning the keepQueryParameters filtering logic is now skipped when the array contains exactly one element. As a result, no parameters are removed based on the keep list, causing both 'keep' and 'drop' to remain in the URL. This contradicts the intended behavior of keeping only specified parameters. However, since the PR title indicates a refactoring of URL normalization edge handling, and this change alters core filtering logic, it may represent an intentional shift in behavior — though it risks being a regression if single-element keep lists were previously supported.\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3235,
+    "completionTokens": 135,
+    "costUsd": 0.001092,
+    "latencyMs": 2124
+  }
+}

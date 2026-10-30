@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The change replaces `slice(lastIndex, protocolAtIndex)` with `slice(0, protocolAtIndex)`, which alters how segments between protocol-like patterns are processed. In URLs containing multiple protocol-like substrings (e.g., 'http://'), this causes earlier parts of the pathname to be re-processed incorrectly, leading to malformed output such as 'http:///foo/bar' instead of preserving the intended structure. The witness test demonstrates a real regression where the normalization logic fails to handle nested or repeated protocol-like patterns correctly, indicating unintended behavior.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3417,
+    "completionTokens": 123,
+    "costUsd": 0.0011358,
+    "latencyMs": 1410
+  }
+}

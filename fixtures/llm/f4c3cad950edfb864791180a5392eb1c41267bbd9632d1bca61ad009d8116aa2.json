@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change reduces the maximum TLD length from 63 to 62 characters, contradicting the documented hostname restrictions and causing valid 63-character TLDs to retain the 'www.' prefix.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3545,
+    "completionTokens": 181,
+    "costUsd": 0.004088,
+    "latencyMs": 1128
+  }
+}

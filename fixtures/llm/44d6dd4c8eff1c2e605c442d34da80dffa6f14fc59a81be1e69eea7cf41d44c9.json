@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The removed condition specifically preserved the original URL's lack of trailing slash when removeSingleSlash is false and pathname is root. Its removal causes a trailing slash to be incorrectly added, which is an unintended regression.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3415,
+    "completionTokens": 403,
+    "costUsd": 0.004624,
+    "latencyMs": 1831
+  }
+}

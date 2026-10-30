@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"charges\": [\n    {\n      \"claim\": \"When keepQueryParameters is an empty array, the new code removes all query parameters whereas the old code preserves them\",\n      \"file\": \"index.js\",\n      \"line\": 229,\n      \"severity\": \"major\",\n      \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\nconst url = 'http://example.com/?foo=bar';\\nconst options = { keepQueryParameters: [] };\\nconst result = normalizeUrl(url, options);\\n\\nassert.strictEqual(result, 'http://example.com/?foo=bar');\\n\"\n    }\n  ]\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2968,
+    "completionTokens": 2446,
+    "costUsd": 0.0007651199999999999,
+    "latencyMs": 13129
+  }
+}

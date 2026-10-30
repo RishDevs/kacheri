@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"dismissed\",\"reason\":\"The PR title 'Refactor URL normalization edge handling' and the deliberate removal of the dot check indicate intentional behavior change. The witness tests the old behavior where dot-containing protocols were incorrectly normalized; the refactor correctly treats them as custom protocols per RFC 3986 scheme syntax.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3095,
+    "completionTokens": 1251,
+    "costUsd": 0.006848,
+    "latencyMs": 4809
+  }
+}

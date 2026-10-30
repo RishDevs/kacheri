@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import { strict as assert } from 'node:assert';\\nimport { test } from 'node:test';\\nimport x from '../index.js';\\n\\ntest('keepQueryParameters single element', () => {\\n  const url = 'http://example.com?keep=this&drop=that';\\n  const options = { keepQueryParameters: ['keep'] };\\n  const result = x(url, options);\\n  // Expected result when keepQueryParameters length is 1: only that parameter remains\\n  assert.strictEqual(result, 'http://example.com/?keep=this');\\n});\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3229,
+    "completionTokens": 2339,
+    "costUsd": 0.0007551,
+    "latencyMs": 18341
+  }
+}

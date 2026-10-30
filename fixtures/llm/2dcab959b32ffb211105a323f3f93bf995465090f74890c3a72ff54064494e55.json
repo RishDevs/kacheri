@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The change from `length > 0` to `length > -1` causes the keep-query-parameters block to execute for empty arrays, deleting all query parameters instead of preserving them, which is a clear regression.\"},{\"chargeId\":\"c2\",\"decision\":\"convicted\",\"reason\":\"The condition `length > -1` evaluates to true for empty arrays (0 > -1), triggering the deletion loop that removes all query parameters when none match the empty keep list, contradicting the intended behavior of preserving all parameters.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 4151,
+    "completionTokens": 389,
+    "costUsd": 0.005318,
+    "latencyMs": 2487
+  }
+}

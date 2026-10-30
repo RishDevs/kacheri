@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change from {1,63} to {1,62} incorrectly prevents stripping 'www.' from valid hostnames where the first label is exactly 63 characters long, which the DNS specification permits. The witness demonstrates a concrete regression on a valid input.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3616,
+    "completionTokens": 712,
+    "costUsd": 0.005752,
+    "latencyMs": 3113
+  }
+}

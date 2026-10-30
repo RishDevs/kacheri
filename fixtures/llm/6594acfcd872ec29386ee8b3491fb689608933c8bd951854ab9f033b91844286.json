@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"major\",\"message\":\"The regex for stripping 'www.' changed the minimum TLD length from 2 to 3 characters (from {2,63} to {3,63}). This breaks www-stripping for valid 2-character TLDs like .io, .ai, .co, .tv, .me, etc. The comment states minimum 2, but the regex now requires minimum 3.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2669,
+    "completionTokens": 1149,
+    "costUsd": 0.006116,
+    "latencyMs": 3824
+  }
+}

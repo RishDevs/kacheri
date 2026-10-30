@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"WWW strip fails for 63-character second-level domain label due to reduced length limit\", \"file\": \"index.js\", \"line\": 208, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('WWW strip length edge case', () => {\\n  it('should strip www. for 63-character label on base but not on head', () => {\\n    const label = 'a'.repeat(63);\\n    const hostname = `www.${label}.aa`;\\n    const url = `http://${hostname}`;\\n    const result = normalizeUrl(url, { stripWWW: true });\\n    // Base behavior: www stripped\\n    const expected = `http://${label}.aa`;\\n    assert.strictEqual(result, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3040,
+    "completionTokens": 2769,
+    "costUsd": 0.0034040999999999997,
+    "latencyMs": 13171
+  }
+}

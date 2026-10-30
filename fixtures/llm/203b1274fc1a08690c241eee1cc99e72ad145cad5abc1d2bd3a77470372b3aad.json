@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":168,\"severity\":\"major\",\"message\":\"The slice start index was changed from `lastIndex` to `0`, causing the loop to repeatedly process the same prefix of the pathname on each iteration. The `lastIndex` variable is updated at the end of each iteration but never used, so intermediate segments between protocol matches are not handled correctly. This breaks duplicate-slash normalization for pathnames containing multiple protocol-like patterns (e.g., '/foo//bar/http://example.com//path').\"}] }",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2587,
+    "completionTokens": 848,
+    "costUsd": 0.005131,
+    "latencyMs": 6699
+  }
+}

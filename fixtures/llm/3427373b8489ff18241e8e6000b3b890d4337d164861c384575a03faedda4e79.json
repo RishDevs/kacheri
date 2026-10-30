@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":197,\"severity\":\"minor\",\"message\":\"Inconsistent regex for slash collapsing: intermediate segments use `/{1,}/g` (match 1+ slashes) while remnant uses `/{2,}/g` (match 2+ slashes). Both produce identical runtime results since single slashes are replaced with single slashes, but the inconsistency deviates from the comment's intent ('Remove duplicate slashes') and creates a maintenance hazard. The intermediate regex should be `/{2,}/g` to match the remnant and the documented intent.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2558,
+    "completionTokens": 4196,
+    "costUsd": 0.015146,
+    "latencyMs": 13206
+  }
+}

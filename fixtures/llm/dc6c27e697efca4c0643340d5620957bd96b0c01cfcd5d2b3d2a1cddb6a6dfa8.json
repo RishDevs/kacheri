@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\": \"import assert from 'node:assert/strict';\\nimport x from '../index.js';\\n\\nconst input = 'http://example.com/http://test/http://again';\\nconst output = x(input);\\nassert.ok(output.includes('//'), 'Output should contain double slashes');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 2975,
+    "completionTokens": 1365,
+    "costUsd": 0.0005061,
+    "latencyMs": 6693
+  }
+}

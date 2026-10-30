@@ -1,0 +1,12 @@
+{
+  "content": "{\"argument\": \"The condition was changed from `length > 0` to `length > -1`, which evaluates to true even for empty arrays (since 0 > -1). This causes the loop to run over an empty keys list, but the logic inside the loop deletes parameters that do NOT match the keep list. Since the keep list is empty, no parameters match, so all are deleted—a clear regression. The witness test correctly expects empty keepQueryParameters to preserve all query parameters, as implied by the base behavior.\", \"concedes\": true}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "defense",
+    "promptTokens": 3228,
+    "completionTokens": 115,
+    "costUsd": 0.0010719000000000002,
+    "latencyMs": 1570
+  }
+}

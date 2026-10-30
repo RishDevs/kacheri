@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters single item', () => {\\n  it('should keep only the specified query parameter', () => {\\n    const url = 'http://example.com?foo=1&bar=2&baz=3';\\n    const options = {\\n      keepQueryParameters: ['foo'],\\n      removeQueryParameters: [],\\n      stripHash: false,\\n      sortQueryParameters: true,\\n    };\\n    const expected = 'http://example.com/?foo=1';\\n    const actual = normalizeUrl(url, options);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3384,
+    "completionTokens": 1416,
+    "costUsd": 0.0022895999999999997,
+    "latencyMs": 10725
+  }
+}

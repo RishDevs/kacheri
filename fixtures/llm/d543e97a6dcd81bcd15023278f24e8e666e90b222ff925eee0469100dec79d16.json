@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":22,\"severity\":\"major\",\"message\":\"Removing the `!protocol.includes('.')` check in `hasCustomProtocol` causes URLs with domain-like protocols (e.g., 'example.com:path', 'example.com:8080/path') to be incorrectly treated as custom protocol URLs and returned unnormalized. These should be normalized with the default protocol prepended instead.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2549,
+    "completionTokens": 1189,
+    "costUsd": 0.006116,
+    "latencyMs": 6131
+  }
+}

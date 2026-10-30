@@ -637,7 +637,7 @@ describe('BenchPage (court record)', () => {
     );
     const stats = screen.getByRole('group', { name: 'Headline results' });
     expect(within(stats).getByText('56%')).toBeTruthy();
-    expect(within(stats).getByText('single reviewer: 36%')).toBeTruthy();
+    expect(within(stats).getByText('Super alone: 36%')).toBeTruthy();
     expect(within(stats).getByText('0.08')).toBeTruthy();
     expect(within(stats).getAllByText(/^\$0\.0\d{3}$/)).toHaveLength(1);
 
@@ -692,9 +692,9 @@ describe('BenchPage (court record)', () => {
     expect(screen.queryByRole('note', { name: 'Sample data' })).toBeNull();
     expect(screen.getByText('Record of 3 trials')).toBeTruthy();
     expect(within(stats).getByText('50%')).toBeTruthy();
-    expect(within(stats).getByText('single reviewer: 100%')).toBeTruthy();
+    expect(within(stats).getByText('Super alone: 100% · Ultra alone: 50%')).toBeTruthy();
     expect(within(stats).getByText('0.00')).toBeTruthy();
-    expect(within(stats).getByText('single reviewer: 2.00')).toBeTruthy();
+    expect(within(stats).getByText('Super alone: 2.00 · Ultra alone: 0.67')).toBeTruthy();
     const table = screen.getByRole('table', { name: 'Results by reviewer' });
     const ultra = within(table).getByRole('rowheader', { name: 'Single reviewer, Nemotron Ultra' }).closest('tr')!;
     expect(ultra.textContent).toContain('1 of 2');

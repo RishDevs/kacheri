@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":229,\"severity\":\"major\",\"message\":\"Changed condition from `length > 0` to `length >= 0` for `keepQueryParameters`. This causes an empty array `[]` to trigger the keep-logic, which deletes ALL query parameters (since no key matches an empty filter). Previously, an empty array skipped the keep-logic entirely, preserving all parameters. This is a breaking behavior change for callers passing `keepQueryParameters: []`.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2627,
+    "completionTokens": 925,
+    "costUsd": 0.005402,
+    "latencyMs": 3350
+  }
+}

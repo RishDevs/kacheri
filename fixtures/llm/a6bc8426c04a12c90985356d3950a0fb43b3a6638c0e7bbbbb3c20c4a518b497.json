@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The keepQueryParameters option fails to filter when exactly one parameter is provided due to changed condition from length > 0 to length > 1.\", \"file\": \"index.js\", \"line\": 229, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport { strict as assert } from 'node:assert';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe('keepQueryParameters single element', () => {\\n  it('should keep only the specified query parameter', () => {\\n    const url = 'https://example.com/path?foo=1&bar=2&baz=3';\\n    const options = { keepQueryParameters: ['foo'] };\\n    const result = normalizeUrl(url, options);\\n    assert.strictEqual(result, 'https://example.com/path?foo=1');\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3090,
+    "completionTokens": 983,
+    "costUsd": 0.0018117,
+    "latencyMs": 6532
+  }
+}

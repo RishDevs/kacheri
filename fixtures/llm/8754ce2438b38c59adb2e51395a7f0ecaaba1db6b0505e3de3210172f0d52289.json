@@ -1,0 +1,12 @@
+{
+  "content": "{\"witnessCode\": \"import { describe, it } from 'node:test';\\\\nimport assert from 'node:assert/strict';\\\\nimport normalizeUrl from '../index.js';\\\\n\\\\ndescribe('normalizeUrl protocol regex length', () => {\\\\n  it('should preserve double slash after protocol-like substring in pathname', () => {\\\\n    const longProto = 'a'.repeat(51);\\\\n    const url = 'http://example.com/' + '/'+longProto+'://///test';\\\\n    const expected = 'http://example.com/' + '/'+longProto+':///test';\\\\n    const actual = normalizeUrl(url);\\\\n    assert.strictEqual(actual, expected);\\\\n  });\\\\n});\"}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3225,
+    "completionTokens": 798,
+    "costUsd": 0.0016857,
+    "latencyMs": 5523
+  }
+}

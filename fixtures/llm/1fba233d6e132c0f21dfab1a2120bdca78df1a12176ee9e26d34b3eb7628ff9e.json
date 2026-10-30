@@ -5,8 +5,8 @@
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
     "role": "prosecutor",
     "promptTokens": 2991,
-    "completionTokens": 431,
-    "costUsd": 0.0002829,
-    "latencyMs": 1844
+    "completionTokens": 247,
+    "costUsd": 0.00023873999999999998,
+    "latencyMs": 1353
   }
 }

@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":193,\"severity\":\"minor\",\"message\":\"The condition `(options.removeDirectoryIndex.length + 1) > 0` is always true for any array (including empty arrays), since array length is always >= 0. This changes the behavior from the original `options.removeDirectoryIndex.length > 0` which correctly skipped processing for empty arrays. While the inner logic handles empty arrays correctly (testParameter returns false for empty filters), the condition itself is logically incorrect and causes unnecessary processing.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 2589,
+    "completionTokens": 1372,
+    "costUsd": 0.006705,
+    "latencyMs": 3800
+  }
+}

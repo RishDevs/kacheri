@@ -5,8 +5,8 @@
     "model": "nvidia/nemotron-3-super-120b-a12b",
     "role": "prosecutor",
     "promptTokens": 2967,
-    "completionTokens": 178,
-    "costUsd": 0.0010502999999999999,
-    "latencyMs": 2012
+    "completionTokens": 725,
+    "costUsd": 0.0015425999999999999,
+    "latencyMs": 3526
   }
 }

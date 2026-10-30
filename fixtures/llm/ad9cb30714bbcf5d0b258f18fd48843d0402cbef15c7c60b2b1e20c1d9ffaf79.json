@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change makes normalizeUrl incorrectly treat a non-array options.removeDirectoryIndex with a length property as truthy, causing premature directory-index removal.\", \"file\": \"index.js\", \"line\": 192, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test'\\\\nimport assert from 'node:assert/strict'\\\\nimport normalizeUrl from '../index.js'\\\\n\\\\ndescribe('normalizeUrl removeDirectoryIndex bug', () => {\\\\n  it('should not remove directory index when options.removeDirectoryIndex is array-like object', () => {\\\\n    const input = 'http://example.com/index.html'\\\\n    const opts = {\\\\n      removeDirectoryIndex: {\\\\n        '0': /^index\\\\\\\\.[a-z]+$/,\\\\n        length: 1,\\\\n        some: Array.prototype.some\\\\n      }\\\\n    }\\\\n    const expected = 'http://example.com/index.html'\\\\n    assert.strictEqual(normalizeUrl(input, opts), expected)\\\\n  })\\\\n})\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 2950,
+    "completionTokens": 5713,
+    "costUsd": 0.006026699999999999,
+    "latencyMs": 29567
+  }
+}

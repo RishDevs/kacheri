@@ -1,0 +1,12 @@
+{
+  "content": "{\"rulings\":[{\"chargeId\":\"c1\",\"decision\":\"convicted\",\"reason\":\"The regex change reduces the maximum suffix length from 63 to 62 characters, causing valid hostnames with a 63‑character label (allowed by RFC) to no longer have www. stripped. The witness demonstrates this regression; the defense's claim about RFC alignment is contradicted by the off‑by‑one limit.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "judge",
+    "promptTokens": 3638,
+    "completionTokens": 1223,
+    "costUsd": 0.007307,
+    "latencyMs": 4625
+  }
+}

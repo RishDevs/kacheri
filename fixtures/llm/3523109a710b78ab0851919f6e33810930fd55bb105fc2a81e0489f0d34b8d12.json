@@ -1,0 +1,12 @@
+{
+  "content": "{\n  \"witnessCode\":\"import { strict as assert } from 'node:assert';\\nimport x from '../index.js';\\n\\nconst input = 'http://www.x.com/';\\nconst result = x(input, { stripWWW: true });\\nassert.strictEqual(result.includes('www.'), false, 'Hostname should not contain www. after stripping even with single-char label');\"\n}",
+  "usage": {
+    "tier": "nano",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "role": "prosecutor",
+    "promptTokens": 3116,
+    "completionTokens": 2401,
+    "costUsd": 0.0007632,
+    "latencyMs": 11109
+  }
+}

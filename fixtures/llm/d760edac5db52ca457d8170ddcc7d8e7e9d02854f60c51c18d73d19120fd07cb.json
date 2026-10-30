@@ -1,0 +1,12 @@
+{
+  "content": "{\"charges\": [{\"claim\": \"The change to add +1 in slice causes the leading slash to be stripped from the pathname when it contains a protocol-like pattern, producing an invalid URL.\", \"file\": \"index.js\", \"line\": 168, \"severity\": \"major\", \"witnessCode\": \"import { describe, it } from 'node:test';\\nimport assert from 'node:assert/strict';\\nimport normalizeUrl from '../index.js';\\n\\ndescribe(\\\"normalizeUrl leading slash preservation\\\", () => {\\n  it(\\\"should keep leading slash when pathname contains protocol-like pattern\\\", () => {\\n    const input = \\\"http://example.com/http://foo\\\";\\n    const expected = input; // base behavior\\n    const actual = normalizeUrl(input);\\n    assert.strictEqual(actual, expected);\\n  });\\n});\"}]}",
+  "usage": {
+    "tier": "super",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "role": "prosecutor",
+    "promptTokens": 3105,
+    "completionTokens": 3400,
+    "costUsd": 0.0039915,
+    "latencyMs": 29968
+  }
+}

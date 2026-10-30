@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":210,\"severity\":\"minor\",\"message\":\"Comment states TLD minimum length is 2 characters ('min: 2'), but the regex quantifier was changed from {2,63} to {1,63}, allowing single-character TLDs. The comment was not updated to reflect this change, creating a documentation inconsistency.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "baseline",
+    "promptTokens": 8696,
+    "completionTokens": 2407,
+    "costUsd": 0.015917,
+    "latencyMs": 6937
+  }
+}

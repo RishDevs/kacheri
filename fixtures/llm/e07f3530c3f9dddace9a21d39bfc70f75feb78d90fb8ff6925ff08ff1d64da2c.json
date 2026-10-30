@@ -1,0 +1,12 @@
+{
+  "content": "{\"findings\":[{\"file\":\"index.js\",\"line\":208,\"severity\":\"minor\",\"message\":\"The regex change from {1,63} to {0,63} allows zero-length hostname labels, which violates hostname specifications (each label must be 1-63 characters per RFC 1123). This could incorrectly strip 'www.' from malformed hostnames like 'www..com' or 'www..example.com'.\"}]}",
+  "usage": {
+    "tier": "ultra",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "role": "investigator",
+    "promptTokens": 2698,
+    "completionTokens": 846,
+    "costUsd": 0.005236,
+    "latencyMs": 3564
+  }
+}
