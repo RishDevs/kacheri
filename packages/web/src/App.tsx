@@ -5,6 +5,7 @@ import { initialState, reducer } from './state';
 import { Board } from './components/Board';
 import { CreateTaskForm } from './components/CreateTaskForm';
 import { TaskView } from './components/TaskView';
+import { Masthead } from './components/TopNav';
 
 type Connection = 'connecting' | 'live' | 'offline';
 
@@ -95,19 +96,21 @@ export function App({ api, nav }: { api: KacheriApi; nav?: ReactNode }) {
   const extras = selectedId ? state.extras[selectedId] : undefined;
 
   return (
-    <div className="app">
-      <header className="app-head">
-        <h1>Kacheri</h1>
-        {nav}
-        <span className={`conn conn-${connection}`} role="status">
-          {connection === 'live' ? 'Live' : connection === 'offline' ? 'Disconnected — retrying' : 'Connecting…'}
-        </span>
-      </header>
+    <div className="site app">
+      <Masthead
+        nav={nav}
+        status={
+          <span className={`conn conn-${connection}`} role="status">
+            {connection === 'live' ? 'Live' : connection === 'offline' ? 'Disconnected — retrying' : 'Connecting…'}
+          </span>
+        }
+      />
       {error && (
-        <p className="error banner" role="alert">
+        <p className="banner-error board-banner" role="alert">
           {error}
         </p>
       )}
+      <h1 className="board-title">Orchestrator board</h1>
       <main className="layout">
         <aside className="sidebar">
           <CreateTaskForm onSubmit={createTask} />

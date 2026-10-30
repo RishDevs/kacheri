@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { CaseRecord, CourtEvent } from '@kacheri/shared';
+import type { CaseRecord, CourtEvent, Evidence } from '@kacheri/shared';
 import type { KacheriApi } from '../src/api';
 import { parseBench, type BenchData } from '../src/court/bench';
+import { applyCommand } from '../src/court/repro';
 import type { CourtHandlers, CourtSource } from '../src/court/source';
 import { BenchPage } from '../src/components/court/BenchPage';
 import { CaseView } from '../src/components/court/CaseView';
@@ -39,77 +40,147 @@ function fakeSource(cases: CaseRecord[], opts: { demo?: boolean; bench?: BenchDa
   return { source, emit, replay, stops };
 }
 
+function section(title: string): HTMLElement {
+  return screen.getByRole('heading', { name: title }).closest('section') as HTMLElement;
+}
+
+function judgmentBox(): HTMLElement {
+  return screen.getByRole('region', { name: 'Judgment' });
+}
+
+function headline(): string {
+  return judgmentBox().querySelector('.judgment-headline')?.textContent ?? '';
+}
+
+function countItem(n: number): HTMLElement {
+  return within(section('I. The Charges')).getByText(`Count ${n}.`).closest('li') as HTMLElement;
+}
+
+function mockClipboard() {
+  const writeText = vi.fn(async (_text: string) => undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  return writeText;
+}
+
+afterEach(() => {
+  delete (navigator as { clipboard?: unknown }).clipboard;
+});
+
 describe('CourtPage (live)', () => {
-  it('streams charges, evidence, defense, rulings and usage into the lanes', async () => {
+  it('fills the judgment in as events arrive, with the current stage in plain words', async () => {
     const { source, emit } = fakeSource([makeCase()]);
     render(<CourtPage source={source} caseId="case1" onSelect={vi.fn()} />);
     await screen.findByRole('article', { name: 'Case Add range support' });
     await waitFor(() => expect(source.getCase).toHaveBeenCalledWith('case1'));
-    expect(screen.getByText('The prosecutor is reading the diff…')).toBeTruthy();
+    expect(headline()).toBe('The prosecution is writing proof tests…');
+    expect(judgmentBox().textContent).toContain('In plain words: the court has not decided yet.');
+    expect(within(section('I. The Charges')).getByText('No charges have been filed yet.')).toBeTruthy();
 
-    emit({ type: 'usage', caseId: 'case1', usage: makeUsage({ costUsd: 0.0012, promptTokens: 1500, completionTokens: 700 }) });
-    emit({ type: 'charge', caseId: 'case1', charge: makeCharge('c1', { claim: 'Off by one in range end' }) });
-    emit({ type: 'charge', caseId: 'case1', charge: makeCharge('c2', { claim: 'Flaky claim' }) });
-    const c1 = screen.getByRole('group', { name: 'Charge c1' });
-    expect(within(c1).getByText('Off by one in range end')).toBeTruthy();
-    expect(within(c1).getByText('src/a.js:3')).toBeTruthy();
-    expect(within(c1).getByText('__kacheri__/c1.test.mjs')).toBeTruthy();
+    const c1 = makeCharge('c1', { claim: 'Off by one in range end' });
+    const c2 = makeCharge('c2', { claim: 'Flaky claim' });
+    emit({ type: 'usage', caseId: 'case1', usage: makeUsage({ costUsd: 0.0012 }) });
+    emit({ type: 'charge', caseId: 'case1', charge: c1 });
+    emit({ type: 'charge', caseId: 'case1', charge: c2 });
+    expect(countItem(1).textContent).toContain('Off by one in range end');
+    expect(countItem(1).textContent).toContain('src/a.js:3');
+    expect(within(countItem(1)).getByText('PENDING')).toBeTruthy();
 
-    emit({ type: 'evidence', caseId: 'case1', evidence: makeEvidence('c1', true) });
-    emit({ type: 'evidence', caseId: 'case1', evidence: makeEvidence('c2', false) });
-    expect(within(c1).getByText('Admissible')).toBeTruthy();
-    expect(within(within(c1).getByLabelText('head runs')).getAllByText('FAIL')).toHaveLength(3);
-    expect(within(within(c1).getByLabelText('base runs')).getAllByText('PASS')).toHaveLength(3);
-    const c2 = screen.getByRole('group', { name: 'Charge c2' });
-    expect(within(c2).getByText('Inadmissible')).toBeTruthy();
-    expect(c2.className).toContain('charge-inadmissible');
-    expect(within(c2).getByText('Not heard: evidence inadmissible.')).toBeTruthy();
+    const usage = [makeUsage({ costUsd: 0.0012 })];
+    emit({ type: 'case', record: makeCase({ status: 'trial', charges: [c1, c2], usage }) });
+    expect(headline()).toBe('The court is running test 1 of 12…');
+    const e1 = makeEvidence('c1', true);
+    const e2 = makeEvidence('c2', false);
+    emit({ type: 'evidence', caseId: 'case1', evidence: e1 });
+    expect(headline()).toBe('The court is running test 7 of 12…');
+    emit({ type: 'evidence', caseId: 'case1', evidence: e2 });
+
+    emit({ type: 'case', record: makeCase({ status: 'deliberation', charges: [c1, c2], evidence: [e1, e2], usage }) });
+    expect(headline()).toBe('The defense is responding…');
+    expect(screen.getByRole('heading', { name: 'II. The Evidence on Count 1' })).toBeTruthy();
+    expect(screen.getByRole('table', { name: 'Exhibit 1: record of trial runs' })).toBeTruthy();
+    expect(within(section('III. The Defense')).getByText('The defense has not answered Count 1 yet.')).toBeTruthy();
 
     emit({ type: 'rebuttal', caseId: 'case1', rebuttal: { chargeId: 'c1', argument: 'Fair cop.', concedes: true } });
-    expect(within(c1).getByText('Concedes')).toBeTruthy();
-    expect(within(c1).getByText('Fair cop.')).toBeTruthy();
+    expect(headline()).toBe('The judge is deciding…');
+    expect(section('III. The Defense').textContent).toContain(
+      'Counsel for the change (Nemotron Super) conceded Count 1: fair cop.',
+    );
 
-    emit({ type: 'ruling', caseId: 'case1', ruling: { chargeId: 'c1', decision: 'convicted', reason: 'Proven by witness.' } });
+    emit({ type: 'ruling', caseId: 'case1', ruling: { chargeId: 'c1', decision: 'convicted', reason: 'Proven by the test.' } });
     emit({ type: 'ruling', caseId: 'case1', ruling: { chargeId: 'c2', decision: 'dismissed', reason: 'Inadmissible.' } });
-    expect(within(c1).getByText('Convicted')).toBeTruthy();
-    expect(c1.className).toContain('outcome-convicted');
-    expect(within(c2).getByText('Dismissed')).toBeTruthy();
-    expect(c2.className).toContain('outcome-dismissed');
-    // the stamp appears only on the convicted charge, animated because the ruling arrived live
-    expect(within(c1).getByText('Convicted').className).toContain('stamp-arrive');
-    expect(c2.querySelector('.stamp')).toBeNull();
-    expect(document.querySelectorAll('.stamp')).toHaveLength(1);
-    expect(screen.queryByText(/Replay of recorded Token Factory run/)).toBeNull();
+    expect(headline()).toBe('The court is testing the fix…');
+    expect(within(countItem(1)).getByText('PROVEN')).toBeTruthy();
+    expect(within(countItem(2)).getByText('DISMISSED')).toBeTruthy();
+    expect(section('V. Order').textContent).toContain('The court has not yet made an order.');
+    expect(within(section('V. Order')).queryByText('So ordered.')).toBeNull();
 
-    const meters = screen.getByLabelText('Case meters');
-    expect(within(meters).getByText('$0.0012')).toBeTruthy();
-    expect(within(meters).getByText('2.2k tok')).toBeTruthy();
-    expect(screen.getByLabelText('Tally').textContent).toMatch(/1 convicted · 1 dismissed \(1 inadmissible\)/);
+    const remedy = makeRemedy();
+    emit({ type: 'remedy', caseId: 'case1', remedy });
+    const runs = screen.getByRole('table', { name: 'Exhibit 1: record of trial runs' });
+    expect(within(within(runs).getByText('With the fix').closest('tr')!).getAllByText('PASS')).toHaveLength(3);
 
-    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×1 → Super → Ultra');
-    expect(screen.queryByRole('region', { name: 'Remedy' })).toBeNull();
-    expect(document.querySelector('.fix-mark')).toBeNull();
-    emit({ type: 'remedy', caseId: 'case1', remedy: makeRemedy() });
-    const remedy = screen.getByRole('region', { name: 'Remedy' });
-    expect(within(remedy).getByText('Verified')).toBeTruthy();
-    expect(within(within(remedy).getByLabelText('c1 head+fix runs')).getAllByText('PASS')).toHaveLength(3);
-    expect(within(c1).getByText('Fix verified').className).toBe('fix-mark');
-    expect(within(c2).queryByText('Fix verified')).toBeNull();
-    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×1 → Super → Ultra → Super (fix)');
+    emit({
+      type: 'case',
+      record: makeCase({
+        status: 'closed',
+        endedAt: '2026-10-30T07:03:00.000Z',
+        charges: [c1, c2],
+        evidence: [e1, e2],
+        rebuttals: [{ chargeId: 'c1', argument: 'Fair cop.', concedes: true }],
+        rulings: [
+          { chargeId: 'c1', decision: 'convicted', reason: 'Proven by the test.' },
+          { chargeId: 'c2', decision: 'dismissed', reason: 'Inadmissible: passes on head 3/3.' },
+        ],
+        usage,
+        remedy,
+      }),
+    });
+    expect(headline()).toBe('Guilty on Count 1. Count 2 dismissed for want of evidence.');
+    expect(judgmentBox().className).toContain('judgment-guilty');
+    expect(judgmentBox().textContent).toContain(
+      'In plain words: this change breaks one thing, proven by a test that fails. The other concern had no working proof, so it is not counted. A fix has been tested and is ready.',
+    );
+    expect(within(section('V. Order')).getByText('So ordered.')).toBeTruthy();
+    expect(screen.getByText('Entered 30 October 2026')).toBeTruthy();
+    expect(screen.queryByText(/^Replay\./)).toBeNull();
   });
 
-  it('lists cases, selects one, and files a new case', async () => {
+  it('lists cases in a plain docket table, opens one by link, and files a new case', async () => {
     const onSelect = vi.fn();
-    const { source } = fakeSource([makeCase({ id: 'k1', title: 'First case' })]);
+    const guilty = makeCase({
+      id: 'k2',
+      title: 'Second case',
+      status: 'closed',
+      startedAt: '2026-10-29T07:00:00.000Z',
+      charges: [makeCharge('c1'), makeCharge('c2')],
+      evidence: [makeEvidence('c1', true), makeEvidence('c2', false)],
+      rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'r' }],
+      usage: [makeUsage({ costUsd: 0.0123 })],
+    });
+    const { source } = fakeSource([makeCase({ id: 'k1', title: 'First case' }), guilty]);
     render(<CourtPage source={source} caseId={null} onSelect={onSelect} />);
-    expect(screen.getByRole('heading', { name: 'No evidence, no finding.' })).toBeTruthy();
-    fireEvent.click(await screen.findByRole('button', { name: /First case/ }));
+    const docket = await screen.findByRole('table', { name: 'Case docket' });
+    expect(within(docket).getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'Case No.',
+      'Parties',
+      'Filed',
+      'Judgment',
+      'Costs',
+    ]);
+
+    const link = within(docket).getByRole('link', { name: 'First case' });
+    expect(link.getAttribute('href')).toBe('#/court/k1');
+    fireEvent.click(link);
     expect(onSelect).toHaveBeenCalledWith('k1');
-    const docket = screen.getByRole('table', { name: 'Case docket' });
-    const row = within(docket).getByRole('button', { name: /First case/ }).closest('tr')!;
-    expect(row.textContent).toContain('aaaaaaa..bbbbbbb');
-    expect(row.textContent).toContain('$0.0000');
-    expect(row.textContent).toContain('2026-10-30');
+    const first = link.closest('tr')!;
+    expect(first.textContent).toContain('KC-2026-K1');
+    expect(first.textContent).toContain('2026-10-30');
+    expect(first.textContent).toContain('IN SESSION');
+    expect(first.textContent).toContain('$0.0000');
+    const second = within(docket).getByRole('link', { name: 'Second case' }).closest('tr')!;
+    expect(within(second).getByText('GUILTY 1').className).toContain('verdict-guilty');
+    expect(second.textContent).toContain('of 2 counts');
+    expect(second.textContent).toContain('$0.0123');
 
     const form = screen.getByRole('form', { name: 'File a case' });
     fireEvent.submit(form);
@@ -123,308 +194,434 @@ describe('CourtPage (live)', () => {
     expect(source.createCase).toHaveBeenCalledWith({ title: 'New case', repoPath: '/r', baseRef: 'main', headRef: 'feat' });
   });
 
-  it('labels a recorded Token Factory run as a replay with its date', async () => {
+  it('marks a not-guilty case in the docket', async () => {
+    const record = makeCase({
+      status: 'closed',
+      charges: [makeCharge('c1')],
+      evidence: [makeEvidence('c1', false)],
+    });
+    render(<CourtPage source={fakeSource([record]).source} caseId={null} onSelect={vi.fn()} />);
+    expect((await screen.findByText('NOT GUILTY')).className).toContain('verdict-not-guilty');
+  });
+
+  it('labels a recorded run as a replay with its date, and goes back to the docket by link', async () => {
+    const onSelect = vi.fn();
     const record = makeCase({ mode: 'replay', status: 'closed', endedAt: '2026-10-30T07:02:00.000Z' });
-    render(<CourtPage source={fakeSource([record]).source} caseId="case1" onSelect={vi.fn()} />);
-    const label = await screen.findByText(/Replay of recorded Token Factory run/);
-    expect(label.textContent).toContain('recorded on 2026-10-30');
+    render(<CourtPage source={fakeSource([record]).source} caseId="case1" onSelect={onSelect} />);
+    const label = await screen.findByText(/^Replay\./);
+    expect(label.textContent).toBe('Replay. This case was recorded on 30 October 2026 and is played back here, not run live.');
+    fireEvent.click(screen.getByRole('link', { name: '← Back to the docket' }));
+    expect(onSelect).toHaveBeenCalledWith(null);
   });
 });
 
-describe('CourtPage (demo)', () => {
+describe('CourtPage (demo replay of the normalize-url case)', () => {
   const demo = readDemo<CaseRecord>('cases/demo-1.json');
 
-  it('renders the demo case: diff, lanes, verdicts and header meters', async () => {
-    const { source, replay, stops } = fakeSource([demo], { demo: true });
-    render(<CourtPage source={source} caseId="demo-1" onSelect={vi.fn()} />);
+  async function renderDemo() {
+    const fake = fakeSource([demo], { demo: true });
+    render(<CourtPage source={fake.source} caseId={demo.id} onSelect={vi.fn()} />);
     await screen.findByRole('article', { name: `Case ${demo.title}` });
-    await waitFor(() => expect(replay).toHaveBeenCalledWith('demo-1'));
+    return fake;
+  }
+
+  it('renders the caption, judgment and every section as in the approved mockup', async () => {
+    const { source, replay, stops } = await renderDemo();
+    await waitFor(() => expect(replay).toHaveBeenCalledWith(demo.id));
     expect(source.getCase).not.toHaveBeenCalled();
     expect(screen.getByRole('status').textContent).toBe('Demo replay');
+    expect(screen.getByText('sitting in review of sindresorhus/normalize-url')).toBeTruthy();
 
-    expect(within(screen.getByRole('region', { name: 'Diff' })).getByRole('region', { name: 'src/compare.js' })).toBeTruthy();
-    expect(screen.getByText('PR description')).toBeTruthy();
-    const meters = screen.getByLabelText('Case meters');
-    expect(within(meters).getByText('$0.0274')).toBeTruthy();
-    expect(within(meters).getByText('31.7k tok')).toBeTruthy();
-    expect(within(meters).getByText('3m 23s')).toBeTruthy();
+    const caption = screen.getByRole('group', { name: 'Caption' });
+    expect(within(caption).getByText('THE MAINTAINERS OF NORMALIZE-URL,')).toBeTruthy();
+    expect(within(caption).getByText('PULL REQUEST ec3ab37, “Refactor URL normalization edge handling,”')).toBeTruthy();
+    expect(within(caption).getByText('Plaintiff,')).toBeTruthy();
+    expect(within(caption).getByText('Defendant.')).toBeTruthy();
+    expect(within(caption).getByText('KC-2026-0014')).toBeTruthy();
+    expect(within(caption).getByText('JUDGMENT')).toBeTruthy();
+    expect(within(caption).getByText(/^Base/).textContent).toBe('Base d74a32e · Head ec3ab37');
 
-    expect(within(screen.getByRole('group', { name: 'Charge c1' })).getByText('Convicted')).toBeTruthy();
-    const c2 = screen.getByRole('group', { name: 'Charge c2' });
-    expect(within(c2).getByText('Admissible')).toBeTruthy();
-    expect(within(c2).getByText('Contests')).toBeTruthy();
-    expect(within(c2).getByText('Dismissed')).toBeTruthy();
-    for (const id of ['c3', 'c4', 'c5']) {
-      const g = screen.getByRole('group', { name: `Charge ${id}` });
-      expect(within(g).getByText('Inadmissible')).toBeTruthy();
-      expect(within(g).getByText('Dismissed')).toBeTruthy();
+    expect(headline()).toBe('Guilty on Count 1. Counts 2 to 4 dismissed for want of evidence.');
+    expect(judgmentBox().querySelector('.plain')?.textContent).toBe(
+      'In plain words: this change breaks one thing, proven by a test that fails. The other three concerns had no working proof, so they are not counted. A fix has been tested and is ready.',
+    );
+    expect(within(judgmentBox()).getByRole('button', { name: 'Apply the ordered fix' })).toBeTruthy();
+    expect(within(judgmentBox()).getByRole('button', { name: 'Copy repro command' })).toBeTruthy();
+
+    expect(countItem(1).textContent).toBe('Count 1. Hostnames with a port lose their protocol. index.js:17 PROVEN');
+    expect(countItem(1).className).toContain('count-proven');
+    for (const n of [2, 3, 4]) {
+      expect(within(countItem(n)).getByText('DISMISSED')).toBeTruthy();
+      expect(countItem(n).className).toContain('count-dismissed');
+      expect(countItem(n).querySelector('.loc')).toBeNull();
     }
-    const c4 = screen.getByRole('group', { name: 'Charge c4' });
-    const c4Base = within(c4).getByLabelText('base runs');
-    expect(within(c4Base).getAllByText('ERROR')).toHaveLength(3);
-    expect(c4Base.querySelector('th')?.className).toContain('reg-side-fault');
-    expect(c4.className).toContain('charge-inadmissible');
 
-    const register = within(screen.getByRole('group', { name: 'Charge c1' })).getByRole('table', { name: 'Evidence register' });
-    expect(within(within(register).getByLabelText('head runs')).getAllByText('FAIL')).toHaveLength(3);
-    expect(within(register).getByText('3/3 fail')).toBeTruthy();
-    expect(within(register).getByText('3/3 pass')).toBeTruthy();
-    expect(within(register).getByText('fails on head 3/3, passes on base 3/3')).toBeTruthy();
-    expect(
-      within(within(screen.getByRole('group', { name: 'Charge c5' })).getByLabelText('head runs')).getByText(
-        '2/3 fail, 1/3 pass',
-      ),
-    ).toBeTruthy();
+    const evidence = section('II. The Evidence on Count 1');
+    expect(evidence.textContent).toContain(
+      'The prosecution (Nemotron Nano) filed a test as its proof. The court ran it three times on the code before the change, three times after, and three times with the fix.',
+    );
 
-    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano ×3 → Super → Ultra → Super (fix)');
-    expect(within(meters).getByText('Nano ×3').getAttribute('title')).toBe('nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B');
-    expect(within(meters).getByText('Super (fix)').getAttribute('title')).toBe('nvidia/nemotron-3-super-120b-a12b');
-    expect(within(meters).getByText('24.5k tok')).toBeTruthy();
-    expect(within(meters).getByText('9.1k tok')).toBeTruthy();
-    expect(screen.getByText(/Replay of recorded Token Factory run/).textContent).toContain('recorded on 2026-10-29');
+    expect(section('III. The Defense').textContent).toContain(
+      'Counsel for the change (Nemotron Super) conceded Count 1: hostnames with a port are documented input, and nothing in the pull request says this behaviour should change.',
+    );
 
-    // a closed case loads with its stamp already in place: only the convicted charge, no arrival animation
-    const stamps = document.querySelectorAll('.stamp');
-    expect(stamps).toHaveLength(1);
-    expect(stamps[0].closest('[role="group"]')?.getAttribute('aria-label')).toBe('Charge c1');
-    expect(stamps[0].className).not.toContain('stamp-arrive');
+    const findings = section('IV. Findings of the Court');
+    expect(findings.textContent).toContain(
+      'On Count 1: the test is sound, it fails only after the change, and the failure traces to the removed check at line 17.',
+    );
+    expect(findings.textContent).toContain(
+      'On Counts 2 to 4: dismissed without trial. Count 2’s test passed on the new code. Count 3’s test gave the same result before the change. Count 4’s test could not run.',
+    );
+
+    const order = section('V. Order');
+    expect(order.textContent).toContain(
+      'It is ordered that the following remedy be applied. The court re-ran Exhibit 1 on the remedied code (3 of 3 pass) and the library’s own 25 tests (all pass).',
+    );
+    expect(order.querySelector('.fix-patch')?.textContent).toBe(
+      "  return protocol.endsWith(':')\n+   && !protocol.includes('.')\n    && !supportedProtocols.has(protocol);",
+    );
+    expect(within(order).getByText('So ordered.')).toBeTruthy();
+
+    expect(screen.getByText('Nemotron 3 Ultra, presiding')).toBeTruthy();
+    expect(screen.getByText('Entered 30 October 2026')).toBeTruthy();
+    const costs = document.querySelector('.costs')!;
+    expect(within(costs as HTMLElement).getByText('$0.0179')).toBeTruthy();
+    expect(within(costs as HTMLElement).getByText('2m 47s')).toBeTruthy();
+    expect(screen.getByText(/^Replay\./).textContent).toContain('recorded on 30 October 2026');
 
     const calls = replay.mock.calls.length;
-    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Replay from the start' }));
     await waitFor(() => expect(replay.mock.calls.length).toBe(calls + 1));
     expect(stops[calls - 1]).toHaveBeenCalled();
   });
-});
 
-describe('CaseView workbench', () => {
-  const demo = readDemo<CaseRecord>('cases/demo-1.json');
-  type ScrollFn = (this: Element, arg?: boolean | ScrollIntoViewOptions) => void;
-  const proto = Element.prototype as { scrollIntoView?: ScrollFn };
-  let original: ScrollFn | undefined;
-  let scrolled: Element[] = [];
-
-  beforeEach(() => {
-    original = proto.scrollIntoView;
-    scrolled = [];
-    proto.scrollIntoView = function (this: Element) {
-      scrolled.push(this);
-    };
-  });
-  afterEach(() => {
-    proto.scrollIntoView = original;
-    delete (navigator as { clipboard?: unknown }).clipboard;
-  });
-
-  async function renderDemo() {
-    const { source } = fakeSource([demo], { demo: true });
-    render(<CourtPage source={source} caseId="demo-1" onSelect={vi.fn()} />);
-    await screen.findByRole('article', { name: `Case ${demo.title}` });
-  }
-
-  it('links charges and diff lines both ways', async () => {
+  it('renders the three exhibits: trial runs, the proof test, and the line at issue', async () => {
     await renderDemo();
-    const diffPane = screen.getByRole('region', { name: 'Diff' });
-    const compare = within(diffPane).getByRole('region', { name: 'src/compare.js' });
-    const mark = within(compare).getByRole('button', { name: 'Go to charge c1' });
-    const markedRow = mark.closest('tr')!;
-    expect(markedRow.className).toContain('line-charged');
-    expect(markedRow.textContent).toContain('MAIN.length - 1');
-    expect(within(compare).getByRole('button', { name: 'Go to charge c4' })).toBeTruthy();
+    const evidence = section('II. The Evidence on Count 1');
+    expect(within(evidence).getByText('EXHIBIT 1')).toBeTruthy();
+    expect(within(evidence).getByText('Record of trial runs')).toBeTruthy();
+    const runs = within(evidence).getByRole('table', { name: 'Exhibit 1: record of trial runs' });
+    expect(within(runs).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Code tested', 'Run 1', 'Run 2', 'Run 3']);
+    const row = (label: string) => within(runs).getByText(label).closest('tr') as HTMLElement;
+    expect(within(row('Before the change')).getAllByText('PASS')).toHaveLength(3);
+    expect(within(row('After the change')).getAllByText('FAIL')).toHaveLength(3);
+    expect(within(row('With the fix')).getAllByText('PASS')).toHaveLength(3);
+    expect(within(row('After the change')).getAllByText('FAIL')[0].className).toBe('cell fail');
+    expect(within(row('Before the change')).getAllByText('PASS')[0].className).toBe('cell pass');
 
-    const c1 = screen.getByRole('group', { name: 'Charge c1' });
-    fireEvent.click(within(c1).getByRole('button', { name: 'src/compare.js:28' }));
-    expect(markedRow.className).toContain('line-active');
-    expect(c1.className).toContain('charge-active');
-    expect(scrolled[scrolled.length - 1]).toBe(markedRow);
+    expect(within(evidence).getByText('EXHIBIT 2')).toBeTruthy();
+    expect(within(evidence).getByText('The proof test, as filed')).toBeTruthy();
+    const code = evidence.querySelectorAll('pre.exhibit-code')[0];
+    expect(code.textContent).toContain("assert.equal(normalizeUrl('sindresorhus.com:123'), 'http://sindresorhus.com:123');");
 
-    const range = within(diffPane).getByRole('region', { name: 'src/range.js' });
-    fireEvent.click(within(range).getByRole('button', { name: 'Go to charge c2' }));
-    const c2 = screen.getByRole('group', { name: 'Charge c2' });
-    expect(c2.className).toContain('charge-active');
-    expect(c1.className).not.toContain('charge-active');
-    expect(markedRow.className).not.toContain('line-active');
-    expect(within(range).getByRole('button', { name: 'Go to charge c2' }).closest('tr')!.className).toContain('line-active');
-    expect(scrolled[scrolled.length - 1]).toBe(c2);
+    expect(within(evidence).getByText('EXHIBIT 3')).toBeTruthy();
+    expect(within(evidence).getByText('The line at issue, index.js')).toBeTruthy();
+    const lines = evidence.querySelector('.lines-at-issue')!;
+    expect(lines.textContent).toBe(
+      "  return protocol.endsWith(':')\n    && !protocol.includes('.')     ← removed by this change\n    && !supportedProtocols.has(protocol);",
+    );
+    const removed = lines.querySelector('.xl-del')!;
+    expect(removed.querySelector('.xl-code')?.textContent).toBe("    && !protocol.includes('.')");
+    expect(removed.querySelector('.xl-note')?.textContent).toBe('← removed by this change');
+    expect(within(evidence).queryByText('EXHIBIT 4')).toBeNull();
   });
 
-  it('opens each register cell in the log drawer', async () => {
+  it('copies the repro command and the apply command for the ordered fix', async () => {
+    const writeText = mockClipboard();
     await renderDemo();
-    const c1 = screen.getByRole('group', { name: 'Charge c1' });
-    fireEvent.click(within(c1).getByRole('button', { name: 'head run 3: FAIL, open log' }));
-    const drawer = screen.getByRole('dialog', { name: 'Log: c1 · head run 3' });
-    expect(drawer.textContent).toContain('0 !== -1');
-    fireEvent.click(within(drawer).getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog')).toBeNull();
-
-    fireEvent.click(within(c1).getByRole('button', { name: 'base run 1: PASS, open log' }));
-    expect(screen.getByRole('dialog', { name: 'Log: c1 · base run 1' }).textContent).toMatch(/No log recorded for this run/);
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
-
-  it('copies a repro that checks out head and runs the witness', async () => {
-    const writeText = vi.fn(async (_text: string) => undefined);
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    await renderDemo();
-    const c1 = screen.getByRole('group', { name: 'Charge c1' });
-    expect(within(c1).getByText('Witness').closest('details')?.open).toBe(false);
-    fireEvent.click(within(c1).getByRole('button', { name: 'Copy repro' }));
+    fireEvent.click(within(judgmentBox()).getByRole('button', { name: 'Copy repro command' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const cmd = writeText.mock.calls[0][0];
     expect(cmd).toContain(`git checkout --detach '${demo.headRef}'`);
     expect(cmd).toContain("node --test '__kacheri__/c1.test.mjs' # expected: FAIL on head");
-    expect(await within(c1).findByRole('button', { name: 'Copied' })).toBeTruthy();
+    expect(await within(judgmentBox()).findByRole('button', { name: 'Copied' })).toBeTruthy();
+
+    fireEvent.click(within(judgmentBox()).getByRole('button', { name: 'Apply the ordered fix' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2));
+    expect(writeText.mock.calls[1][0]).toBe(applyCommand(demo.remedy!.patch));
+    expect(await within(judgmentBox()).findByRole('button', { name: 'Copied: paste it in a terminal' })).toBeTruthy();
+  });
+});
+
+describe('CaseView', () => {
+  const closed = { status: 'closed' as const, endedAt: '2026-10-30T07:03:00.000Z' };
+
+  it('shows the caption parties for a local repository', () => {
+    render(<CaseView record={makeCase({ ...closed, repoPath: '/home/me/tinysemver/' })} />);
+    const caption = screen.getByRole('group', { name: 'Caption' });
+    expect(within(caption).getByText('THE MAINTAINERS OF TINYSEMVER,')).toBeTruthy();
+    expect(within(caption).getByText('PULL REQUEST bbbbbbb, “Add range support,”')).toBeTruthy();
+    expect(within(caption).getByText('v.')).toBeTruthy();
+    expect(within(caption).getByText('KC-2026-CASE1')).toBeTruthy();
+    expect(screen.getByText('sitting in review of tinysemver')).toBeTruthy();
   });
 
-  it('ends the docket with the verified remedy: register, suite log and fix patch', async () => {
-    const writeText = vi.fn(async (_text: string) => undefined);
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    await renderDemo();
-    const docket = screen.getByRole('region', { name: 'Docket' });
-    const remedy = within(docket).getByRole('region', { name: 'Remedy' });
-    const charges = docket.querySelector('ol.charges')!;
-    expect(charges.compareDocumentPosition(remedy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(remedy.nextElementSibling).toBeNull();
-
-    expect(within(remedy).getByRole('heading', { name: 'Remedy' }).className).toBe('remedy-title');
-    expect(within(remedy).getByText('Verified').className).toContain('remedy-verified');
-    expect(within(remedy).queryByText('Not verified')).toBeNull();
-    expect(within(remedy).getByText('2 attempts')).toBeTruthy();
-    expect(within(remedy).getByText(demo.remedy!.explanation)).toBeTruthy();
-
-    const register = within(remedy).getByRole('table', { name: 'Remedy register' });
-    expect(within(register).getAllByRole('row')).toHaveLength(2);
-    const row = within(register).getByLabelText('c1 head+fix runs');
-    expect(row.querySelector('th')?.textContent).toBe('c1 HEAD+FIX');
-    expect(within(row).getAllByText('PASS')).toHaveLength(3);
-    expect(within(row).getByText('3/3 pass')).toBeTruthy();
-
-    const suite = within(remedy).getByText('Existing suite').closest('p')!;
-    expect(within(suite).getByText('PASS').className).toBe('suite-pass');
-    fireEvent.click(within(suite).getByRole('button', { name: 'View log' }));
-    const drawer = screen.getByRole('dialog', { name: 'Log: existing suite · head+fix' });
-    expect(drawer.textContent).toContain('ℹ pass 10');
-    expect(within(drawer).getByText('PASS').className).toContain('suite-pass');
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.queryByRole('dialog')).toBeNull();
-
-    expect(remedy.querySelector('.diff-refs')?.textContent).toBe(`${demo.headRef.slice(0, 10)}…head+fix · 1 file changed`);
-    const fixFile = within(remedy).getByRole('region', { name: 'src/compare.js' });
-    const dels = fixFile.querySelectorAll('tr.line-del');
-    const adds = fixFile.querySelectorAll('tr.line-add');
-    expect(dels).toHaveLength(1);
-    expect(adds).toHaveLength(1);
-    expect(dels[0].textContent).toContain('i < MAIN.length - 1;');
-    expect(adds[0].textContent).toContain('i < MAIN.length;');
-
-    fireEvent.click(within(remedy).getByRole('button', { name: 'Copy patch' }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(demo.remedy!.patch));
-    expect(await within(remedy).findByRole('button', { name: 'Copied' })).toBeTruthy();
-
-    const c1 = screen.getByRole('group', { name: 'Charge c1' });
-    const mark = within(c1).getByText('Fix verified');
-    expect(mark.className).toBe('fix-mark');
-    expect(mark.parentElement?.querySelector('.stamp')).toBeTruthy();
-    expect(document.querySelectorAll('.fix-mark')).toHaveLength(1);
-  });
-
-  it('shows an unverified remedy muted, with no fix mark and missing runs as dashes', () => {
+  it('labels each count PROVEN, DISMISSED or PENDING and shows locations only for live counts', () => {
     const record = makeCase({
-      status: 'closed',
-      endedAt: '2026-10-30T07:03:00.000Z',
-      charges: [makeCharge('c1'), makeCharge('c2')],
-      evidence: [makeEvidence('c1', true), makeEvidence('c2', true)],
+      status: 'deliberation',
+      charges: [makeCharge('c1', { line: 7 }), makeCharge('c2'), makeCharge('c3', { file: 'src/b.js', line: null })],
+      evidence: [makeEvidence('c1', true), makeEvidence('c2', false), makeEvidence('c3', true)],
+      rulings: [
+        { chargeId: 'c1', decision: 'convicted', reason: 'proven' },
+        { chargeId: 'c2', decision: 'dismissed', reason: 'Inadmissible: passes on head 3/3.' },
+      ],
+    });
+    render(<CaseView record={record} />);
+    expect(countItem(1).textContent).toBe('Count 1. claim c1 src/a.js:7 PROVEN');
+    expect(countItem(2).textContent).toBe('Count 2. claim c2 DISMISSED');
+    expect(countItem(3).textContent).toBe('Count 3. claim c3 src/b.js PENDING');
+    expect(within(countItem(1)).getByText('PROVEN').className).toBe('count-status');
+    expect(countItem(3).className).toContain('count-pending');
+    expect(screen.getByRole('heading', { name: 'II. The Evidence on Counts 1 and 3' })).toBeTruthy();
+    expect(section('IV. Findings of the Court').textContent).toContain('On Count 3: the judge has not ruled yet.');
+  });
+
+  it('numbers exhibits across several proven counts and shows the changed lines at each', () => {
+    const patch = [
+      'diff --git a/src/a.js b/src/a.js',
+      '--- a/src/a.js',
+      '+++ b/src/a.js',
+      '@@ -1,4 +1,4 @@',
+      ' function f(n) {',
+      '-  const end = n;',
+      '+  const end = n - 1;',
+      '   return end;',
+      ' }',
+      '',
+    ].join('\n');
+    const record = makeCase({
+      ...closed,
+      patch,
+      charges: [makeCharge('c1', { line: 2 }), makeCharge('c2', { line: 3 })],
+      evidence: [makeEvidence('c1', true), makeEvidence('c2', true, { base: ['pass', 'pass'], head: ['fail', 'fail'] })],
       rulings: [
         { chargeId: 'c1', decision: 'convicted', reason: 'r1' },
         { chargeId: 'c2', decision: 'convicted', reason: 'r2' },
       ],
+    });
+    render(<CaseView record={record} />);
+    const evidence = section('II. The Evidence on Counts 1 and 2');
+    expect(within(evidence).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Count 1', 'Count 2']);
+    expect(Array.from(evidence.querySelectorAll('.exhibit')).map((e) => e.textContent)).toEqual([
+      'EXHIBIT 1',
+      'EXHIBIT 2',
+      'EXHIBIT 3',
+      'EXHIBIT 4',
+      'EXHIBIT 5',
+      'EXHIBIT 6',
+    ]);
+    expect(evidence.textContent).toContain('The court ran it twice on the code before the change and twice after.');
+    const second = within(evidence).getByRole('table', { name: 'Exhibit 4: record of trial runs' });
+    expect(within(second).queryByText('With the fix')).toBeNull();
+    expect(within(within(second).getByText('After the change').closest('tr')!).getAllByText('—')).toHaveLength(1);
+    const issue = evidence.querySelector('.lines-at-issue')!;
+    expect(issue.textContent).toBe(
+      '  function f(n) {\n    const end = n;     ← removed by this change\n    const end = n - 1;     ← added by this change\n    return end;',
+    );
+  });
+
+  it('dismisses counts in plain language, one reason per kind of failed proof', () => {
+    const ev = (chargeId: string, reason: string, overrides: Partial<Evidence> = {}) =>
+      makeEvidence(chargeId, false, { reason, ...overrides });
+    const ids = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'];
+    const record = makeCase({
+      ...closed,
+      charges: ids.map((id) => makeCharge(id)),
+      evidence: [
+        ev('c1', 'witness passes on head: no bug demonstrated'),
+        ev('c2', 'witness also fails on base: pre-existing behaviour, not introduced by this change'),
+        ev('c3', 'witness is broken (errors on base)', { base: ['error'], head: ['error'] }),
+        ev('c4', 'flaky witness (head 2/3 fail, base 3/3 pass)'),
+        ev('c5', 'witness rejected before running: depends on time or randomness', { base: [], head: [] }),
+        ev('c6', 'witness violated the sandbox on head'),
+        ev('c7', 'witness timed out'),
+        makeEvidence('c8', true),
+      ],
+      rulings: [{ chargeId: 'c8', decision: 'dismissed', reason: 'The behaviour change is announced in the pull request.' }],
+    });
+    render(<CaseView record={record} />);
+    const findings = section('IV. Findings of the Court');
+    expect(findings.textContent).toContain(
+      'On Counts 1 to 7: dismissed without trial. Count 1’s test passed on the new code. Count 2’s test gave the same result before the change. Count 3’s test could not run. Count 4’s test was not consistent. Count 5’s test checked the wrong thing. Count 6’s test tried something not allowed. Count 7’s test did not finish in time.',
+    );
+    expect(findings.textContent).toContain(
+      'On Count 8: dismissed after hearing. The behaviour change is announced in the pull request.',
+    );
+    expect(headline()).toBe('Not guilty. All 8 counts dismissed.');
+  });
+
+  it('enters a not-guilty judgment when nothing is proven', () => {
+    const record = makeCase({
+      ...closed,
+      charges: [makeCharge('c1'), makeCharge('c2'), makeCharge('c3')],
+      evidence: [makeEvidence('c1', false), makeEvidence('c2', false), makeEvidence('c3', false)],
+    });
+    render(<CaseView record={record} />);
+    expect(headline()).toBe('Not guilty. All 3 counts dismissed for want of evidence.');
+    expect(judgmentBox().className).toContain('judgment-not-guilty');
+    expect(judgmentBox().querySelector('.plain')?.textContent).toBe(
+      'In plain words: Nothing in this change was proven to break.',
+    );
+    expect(within(judgmentBox()).queryByRole('button')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'II. The Evidence' })).toBeTruthy();
+    expect(section('II. The Evidence').textContent).toContain('No count was proven, so the court sets out no evidence.');
+    expect(section('III. The Defense').textContent).toContain('No count was proven, so the defense had nothing to answer.');
+    expect(section('V. Order').textContent).toContain('No remedy is ordered. Nothing was proven, so there is nothing to fix.');
+  });
+
+  it('orders a verified remedy and shows its patch', () => {
+    const record = makeCase({
+      ...closed,
+      charges: [makeCharge('c1')],
+      evidence: [makeEvidence('c1', true)],
+      rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'r1' }],
+      remedy: makeRemedy(),
+    });
+    render(<CaseView record={record} />);
+    const order = section('V. Order');
+    expect(within(order).getByText(/^It is ordered/).textContent).toBe(
+      'It is ordered that the following remedy be applied. The court re-ran Exhibit 1 on the remedied code (3 of 3 pass) and the library’s own 4 tests (all pass).',
+    );
+    expect(order.querySelector('.fix-patch')?.textContent).toBe('- const end = n - 1;\n+ const end = n;');
+    expect(within(judgmentBox()).getByRole('button', { name: 'Apply the ordered fix' })).toBeTruthy();
+  });
+
+  it('orders no remedy when there is none, and says so plainly', () => {
+    const record = makeCase({
+      ...closed,
+      charges: [makeCharge('c1')],
+      evidence: [makeEvidence('c1', true)],
+      rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'r1' }],
+      remedy: null,
+    });
+    render(<CaseView record={record} />);
+    const order = section('V. Order');
+    expect(within(order).getByText(/^No remedy is ordered/).textContent).toBe(
+      'No remedy is ordered. The court has no tested fix for this change.',
+    );
+    expect(order.querySelector('.fix-patch')).toBeNull();
+    expect(within(order).getByText('So ordered.')).toBeTruthy();
+    expect(judgmentBox().textContent).toContain('No tested fix is available.');
+    expect(within(judgmentBox()).queryByRole('button', { name: 'Apply the ordered fix' })).toBeNull();
+    expect(within(judgmentBox()).getByRole('button', { name: 'Copy repro command' })).toBeTruthy();
+    expect(screen.queryByText('With the fix')).toBeNull();
+  });
+
+  it('orders no remedy when the proposed fix failed verification', () => {
+    const record = makeCase({
+      ...closed,
+      charges: [makeCharge('c1')],
+      evidence: [makeEvidence('c1', true)],
+      rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'r1' }],
       remedy: makeRemedy({
-        chargeIds: ['c1', 'c2'],
         verified: false,
-        attempts: 1,
         suite: 'fail',
-        suiteLog: '',
         witnesses: [{ chargeId: 'c1', outcomes: ['pass', 'fail', 'pass'] }],
       }),
     });
     render(<CaseView record={record} />);
-    const remedy = screen.getByRole('region', { name: 'Remedy' });
-    expect(within(remedy).getByText('Not verified').className).toContain('remedy-unverified');
-    expect(within(remedy).queryByText('Verified')).toBeNull();
-    expect(within(remedy).getByText('1 attempt')).toBeTruthy();
-
-    const c1Row = within(remedy).getByLabelText('c1 head+fix runs');
-    expect(within(c1Row).getAllByText('PASS')).toHaveLength(2);
-    expect(within(c1Row).getByText('FAIL').className).toBe('run-fail');
-    expect(within(c1Row).getByText('2/3 pass, 1/3 fail')).toBeTruthy();
-    const c2Row = within(remedy).getByLabelText('c2 head+fix runs');
-    expect(within(c2Row).getAllByText('—')).toHaveLength(3);
-    expect(within(c2Row).getByText('no runs')).toBeTruthy();
-
-    const suite = within(remedy).getByText('Existing suite').closest('p')!;
-    expect(within(suite).getByText('FAIL').className).toBe('suite-fail');
-    fireEvent.click(within(suite).getByRole('button', { name: 'View log' }));
-    expect(screen.getByRole('dialog', { name: 'Log: existing suite · head+fix' }).textContent).toContain('(empty output)');
-
-    expect(document.querySelector('.fix-mark')).toBeNull();
-    expect(screen.getByLabelText('Model lineage').textContent).toBe('Nano → Super → Ultra → Super (fix)');
+    const order = section('V. Order');
+    expect(within(order).getByText(/^No remedy is ordered/).textContent).toBe(
+      'No remedy is ordered. A fix was proposed, but it did not pass the court’s tests: on the fixed code, Exhibit 1 gave 2 of 3 pass, and the library’s own 4 tests failed.',
+    );
+    expect(order.querySelector('.fix-patch')).toBeNull();
+    expect(judgmentBox().textContent).toContain('A fix was tried, but it did not pass the court’s tests.');
+    expect(within(judgmentBox()).queryByRole('button', { name: 'Apply the ordered fix' })).toBeNull();
+    const fixRow = screen.getByText('With the fix').closest('tr')!;
+    expect(within(fixRow).getByText('FAIL').className).toBe('cell fail');
   });
 
-  it('labels a suite that was not run', () => {
-    const record = makeCase({
-      status: 'closed',
-      charges: [makeCharge('c1')],
-      rulings: [{ chargeId: 'c1', decision: 'convicted', reason: 'r1' }],
-      remedy: makeRemedy({ suite: 'not_run', suiteLog: '' }),
-    });
-    render(<CaseView record={record} />);
-    const suite = within(screen.getByRole('region', { name: 'Remedy' })).getByText('Existing suite').closest('p')!;
-    expect(within(suite).getByText('NOT RUN').className).toBe('suite-not_run');
-    fireEvent.click(within(suite).getByRole('button', { name: 'View log' }));
-    expect(screen.getByRole('dialog').textContent).toContain('The existing suite was not run on head+fix.');
+  it('reports a mistrial plainly', () => {
+    render(<CaseView record={makeCase({ status: 'error', error: 'git exploded', endedAt: '2026-10-30T07:01:00.000Z' })} />);
+    expect(headline()).toBe('Mistrial. The case could not be finished.');
+    expect(screen.getByRole('alert').textContent).toBe('The court reports an error: git exploded');
+    expect(screen.getByText('Not entered: the case did not finish')).toBeTruthy();
   });
 });
 
-describe('BenchPage', () => {
+describe('BenchPage (court record)', () => {
   const sample = parseBench(readDemo('bench.json'));
 
-  it('shows the sample banner, metric bars and a row per item', async () => {
-    const { source } = fakeSource([], { bench: sample });
-    render(<BenchPage source={source} />);
+  it('flags sample data and lays out the headline results, reviewers and cases', async () => {
+    render(<BenchPage source={fakeSource([], { bench: sample }).source} />);
     const banner = await screen.findByRole('note', { name: 'Sample data' });
     expect(banner.textContent).toMatch(/not real benchmark results/);
-    const comparison = screen.getByRole('table', { name: 'Comparison' });
-    expect(within(comparison).getAllByRole('row')).toHaveLength(3);
-    expect(within(comparison).getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
-      'System',
-      'Hit rate',
-      'FP / PR',
+    expect(screen.getByText('Record of 25 trials, tinysemver')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
+      'Does demanding proof make code review more trustworthy?',
+    );
+    const stats = screen.getByRole('group', { name: 'Headline results' });
+    expect(within(stats).getByText('56%')).toBeTruthy();
+    expect(within(stats).getByText('single reviewer: 36%')).toBeTruthy();
+    expect(within(stats).getByText('0.08')).toBeTruthy();
+    expect(within(stats).getAllByText(/^\$0\.0\d{3}$/)).toHaveLength(1);
+
+    const table = screen.getByRole('table', { name: 'Results by reviewer' });
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'Reviewer',
+      'Convicted',
+      'False accusations',
       'Precision',
-      '$ / PR',
-      'p50 latency',
-      'n',
+      'Cost / case',
+      'Median time',
     ]);
-    const hit = screen.getByRole('group', { name: 'Hit rate' });
-    // comparison table comes first, then the per-metric rules
-    expect(comparison.compareDocumentPosition(hit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(hit).getByText('56%')).toBeTruthy();
-    expect(within(hit).getByText('36%')).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'Precision' })).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'p50 latency' })).toBeTruthy();
-    expect(within(screen.getByRole('group', { name: 'False positives per PR' })).getByText('0.08')).toBeTruthy();
-    expect(within(screen.getByRole('group', { name: 'Cost per PR' })).getAllByText(/^\$0\.0\d{3}$/)).toHaveLength(2);
-    const table = screen.getByRole('table', { name: 'Per-item results' });
-    expect(within(table).getAllByRole('row')).toHaveLength(2 + 25);
-    expect(within(table).getByText('m08')).toBeTruthy();
+    expect(within(table).getAllByRole('rowheader').map((h) => h.textContent)).toEqual([
+      'Kacheri Court (proof required)',
+      'Single reviewer, Nemotron Super',
+    ]);
+    expect(within(table).getByRole('rowheader', { name: 'Kacheri Court (proof required)' }).closest('tr')!.textContent).toContain(
+      '14 of 25',
+    );
+    expect(screen.getByRole('heading', { name: 'II. The cases before the court' })).toBeTruthy();
+    expect(screen.getByText('25 planted bugs.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'III. Method' }).nextElementSibling?.textContent).toContain(
+      'These sample numbers are placeholders, not recorded runs.',
+    );
   });
 
-  it('omits the banner for unflagged results and reports missing results', async () => {
-    const real = { ...sample, sample: false, label: null };
-    const { source } = fakeSource([], { bench: real });
-    render(<BenchPage source={source} />);
-    await screen.findByRole('group', { name: 'Hit rate' });
+  it('reads real runner output: three reviewers, kinds of case, innocent changes excluded from the hit rate', async () => {
+    const r = (itemId: string, system: string, kind: string, hit: boolean, falsePositives: number) => ({
+      itemId,
+      system,
+      kind,
+      hit,
+      falsePositives,
+      findings: falsePositives + (hit ? 1 : 0),
+      convicted: system === 'court' ? falsePositives + (hit ? 1 : 0) : 0,
+      costUsd: 0.01,
+      latencyMs: 1000,
+    });
+    const data = parseBench([
+      r('m1', 'court', 'mutant', true, 0),
+      r('h1', 'court', 'historical', false, 0),
+      r('k1', 'court', 'clean', false, 0),
+      r('m1', 'baseline', 'mutant', true, 2),
+      r('h1', 'baseline', 'historical', true, 1),
+      r('k1', 'baseline', 'clean', false, 3),
+      r('m1', 'baseline-ultra', 'mutant', true, 1),
+      r('h1', 'baseline-ultra', 'historical', false, 0),
+      r('k1', 'baseline-ultra', 'clean', false, 1),
+    ]);
+    render(<BenchPage source={fakeSource([], { bench: data }).source} />);
+    const stats = await screen.findByRole('group', { name: 'Headline results' });
     expect(screen.queryByRole('note', { name: 'Sample data' })).toBeNull();
-    cleanup();
+    expect(screen.getByText('Record of 3 trials')).toBeTruthy();
+    expect(within(stats).getByText('50%')).toBeTruthy();
+    expect(within(stats).getByText('single reviewer: 100%')).toBeTruthy();
+    expect(within(stats).getByText('0.00')).toBeTruthy();
+    expect(within(stats).getByText('single reviewer: 2.00')).toBeTruthy();
+    const table = screen.getByRole('table', { name: 'Results by reviewer' });
+    const ultra = within(table).getByRole('rowheader', { name: 'Single reviewer, Nemotron Ultra' }).closest('tr')!;
+    expect(ultra.textContent).toContain('1 of 2');
+    expect(screen.getByText('1 planted bug.')).toBeTruthy();
+    expect(screen.getByText('1 real regression.')).toBeTruthy();
+    expect(screen.getByText('1 innocent change.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'III. Method' }).nextElementSibling?.textContent).toContain(
+      'All results come from recorded runs and can be replayed.',
+    );
+  });
+
+  it('reports missing results', async () => {
     render(<BenchPage source={fakeSource([], { bench: null }).source} />);
     expect(await screen.findByText('No benchmark results published yet.')).toBeTruthy();
   });
@@ -463,13 +660,14 @@ describe('Root', () => {
     render(<Root api={fakeApi()} court={source} />);
     expect(screen.getByRole('list', { name: 'Task board' })).toBeTruthy();
     const nav = screen.getByRole('navigation', { name: 'Sections' });
-    expect(within(nav).getByText('Board').getAttribute('aria-current')).toBe('page');
+    expect(within(nav).getAllByRole('link').map((a) => a.textContent)).toEqual(['Docket', 'Court record', 'Board']);
+    expect(within(nav).getByRole('link', { name: 'Board' }).getAttribute('aria-current')).toBe('page');
 
     act(() => {
       window.history.replaceState(null, '', '#/court');
       window.dispatchEvent(new Event('hashchange'));
     });
-    fireEvent.click(await screen.findByRole('button', { name: /First case/ }));
+    fireEvent.click(await screen.findByRole('link', { name: 'First case' }));
     expect(window.location.hash).toBe('#/court/k1');
     expect(await screen.findByRole('article', { name: 'Case First case' })).toBeTruthy();
 
@@ -478,16 +676,19 @@ describe('Root', () => {
       window.dispatchEvent(new Event('hashchange'));
     });
     expect(await screen.findByText('No benchmark results published yet.')).toBeTruthy();
+    expect(
+      within(screen.getByRole('navigation', { name: 'Sections' })).getByRole('link', { name: 'Court record' }).getAttribute('aria-current'),
+    ).toBe('page');
   });
 
-  it('hides the board in demo mode and toggles the theme', () => {
+  it('hides the board in demo mode and has no theme switch', () => {
     const { source } = fakeSource([], { demo: true });
     render(<Root api={null} court={source} />);
     const nav = screen.getByRole('navigation', { name: 'Sections' });
     expect(within(nav).queryByText('Board')).toBeNull();
-    expect(within(nav).getByText('Court').getAttribute('aria-current')).toBe('page');
-    const before = document.documentElement.dataset.theme;
-    fireEvent.click(within(nav).getByRole('button', { name: /Switch to/ }));
-    expect(document.documentElement.dataset.theme).not.toBe(before);
+    expect(within(nav).getByRole('link', { name: 'Docket' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.queryByRole('button', { name: /theme|dark|light/i })).toBeNull();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(screen.getByText('Judges: NVIDIA Nemotron on Nebius Token Factory')).toBeTruthy();
   });
 });

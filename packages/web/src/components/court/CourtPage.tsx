@@ -2,8 +2,11 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type For
 import type { CaseRecord } from '@kacheri/shared';
 import type { CourtSource, CreateCaseInput } from '../../court/source';
 import { courtReducer, initialCourtState, sortCases } from '../../court/state';
-import { admissibleCount, caseTally, caseTotals, formatUsd, isoDate, shortSha } from '../../court/summary';
-import { CaseStatusBadge, CaseView } from './CaseView';
+import { caseNumber } from '../../court/judgment';
+import { caseTally, caseTotals, formatUsd, isActive, isoDate } from '../../court/summary';
+import { caseHref, followInApp } from '../links';
+import { Masthead } from '../TopNav';
+import { CaseView } from './CaseView';
 
 type Connection = 'connecting' | 'live' | 'offline' | 'demo';
 
@@ -14,7 +17,28 @@ const CONNECTION_TEXT: Record<Connection, string> = {
   demo: 'Demo replay',
 };
 
-function CaseDocket({
+function DocketJudgment({ record }: { record: CaseRecord }) {
+  if (isActive(record.status)) return <span className="verdict">IN SESSION</span>;
+  if (record.status === 'error') {
+    return (
+      <>
+        <span className="verdict">MISTRIAL</span>
+        <span className="verdict-note">did not finish</span>
+      </>
+    );
+  }
+  const { convicted } = caseTally(record);
+  if (convicted === 0) return <span className="verdict verdict-not-guilty">NOT GUILTY</span>;
+  const total = record.charges.length;
+  return (
+    <>
+      <span className="verdict verdict-guilty">{`GUILTY ${convicted}`}</span>
+      <span className="verdict-note">{`of ${total} count${total === 1 ? '' : 's'}`}</span>
+    </>
+  );
+}
+
+function DocketTable({
   cases,
   recordedAt,
   onSelect,
@@ -24,68 +48,41 @@ function CaseDocket({
   onSelect(id: string): void;
 }) {
   return (
-    <section className="case-docket" aria-label="Cases">
-      <h2 className="section-head">
-        Cases <span className="count">{cases.length}</span>
-      </h2>
-      {cases.length === 0 ? (
-        <p className="muted">No cases yet.</p>
-      ) : (
-        <table className="data-table docket-table" aria-label="Case docket">
-          <thead>
-            <tr>
-              <th scope="col">Case</th>
-              <th scope="col">Status</th>
-              <th scope="col">Base..head</th>
-              <th scope="col" className="num">
-                Filed
-              </th>
-              <th scope="col" className="num">
-                Admissible
-              </th>
-              <th scope="col" className="num">
-                Convicted
-              </th>
-              <th scope="col" className="num">
-                Cost
-              </th>
-              <th scope="col">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cases.map((c) => {
-              const convicted = caseTally(c).convicted;
-              const date = recordedAt[c.id] ?? c.startedAt;
-              return (
-                <tr key={c.id}>
-                  <td className="docket-title">
-                    <button type="button" className="row-link" onClick={() => onSelect(c.id)}>
-                      {c.title}
-                    </button>
-                    <code className="muted docket-id">{c.id}</code>
-                  </td>
-                  <td>
-                    <CaseStatusBadge status={c.status} />
-                  </td>
-                  <td>
-                    <code title={`${c.baseRef}..${c.headRef}`}>
-                      {shortSha(c.baseRef)}..{shortSha(c.headRef)}
-                    </code>
-                  </td>
-                  <td className="num">{c.charges.length}</td>
-                  <td className="num">{admissibleCount(c)}</td>
-                  <td className={`num${convicted > 0 ? ' tally-convicted' : ''}`}>{convicted}</td>
-                  <td className="num">{formatUsd(caseTotals(c.usage).costUsd)}</td>
-                  <td>
-                    <time dateTime={date}>{isoDate(date)}</time>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
-    </section>
+    <div className="table-wrap">
+      <table className="record-table docket-table" aria-label="Case docket">
+        <thead>
+          <tr>
+            <th scope="col">Case No.</th>
+            <th scope="col">Parties</th>
+            <th scope="col">Filed</th>
+            <th scope="col">Judgment</th>
+            <th scope="col">Costs</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cases.map((c) => {
+            const filed = recordedAt[c.id] ?? c.startedAt;
+            return (
+              <tr key={c.id}>
+                <td className="n">{caseNumber(c)}</td>
+                <td>
+                  <a href={caseHref(c.id)} onClick={(e) => followInApp(e, () => onSelect(c.id))}>
+                    {c.title}
+                  </a>
+                </td>
+                <td className="n">
+                  <time dateTime={filed}>{isoDate(filed)}</time>
+                </td>
+                <td>
+                  <DocketJudgment record={c} />
+                </td>
+                <td className="n">{formatUsd(caseTotals(c.usage).costUsd)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -128,27 +125,30 @@ function FileCaseForm({ onSubmit }: { onSubmit(input: CreateCaseInput): Promise<
   }
 
   return (
-    <form className="create-form" aria-label="File a case" onSubmit={submit}>
-      <h2>File a case</h2>
-      {FIELDS.map((f) => (
-        <label key={f.key}>
-          {f.label}
-          <input
-            value={input[f.key]}
-            placeholder={f.placeholder}
-            onChange={(e) => setInput({ ...input, [f.key]: e.target.value })}
-          />
-        </label>
-      ))}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      <button type="submit" className="primary" disabled={busy}>
-        {busy ? 'Filing…' : 'Open trial'}
-      </button>
-    </form>
+    <section className="file-case">
+      <h2 className="sec">File a new case</h2>
+      <p className="p dim">The court reviews the change from the base ref to the head ref of a local repository.</p>
+      <form className="case-form" aria-label="File a case" onSubmit={submit}>
+        {FIELDS.map((f) => (
+          <label key={f.key} className="field">
+            {f.label}
+            <input
+              value={input[f.key]}
+              placeholder={f.placeholder}
+              onChange={(e) => setInput({ ...input, [f.key]: e.target.value })}
+            />
+          </label>
+        ))}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button type="submit" className="btn btn-dark" disabled={busy}>
+          {busy ? 'Filing…' : 'Open the trial'}
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -244,55 +244,50 @@ export function CourtPage({ source, caseId, onSelect, nav }: CourtPageProps) {
 
   const cases = useMemo(() => sortCases(state.cases), [state.cases]);
   const selected = caseId ? state.cases[caseId] : undefined;
+  const status = (
+    <span className={`conn conn-${connection}`} role="status">
+      {CONNECTION_TEXT[connection]}
+    </span>
+  );
 
   return (
-    <div className="app court">
-      <header className="app-head">
-        <h1>Kacheri</h1>
-        {nav}
-        <span className={`conn conn-${connection}`} role="status">
-          {CONNECTION_TEXT[connection]}
-        </span>
-      </header>
-      {error && (
-        <p className="error banner" role="alert">
-          {error}
-        </p>
-      )}
-      {selected ? (
-        <main className="court-case">
-          <button type="button" className="link back-link" onClick={() => onSelect(null)}>
-            All cases
-          </button>
+    <div className="site">
+      <Masthead nav={nav} status={status} />
+      <main className="sheet-wrap">
+        {error && (
+          <p className="banner-error" role="alert">
+            {error}
+          </p>
+        )}
+        {selected ? (
           <CaseView
             key={selected.id}
             record={selected}
             replay={source.mode === 'demo'}
             recordedAt={recordedAt.current[selected.id] ?? null}
+            onBack={() => onSelect(null)}
             onReplay={source.replay ? () => setReplayNonce((n) => n + 1) : undefined}
             onSkip={source.replay ? () => stopReplay.current?.() : undefined}
           />
-        </main>
-      ) : caseId ? (
-        <main className="court-index">
-          <p className="muted">{loaded ? `Case ${caseId} not found.` : 'Loading case…'}</p>
-        </main>
-      ) : (
-        <main className="court-index">
-          <section className="court-intro" aria-label="About the court">
-            <h2>No evidence, no finding.</h2>
-            <p className="muted">
-              Every charge filed against a pull request must come with a witness test that fails on the head and passes
-              on the base, three runs each. Admissible charges face a defense and a judge; everything else is
-              dismissed.
+        ) : caseId ? (
+          <p className="page-note">{loaded ? `Case ${caseId} was not found.` : 'Loading the case…'}</p>
+        ) : (
+          <article className="filing docket" aria-label="Docket">
+            <h1 className="court-name">The Kacheri Court of Code Review</h1>
+            <p className="court-sitting">Docket of cases</p>
+            <p className="lede">
+              Each case is a pull request on trial. A charge counts only when it comes with a test that fails after the
+              change and passed before it.
             </p>
-          </section>
-          <div className={source.createCase ? 'court-index-grid' : undefined}>
-            <CaseDocket cases={cases} recordedAt={recordedAt.current} onSelect={onSelect} />
+            {cases.length === 0 ? (
+              <p className="p dim docket-empty">{loaded ? 'No cases have been filed yet.' : 'Loading the docket…'}</p>
+            ) : (
+              <DocketTable cases={cases} recordedAt={recordedAt.current} onSelect={onSelect} />
+            )}
             {source.createCase && <FileCaseForm onSubmit={createCase} />}
-          </div>
-        </main>
-      )}
+          </article>
+        )}
+      </main>
     </div>
   );
 }

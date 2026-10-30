@@ -4,7 +4,7 @@ import { App } from './App';
 import type { CourtSource } from './court/source';
 import { BenchPage } from './components/court/BenchPage';
 import { CourtPage } from './components/court/CourtPage';
-import { TopNav, useTheme } from './components/TopNav';
+import { TopNav } from './components/TopNav';
 
 export type Route = { view: 'board' } | { view: 'court'; caseId: string | null } | { view: 'bench' };
 
@@ -38,7 +38,6 @@ export function Root({ api, court }: RootProps) {
     [api],
   );
   const [route, setRoute] = useState<Route>(() => resolve(parseRoute(window.location.hash)));
-  const [theme, toggleTheme] = useTheme();
 
   useEffect(() => {
     const sync = () => setRoute(resolve(parseRoute(window.location.hash)));
@@ -57,7 +56,7 @@ export function Root({ api, court }: RootProps) {
     setRoute(next);
   }, []);
 
-  const nav = <TopNav view={route.view} showBoard={api !== null} theme={theme} onToggleTheme={toggleTheme} />;
+  const nav = <TopNav view={route.view} showBoard={api !== null} />;
 
   if (route.view === 'court') {
     return <CourtPage source={court} caseId={route.caseId} onSelect={selectCase} nav={nav} />;

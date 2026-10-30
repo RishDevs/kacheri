@@ -1,7 +1,16 @@
 import type { BenchItem, BenchResult } from '@kacheri/shared';
 
-export type BenchSystem = BenchResult['system'];
-export const SYSTEMS: readonly BenchSystem[] = ['court', 'baseline'];
+// The bench runner (packages/bench) also records a Nemotron Ultra single reviewer and the kind of each item.
+export type BenchSystem = BenchResult['system'] | 'baseline-ultra';
+export const SYSTEMS: readonly BenchSystem[] = ['court', 'baseline', 'baseline-ultra'];
+
+export type BenchKind = 'mutant' | 'historical' | 'clean';
+const KINDS: readonly BenchKind[] = ['mutant', 'historical', 'clean'];
+
+export interface BenchRecord extends Omit<BenchResult, 'system'> {
+  system: BenchSystem;
+  kind?: BenchKind;
+}
 
 export interface BenchItemInfo extends Omit<BenchItem, 'patch'> {
   patch?: string;
@@ -12,7 +21,7 @@ export interface BenchData {
   sample: boolean;
   label: string | null;
   generatedAt: string | null;
-  results: BenchResult[];
+  results: BenchRecord[];
   items: BenchItemInfo[];
 }
 
@@ -24,11 +33,11 @@ function isNum(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
 }
 
-function checkResult(v: unknown, i: number): BenchResult {
+function checkResult(v: unknown, i: number): BenchRecord {
   if (
     !isObject(v) ||
     typeof v.itemId !== 'string' ||
-    (v.system !== 'court' && v.system !== 'baseline') ||
+    !SYSTEMS.includes(v.system as BenchSystem) ||
     typeof v.hit !== 'boolean' ||
     !isNum(v.findings) ||
     !isNum(v.falsePositives) ||
@@ -37,7 +46,9 @@ function checkResult(v: unknown, i: number): BenchResult {
   ) {
     throw new Error(`bench result #${i} is not a valid BenchResult`);
   }
-  return { ...(v as unknown as BenchResult), convicted: isNum(v.convicted) ? v.convicted : 0 };
+  const record: BenchRecord = { ...(v as unknown as BenchRecord), convicted: isNum(v.convicted) ? v.convicted : 0 };
+  if (!KINDS.includes(v.kind as BenchKind)) delete record.kind;
+  return record;
 }
 
 function checkItem(v: unknown): BenchItemInfo | null {
@@ -81,6 +92,8 @@ export function median(values: number[]): number {
 export interface SystemSummary {
   system: BenchSystem;
   items: number;
+  // items that carry a bug (every item except innocent ones)
+  guilty: number;
   hits: number;
   hitRate: number;
   falsePositives: number;
@@ -92,17 +105,19 @@ export interface SystemSummary {
   p50LatencyMs: number;
 }
 
-export function summarize(results: BenchResult[], system: BenchSystem): SystemSummary | null {
+export function summarize(results: readonly BenchRecord[], system: BenchSystem): SystemSummary | null {
   const rs = results.filter((r) => r.system === system);
   if (rs.length === 0) return null;
+  const guilty = rs.filter((r) => r.kind !== 'clean').length;
   const hits = rs.filter((r) => r.hit).length;
   const falsePositives = rs.reduce((n, r) => n + r.falsePositives, 0);
   const totalCostUsd = rs.reduce((n, r) => n + r.costUsd, 0);
   return {
     system,
     items: rs.length,
+    guilty,
     hits,
-    hitRate: hits / rs.length,
+    hitRate: guilty === 0 ? 0 : hits / guilty,
     falsePositives,
     fpPerPr: falsePositives / rs.length,
     precision: hits + falsePositives === 0 ? null : hits / (hits + falsePositives),
@@ -112,11 +127,31 @@ export function summarize(results: BenchResult[], system: BenchSystem): SystemSu
   };
 }
 
+export interface BenchMix extends Record<BenchKind, number> {
+  total: number;
+}
+
+// Distinct items by kind; items without a recorded kind count as planted bugs.
+export function caseMix(data: Pick<BenchData, 'items' | 'results'>): BenchMix {
+  const kinds = new Map<string, BenchKind>();
+  for (const item of data.items) kinds.set(item.id, 'mutant');
+  for (const r of data.results) {
+    if (r.kind || !kinds.has(r.itemId)) kinds.set(r.itemId, r.kind ?? 'mutant');
+  }
+  const mix: BenchMix = { mutant: 0, historical: 0, clean: 0, total: kinds.size };
+  for (const k of kinds.values()) mix[k]++;
+  return mix;
+}
+
+export function benchRepos(data: Pick<BenchData, 'items'>): string {
+  return [...new Set(data.items.map((i) => i.repo).filter(Boolean))].join(', ');
+}
+
 export interface BenchRow {
   itemId: string;
   item: BenchItemInfo | undefined;
-  court: BenchResult | undefined;
-  baseline: BenchResult | undefined;
+  court: BenchRecord | undefined;
+  baseline: BenchRecord | undefined;
 }
 
 export function benchRows(data: BenchData): BenchRow[] {
