@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { BenchResult, CaseRecord } from '@kacheri/shared';
 import { MODELS } from '@kacheri/shared';
-import { patchToDiff, parsePatch } from '../src/diff';
+import { anchorKey, locateLine, patchToDiff, parsePatch } from '../src/diff';
 import { benchRows, median, parseBench, summarize } from '../src/court/bench';
+import { base64Utf8, reproCommand, shellQuote } from '../src/court/repro';
 import { caseToReplay } from '../src/court/replay';
 import { applyToRecord, courtReducer, initialCourtState, sortCases } from '../src/court/state';
 import {
@@ -14,6 +15,10 @@ import {
   formatDuration,
   formatTokens,
   formatUsd,
+  hasRunFault,
+  isoDate,
+  runSummary,
+  shortSha,
 } from '../src/court/summary';
 import { makeCase, makeCharge, makeEvidence, makeUsage, readDemo } from './court-fixtures';
 
@@ -106,10 +111,39 @@ describe('case summary', () => {
     expect(caseTally(closed)).toEqual({ convicted: 1, dismissed: 2, inadmissible: 1, pending: 0 });
   });
 
+  it('summarizes runs, shortens SHAs and formats dates for the register and docket', () => {
+    expect(runSummary(['pass', 'pass', 'pass'])).toBe('3/3 pass');
+    expect(runSummary(['fail', 'pass', 'fail'])).toBe('2/3 fail, 1/3 pass');
+    expect(runSummary([])).toBe('no runs');
+    expect(hasRunFault(['pass', 'timeout'])).toBe(true);
+    expect(hasRunFault(['pass', 'fail'])).toBe(false);
+    expect(shortSha('4f1c2a9e7b3d58c0a6e91f2d7c4b8a05e3f6d912')).toBe('4f1c2a9');
+    expect(shortSha('main')).toBe('main');
+    expect(isoDate('2026-10-29T18:44:48.902Z')).toBe('2026-10-29');
+    expect(isoDate('not a date')).toBe('');
+    expect(isoDate(null)).toBe('');
+  });
+
   it('reads optional patch/description extras defensively', () => {
     expect(caseExtras(makeCase())).toEqual({ patch: undefined, description: undefined });
     const rec = { ...makeCase(), patch: 'diff', description: 7 } as unknown as CaseRecord;
     expect(caseExtras(rec)).toEqual({ patch: 'diff', description: undefined });
+  });
+});
+
+describe('reproCommand', () => {
+  it('checks out head, writes the witness byte-for-byte and runs it', () => {
+    const code = "assert.equal(f('it\\'s'), '✓');\n";
+    const cmd = reproCommand({ headRef: 'b'.repeat(40) }, { witnessPath: '__kacheri__/c1.test.mjs', witnessCode: code });
+    const lines = cmd.split('\n');
+    expect(lines).toHaveLength(4);
+    expect(lines[1]).toBe(`git checkout --detach '${'b'.repeat(40)}'`);
+    expect(lines[3]).toBe("node --test '__kacheri__/c1.test.mjs' # expected: FAIL on head");
+    const encoded = /Buffer\.from\('\\''([A-Za-z0-9+/=]+)'\\''/.exec(lines[2]);
+    expect(encoded).not.toBeNull();
+    expect(Buffer.from(encoded![1], 'base64').toString('utf8')).toBe(code);
+    expect(base64Utf8('✓')).toBe(Buffer.from('✓').toString('base64'));
+    expect(shellQuote("a'b")).toBe("'a'\\''b'");
   });
 });
 
@@ -291,6 +325,17 @@ describe('demo data', () => {
     for (const f of files) {
       for (const h of f.hunks) expect(h.lines.every((l) => l.kind !== 'meta')).toBe(true);
     }
+  });
+
+  it('locates every charge on a diff line for the workbench anchors', () => {
+    const files = parsePatch(demo.patch);
+    for (const c of demo.charges) {
+      expect(locateLine(files, c.file, c.line)).toEqual({ path: c.file, line: c.line });
+    }
+    expect(locateLine(files, './src/compare.js', 999)).toEqual({ path: 'src/compare.js', line: null });
+    expect(locateLine(files, 'src/nope.js', 1)).toBeNull();
+    expect(anchorKey('src/compare.js', 28)).toBe('src/compare.js#28');
+    expect(anchorKey('src/compare.js', null)).toBe('src/compare.js#file');
   });
 
   it('bench sample is flagged and has 25 items x 2 systems with consistent counts', () => {

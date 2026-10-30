@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type For
 import type { CaseRecord } from '@kacheri/shared';
 import type { CourtSource, CreateCaseInput } from '../../court/source';
 import { courtReducer, initialCourtState, sortCases } from '../../court/state';
-import { caseTally, formatUsd, caseTotals } from '../../court/summary';
+import { admissibleCount, caseTally, caseTotals, formatUsd, isoDate, shortSha } from '../../court/summary';
 import { CaseStatusBadge, CaseView } from './CaseView';
 
 type Connection = 'connecting' | 'live' | 'offline' | 'demo';
@@ -14,43 +14,77 @@ const CONNECTION_TEXT: Record<Connection, string> = {
   demo: 'Demo replay',
 };
 
-function CaseList({
+function CaseDocket({
   cases,
-  selectedId,
+  recordedAt,
   onSelect,
 }: {
   cases: CaseRecord[];
-  selectedId: string | null;
+  recordedAt: Readonly<Record<string, string>>;
   onSelect(id: string): void;
 }) {
   return (
-    <section className="case-list" aria-label="Cases">
-      <h2 className="side-title">
+    <section className="case-docket" aria-label="Cases">
+      <h2 className="section-head">
         Cases <span className="count">{cases.length}</span>
       </h2>
-      {cases.length === 0 && <p className="muted">No cases yet.</p>}
-      <ul className="cards">
-        {cases.map((c) => {
-          const tally = caseTally(c);
-          return (
-            <li key={c.id}>
-              <button
-                type="button"
-                className={`card case-card${c.id === selectedId ? ' selected' : ''}`}
-                aria-pressed={c.id === selectedId}
-                onClick={() => onSelect(c.id)}
-              >
-                <span className="card-title">{c.title}</span>
-                <span className="card-meta">
-                  <CaseStatusBadge status={c.status} /> · {c.charges.length} charge{c.charges.length === 1 ? '' : 's'}
-                  {tally.convicted > 0 && <span className="tally-convicted"> · {tally.convicted} convicted</span>} ·{' '}
-                  {formatUsd(caseTotals(c.usage).costUsd)}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {cases.length === 0 ? (
+        <p className="muted">No cases yet.</p>
+      ) : (
+        <table className="data-table docket-table" aria-label="Case docket">
+          <thead>
+            <tr>
+              <th scope="col">Case</th>
+              <th scope="col">Status</th>
+              <th scope="col">Base..head</th>
+              <th scope="col" className="num">
+                Filed
+              </th>
+              <th scope="col" className="num">
+                Admissible
+              </th>
+              <th scope="col" className="num">
+                Convicted
+              </th>
+              <th scope="col" className="num">
+                Cost
+              </th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cases.map((c) => {
+              const convicted = caseTally(c).convicted;
+              const date = recordedAt[c.id] ?? c.startedAt;
+              return (
+                <tr key={c.id}>
+                  <td className="docket-title">
+                    <button type="button" className="row-link" onClick={() => onSelect(c.id)}>
+                      {c.title}
+                    </button>
+                    <code className="muted docket-id">{c.id}</code>
+                  </td>
+                  <td>
+                    <CaseStatusBadge status={c.status} />
+                  </td>
+                  <td>
+                    <code title={`${c.baseRef}..${c.headRef}`}>
+                      {shortSha(c.baseRef)}..{shortSha(c.headRef)}
+                    </code>
+                  </td>
+                  <td className="num">{c.charges.length}</td>
+                  <td className="num">{admissibleCount(c)}</td>
+                  <td className={`num${convicted > 0 ? ' tally-convicted' : ''}`}>{convicted}</td>
+                  <td className="num">{formatUsd(caseTotals(c.usage).costUsd)}</td>
+                  <td>
+                    <time dateTime={date}>{isoDate(date)}</time>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }
@@ -132,17 +166,25 @@ export function CourtPage({ source, caseId, onSelect, nav }: CourtPageProps) {
   const [connection, setConnection] = useState<Connection>(source.mode === 'demo' ? 'demo' : 'connecting');
   const [replayNonce, setReplayNonce] = useState(0);
   const stopReplay = useRef<(() => void) | null>(null);
+  // Original run dates; demo replays restart the clock on the records themselves.
+  const recordedAt = useRef<Record<string, string>>({});
+  const remember = useCallback((records: CaseRecord[]) => {
+    for (const r of records) {
+      if (!(r.id in recordedAt.current)) recordedAt.current[r.id] = r.endedAt ?? r.startedAt;
+    }
+  }, []);
 
   const load = useCallback(() => {
     source.listCases().then(
       (cases) => {
+        remember(cases);
         dispatch({ type: 'cases/loaded', cases });
         setLoaded(true);
         setError(null);
       },
       (err: Error) => setError(err.message),
     );
-  }, [source]);
+  }, [source, remember]);
 
   useEffect(() => {
     load();
@@ -167,7 +209,9 @@ export function CourtPage({ source, caseId, onSelect, nav }: CourtPageProps) {
     let cancelled = false;
     source.getCase(caseId).then(
       (record) => {
-        if (!cancelled) dispatch({ type: 'case/loaded', record });
+        if (cancelled) return;
+        remember([record]);
+        dispatch({ type: 'case/loaded', record });
       },
       (err: Error) => {
         if (!cancelled) setError(err.message);
@@ -176,7 +220,7 @@ export function CourtPage({ source, caseId, onSelect, nav }: CourtPageProps) {
     return () => {
       cancelled = true;
     };
-  }, [source, caseId]);
+  }, [source, caseId, remember]);
 
   useEffect(() => {
     if (!caseId || !loaded || !source.replay) return;
@@ -215,37 +259,40 @@ export function CourtPage({ source, caseId, onSelect, nav }: CourtPageProps) {
           {error}
         </p>
       )}
-      <main className="layout">
-        <aside className="sidebar">
-          <CaseList cases={cases} selectedId={caseId} onSelect={onSelect} />
-          {source.createCase && <FileCaseForm onSubmit={createCase} />}
-        </aside>
-        <div className="content">
-          {selected ? (
-            <>
-              <button type="button" className="link" onClick={() => onSelect(null)}>
-                All cases
-              </button>
-              <CaseView
-                record={selected}
-                onReplay={source.replay ? () => setReplayNonce((n) => n + 1) : undefined}
-                onSkip={source.replay ? () => stopReplay.current?.() : undefined}
-              />
-            </>
-          ) : caseId ? (
-            <p className="muted">{loaded ? `Case ${caseId} not found.` : 'Loading case…'}</p>
-          ) : (
-            <section className="court-intro" aria-label="About the court">
-              <h2>No evidence, no finding.</h2>
-              <p className="muted">
-                Every charge filed against a pull request must come with a witness test that fails on the head and
-                passes on the base, three runs each. Admissible charges face a defense and a judge; everything else is
-                dismissed. Select a case to watch the proceedings.
-              </p>
-            </section>
-          )}
-        </div>
-      </main>
+      {selected ? (
+        <main className="court-case">
+          <button type="button" className="link back-link" onClick={() => onSelect(null)}>
+            All cases
+          </button>
+          <CaseView
+            key={selected.id}
+            record={selected}
+            replay={source.mode === 'demo'}
+            recordedAt={recordedAt.current[selected.id] ?? null}
+            onReplay={source.replay ? () => setReplayNonce((n) => n + 1) : undefined}
+            onSkip={source.replay ? () => stopReplay.current?.() : undefined}
+          />
+        </main>
+      ) : caseId ? (
+        <main className="court-index">
+          <p className="muted">{loaded ? `Case ${caseId} not found.` : 'Loading case…'}</p>
+        </main>
+      ) : (
+        <main className="court-index">
+          <section className="court-intro" aria-label="About the court">
+            <h2>No evidence, no finding.</h2>
+            <p className="muted">
+              Every charge filed against a pull request must come with a witness test that fails on the head and passes
+              on the base, three runs each. Admissible charges face a defense and a judge; everything else is
+              dismissed.
+            </p>
+          </section>
+          <div className={source.createCase ? 'court-index-grid' : undefined}>
+            <CaseDocket cases={cases} recordedAt={recordedAt.current} onSelect={onSelect} />
+            {source.createCase && <FileCaseForm onSubmit={createCase} />}
+          </div>
+        </main>
+      )}
     </div>
   );
 }

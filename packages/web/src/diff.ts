@@ -190,6 +190,25 @@ function matchFile(files: PatchFile[], findingPath: string): PatchFile | undefin
   return files.find((f) => f.path.endsWith(`/${p}`) || p.endsWith(`/${f.path}`));
 }
 
+export interface LineLocation {
+  path: string; // path as it appears in the patch
+  line: number | null; // null when the line is not shown in the diff (file-level)
+}
+
+export function locateLine(files: PatchFile[], file: string, line: number | null): LineLocation | null {
+  const match = matchFile(files, file);
+  if (!match) return null;
+  const visible =
+    line !== null &&
+    match.hunks.some((h) => h.lines.some((l) => l.newNo === line && (l.kind === 'add' || l.kind === 'context')));
+  return { path: match.path, line: visible ? line : null };
+}
+
+// Key carried by `data-anchor` on diff rows (and file sections when line is null).
+export function anchorKey(path: string, line: number | null): string {
+  return `${path}#${line === null ? 'file' : line}`;
+}
+
 export function verdictFindings(verdicts: Verdict[]): PlacedFinding[] {
   return verdicts.flatMap((v) => v.findings.map((f) => ({ ...f, reviewer: v.reviewer })));
 }
