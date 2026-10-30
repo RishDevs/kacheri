@@ -7,6 +7,7 @@ import type {
   Evidence,
   LlmClient,
   LlmUsage,
+  ModelTier,
   Rebuttal,
   Ruling,
   Severity,
@@ -251,7 +252,7 @@ export interface BaselineResult {
 }
 
 // What most AI reviewers do: one strong model, one pass, no evidence requirement.
-export async function runBaseline(opts: Pick<CaseOptions, 'repoPath' | 'baseRef' | 'headRef' | 'title' | 'llm'>): Promise<BaselineResult> {
+export async function runBaseline(opts: Pick<CaseOptions, 'repoPath' | 'baseRef' | 'headRef' | 'title' | 'llm'> & { tier?: ModelTier }): Promise<BaselineResult> {
   const base = await resolveRef(opts.repoPath, opts.baseRef);
   const head = await resolveRef(opts.repoPath, opts.headRef);
   const title = opts.title ?? (await git(['log', '-1', '--format=%s', head], opts.repoPath)).trim();
@@ -259,7 +260,7 @@ export async function runBaseline(opts: Pick<CaseOptions, 'repoPath' | 'baseRef'
   const usage: LlmUsage[] = [];
   let findings: BaselineFinding[] = [];
   try {
-    const v = (await callJson(opts.llm, { tier: 'super', role: 'baseline', reasoning: true, temperature: 0.2, maxTokens: 6000, messages: baselineMessages(ctx) }, (u) => usage.push(u))) as { findings?: unknown };
+    const v = (await callJson(opts.llm, { tier: opts.tier ?? 'super', role: 'baseline', reasoning: true, temperature: 0.2, maxTokens: 6000, messages: baselineMessages(ctx) }, (u) => usage.push(u))) as { findings?: unknown };
     if (Array.isArray(v.findings)) {
       findings = v.findings.flatMap((f) => {
         const r = f as Record<string, unknown>;
